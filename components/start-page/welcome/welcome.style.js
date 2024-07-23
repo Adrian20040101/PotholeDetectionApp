@@ -6,17 +6,20 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        width: Platform.OS === 'web' ? '50%' : '100%',
+        width: Platform.OS === 'web' ? '40%' : '100%',
         height: Platform.OS === 'web' ? '100%' : '100%',
+        backgroundColor: 'black',
     },
     overlay: {
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         padding: 30,
         borderRadius: 15,
+        border: '0.5px solid white',
         alignItems: 'center',
-        marginHorizontal: 20,
+        marginHorizontal: 10,
         width: '90%',
         maxWidth: 600,
+        marginLeft: Platform.OS === 'web' ? 625 : 20
     },
     welcomeText: {
         fontSize: 32,
@@ -34,9 +37,11 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        width: '100%',
+        width: Platform.OS === 'web' ? '65%' : '100%',
     },
     button: {
+        flex: 1,
+        alignItems: 'center',
         backgroundColor: '#1E90FF',
         paddingVertical: 15,
         paddingHorizontal: 25,
