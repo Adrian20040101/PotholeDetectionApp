@@ -10,6 +10,8 @@ const Welcome = () => {
     const [view, setView] = useState('welcome'); // possible states are 'welcome', 'login', 'signup'
     const [typedText, setTypedText] = useState('');
     const [isTyped, setIsTyped] = useState(false);
+    const [isHovered, setIsHovered] = 
+        useState({ login_welcome: false, signup_welcome: false, login: false, signup: false, google_button: false });
     const googleLogo = require('../../../assets/logos/google-logo-2.png')
 
     // typewriter effect for app slogan
@@ -42,10 +44,20 @@ const Welcome = () => {
                         <TextInput placeholder="Email" style={styles.input} />
                         <TextInput placeholder="Password" secureTextEntry style={styles.input} />
                         <Text style={{ color: 'white' }}> - or - </Text>
-                        <Pressable style={styles.googleButton} onPress={() => {/* handle Google login */}}>
+                        <Pressable 
+                            style={[styles.googleButton, isHovered.google_button && styles.googleButtonHover]} 
+                            onPress={() => {/* handle Google login */}}
+                            onMouseEnter={() => setIsHovered({ ...isHovered, google_button: true })}
+                            onMouseLeave={() => setIsHovered({ ...isHovered, google_button: false })}
+                        >
                             <Image source={googleLogo} style={styles.googleLogo} />
                         </Pressable>
-                        <Pressable style={styles.button} onPress={() => setView('welcome')}>
+                        <Pressable 
+                            style={[styles.button, isHovered.login && styles.buttonHover]} 
+                            onPress={() => setView('welcome')}
+                            onMouseEnter={() => setIsHovered({ ...isHovered, login: true })}
+                            onMouseLeave={() => setIsHovered({ ...isHovered, login: false })}
+                        >
                             <Text style={styles.buttonText}>Login</Text>
                         </Pressable>
                     </>
@@ -57,14 +69,25 @@ const Welcome = () => {
                             <Icon name="arrow-back" size={24} color="#fff" />
                         </Pressable>
                         <Text style={styles.title}>Sign Up</Text>
-                        <TextInput placeholder="Name" style={styles.input} />
+                        <TextInput placeholder="Username" style={styles.input} />
                         <TextInput placeholder="Email" style={styles.input} />
                         <TextInput placeholder="Password" secureTextEntry style={styles.input} />
+                        <TextInput placeholder="Confirm Password" secureTextEntry style={styles.input} />
                         <Text style={{ color: 'white' }}> - or - </Text>
-                        <Pressable style={styles.googleButton} onPress={() => {/* handle Google login */}}>
+                        <Pressable 
+                            style={[styles.googleButton, isHovered.google_button && styles.googleButtonHover]} 
+                            onPress={() => {/* handle Google login */}}
+                            onMouseEnter={() => setIsHovered({ ...isHovered, google_button: true })}
+                            onMouseLeave={() => setIsHovered({ ...isHovered, google_button: false })}
+                        >
                             <Image source={googleLogo} style={styles.googleLogo} />
                         </Pressable>
-                        <Pressable style={styles.button} onPress={() => setView('welcome')}>
+                        <Pressable 
+                            style={[styles.button, isHovered.signup && styles.buttonHover]} 
+                            onPress={() => setView('welcome')}
+                            onMouseEnter={() => setIsHovered({ ...isHovered, signup: true })}
+                            onMouseLeave={() => setIsHovered({ ...isHovered, signup: false })}
+                        >
                             <Text style={styles.buttonText}>Sign Up</Text>
                         </Pressable>
                     </>
@@ -75,10 +98,20 @@ const Welcome = () => {
                         <Text style={styles.welcomeText}>Welcome!</Text>
                         <Text style={styles.subtitleText}>{typedText}</Text>
                         <View style={styles.buttonContainer}>
-                            <Pressable style={styles.button} onPress={() => setView('login')}>
+                            <Pressable 
+                                style={[styles.button, isHovered.login_welcome && styles.buttonHover]} 
+                                onPress={() => setView('login')}
+                                onMouseEnter={() => setIsHovered({ ...isHovered, login_welcome: true })}
+                                onMouseLeave={() => setIsHovered({ ...isHovered, login_welcome: false })}
+                            >
                                 <Text style={styles.buttonText}>Log In</Text>
                             </Pressable>
-                            <Pressable style={styles.button} onPress={() => setView('signup')}>
+                            <Pressable 
+                                style={[styles.button, isHovered.signup_welcome && styles.buttonHover]} 
+                                onPress={() => setView('signup')}
+                                onMouseEnter={() => setIsHovered({ ...isHovered, signup_welcome: true })}
+                                onMouseLeave={() => setIsHovered({ ...isHovered, signup_welcome: false })}
+                            >
                                 <Text style={styles.buttonText}>Sign Up</Text>
                             </Pressable>
                         </View>
