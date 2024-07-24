@@ -63,6 +63,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#1C86EE',
         transform: [{ scale: 1.05 }],
     },
+    googleButtonHover: {
+        backgroundColor: '#FFF',
+        transform: [{ scale: 1.10 }],
+    },
     googleButton: {
         marginTop: 20,
         marginBottom: 20,
