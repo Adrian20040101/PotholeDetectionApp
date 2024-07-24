@@ -6,8 +6,8 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        width: Platform.OS === 'web' ? '40%' : '100%',
-        height: Platform.OS === 'web' ? '100%' : '100%',
+        width: Platform.OS === 'web' ? '50%' : '100%',
+        height: '100%',
         backgroundColor: 'black',
     },
     overlay: {
@@ -18,8 +18,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginHorizontal: 10,
         width: '90%',
-        maxWidth: 600,
-        marginLeft: Platform.OS === 'web' ? 625 : 20
+        maxWidth: 500,
+        marginLeft: Platform.OS === 'web' ? 760 : 10
     },
     welcomeText: {
         fontSize: 32,
@@ -62,6 +62,39 @@ const styles = StyleSheet.create({
     buttonHover: {
         backgroundColor: '#1C86EE',
         transform: [{ scale: 1.05 }],
+    },
+    googleButton: {
+        marginTop: 20,
+        marginBottom: 20,
+        padding: 10,
+        borderRadius: 30,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        width: 50,
+        height: 50,
+    },
+    googleLogo: {
+        width: 24,
+        height: 24,
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 20,
+    },
+    input: {
+        width: '100%',
+        backgroundColor: '#fff',
+        padding: 10,
+        marginVertical: 10,
+        borderRadius: 5,
+    },
+    backButton: {
+        alignSelf: 'flex-start',
+        marginBottom: 20,
     },
     
 })
