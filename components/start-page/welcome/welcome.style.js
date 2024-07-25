@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         width: 50,
         height: 50,
+        transition: 'transform 0.3s'
     },
     googleLogo: {
         width: 24,
