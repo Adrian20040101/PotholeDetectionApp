@@ -14,6 +14,11 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         transition: 'transform 0.3s',
     },
+    backArrow: {
+        width: 24,
+        height: 24,
+        tintColor: '#fff',
+    },
     backButtonHovered: {
         transform: [{ scale: 1.2 }],
     },

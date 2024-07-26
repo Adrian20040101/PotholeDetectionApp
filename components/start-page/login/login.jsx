@@ -8,21 +8,36 @@ import styles from './login.style';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import * as Font from 'expo-font';
+import AppLoading from 'expo-app-loading';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const googleLogo = require('../../../assets/logos/google-logo-2.png');
+const backArrow = require('../../../assets/icons/back-arrow-icon.png');
 
 const Login = ({ onBackPress }) => {
+    const [isFontsLoaded, setIsFontsLoaded] = useState(false);
     const [isHovered, setIsHovered] =  useState({ login: false, googleButton: false})
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     //const navigation = useNavigation();
 
+    // const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    //     clientId: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
+    //     redirectUri: AuthSession.makeRedirectUri({
+    //         useProxy: true,
+    //     }),
+    //     scopes: ['profile', 'email'],
+    // });
+
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-        clientId: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
+        clientId: Platform.select({
+            android: '280319253024-hf4rrb3lgl0s052upabndsnpvdaiui7m.apps.googleusercontent.com',
+            web: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
+        }),
         redirectUri: AuthSession.makeRedirectUri({
-            useProxy: true,
+            scheme: 'potholedetection',
         }),
         scopes: ['profile', 'email'],
     });
@@ -64,7 +79,7 @@ const Login = ({ onBackPress }) => {
     return (
         <View style={styles.formContainer}>
             <Pressable style={styles.backButton} onPress={onBackPress}>
-                <Icon name="arrow-back" size={24} color="#fff" />
+                <Image source={backArrow} style={styles.backArrow}/>
             </Pressable>
             <Text style={styles.title}>Login</Text>
             <TextInput

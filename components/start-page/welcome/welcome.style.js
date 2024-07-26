@@ -1,12 +1,14 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 
+const { width: screenWidth } = Dimensions.get('window');
+const isMobile = screenWidth < 800;
 
 const styles = StyleSheet.create({
     background: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        width: Platform.OS === 'web' ? '50%' : '100%',
+        width: isMobile ? '100%' : '50%',
         height: '100%',
         backgroundColor: 'black',
     },
@@ -19,7 +21,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
         width: '90%',
         maxWidth: 500,
-        marginLeft: Platform.OS === 'web' ? 760 : 10
+        marginLeft: isMobile ? 10 : 760
     },
     welcomeText: {
         fontSize: 32,
@@ -37,7 +39,7 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        width: Platform.OS === 'web' ? '65%' : '100%',
+        width: isMobile ? '100%' : '65%'
     },
     button: {
         flex: 1,
