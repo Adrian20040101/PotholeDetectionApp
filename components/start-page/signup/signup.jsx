@@ -3,7 +3,8 @@ import { View, Text, TextInput, Pressable, Image, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import styles from './signup.style';
 
-const googleLogo = require('../../../assets/logos/google-logo-2.png'); // Ensure you have a Google logo image in your assets folder
+const googleLogo = require('../../../assets/logos/google-logo-2.png');
+const backArrow = require('../../../assets/icons/back-arrow-icon.png');
 
 const Signup = ({ onBackPress }) => {
     const [isHovered, setIsHovered] =  useState({ signup: false, googleButton: false})
@@ -23,7 +24,7 @@ const Signup = ({ onBackPress }) => {
     return (
         <View style={styles.formContainer}>
             <Pressable style={styles.backButton} onPress={onBackPress}>
-                <Icon name="arrow-back" size={24} color="#fff" />
+                <Image source={backArrow} style={styles.backArrow}/>
             </Pressable>
             <Text style={styles.title}>Sign Up</Text>
             <TextInput
