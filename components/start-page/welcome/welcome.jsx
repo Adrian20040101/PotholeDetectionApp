@@ -72,7 +72,7 @@ const Welcome = () => {
         <ImageBackground 
         source={{uri: 'https://img.freepik.com/premium-photo/pothole-road-ground-view-cinematic-lighting-generative-aixa_40453-3640.jpg'}} 
             style={styles.background}
-            imageStyle={styles.backgroundImage}
+            imageStyle={styles.imageBackground}
         >
             <View style={[styles.overlay, view === 'welcome' ? styles.welcomeOverlay : styles.formOverlay]}>
                 {renderContent()}

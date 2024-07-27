@@ -3,7 +3,8 @@ import { View, Text, TextInput, Pressable, Image, Alert, Platform } from 'react-
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, signInAnonymously, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../../../config/firebase/firebase-config';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { auth, db } from '../../../config/firebase/firebase-config';
 import styles from './login.style';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
@@ -17,10 +18,11 @@ const googleLogo = require('../../../assets/logos/google-logo-2.png');
 const backArrow = require('../../../assets/icons/back-arrow-icon.png');
 
 const Login = ({ onBackPress }) => {
-    const [isFontsLoaded, setIsFontsLoaded] = useState(false);
+    const navigation = useNavigation();
     const [isHovered, setIsHovered] =  useState({ login: false, googleButton: false})
-    const [email, setEmail] = useState('');
+    const [emailOrUsername, setEmailOrUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     //const navigation = useNavigation();
 
     // const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
@@ -48,7 +50,7 @@ const Login = ({ onBackPress }) => {
             const credential = GoogleAuthProvider.credential(id_token);
             signInWithCredential(auth, credential)
                 .then(() => {
-                    //navigation.navigate('HomePage');
+                    navigation.navigate('HomePage');
                 })
                 .catch((error) => {
                     console.error('Error signing in with Google:', error);
@@ -58,17 +60,45 @@ const Login = ({ onBackPress }) => {
     }, [response]);
 
     const handleLogin = async () => {
-        if (email === '' || password === '') 
-            Alert.alert('Error', 'Please fill in both fields');
-        try {
-            await signInWithEmailAndPassword(auth, email, password)
-            const user = auth.currentUser;
-            if (user) {
-                //navigation.navigate('HomePage');
+        setError('');
+        if (emailOrUsername === '' || password === '') {
+            setError('Please fill in both fields');
+            return;
+        }
+
+        let email = emailOrUsername;
+
+        if (!email.includes('@')) {
+            try {
+                // if the input is a username (doesn't contain an '@' symbol), fetch the corresponding email
+                const usernamesRef = collection(db, 'users');
+                const q = query(usernamesRef, where('username', '==', emailOrUsername));
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    setError('Username not found');
+                    return;
+                }
+                email = querySnapshot.docs[0].data().email;
+            } catch (error) {
+                setError('Error checking username. Please try again.');
+                console.error('Error checking username:', error);
+                return;
             }
+        }
+    
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            navigation.navigate('HomePage');
+            console.log(`Login successful. Welcome ${emailOrUsername}`)
         } catch (error) {
-            console.error('Error signing you in.')
-            Alert.alert('Error', 'Error signing you in. Please try again.');
+            console.error('Error signing you in:', error.message);
+            if (error.code === 'auth/invalid-email') {
+                setError('No user found with this email.');
+            } else if (error.code === 'auth/invalid-credential') {
+                setError('Invalid credentials.');
+            } else {
+                setError('Error signing in. Please try again.');
+            }
         }
     };
 
@@ -82,11 +112,12 @@ const Login = ({ onBackPress }) => {
                 <Image source={backArrow} style={styles.backArrow}/>
             </Pressable>
             <Text style={styles.title}>Login</Text>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <TextInput
-                placeholder="Email"
+                placeholder="Email/Username"
                 style={styles.input}
-                value={email}
-                onChangeText={setEmail}
+                value={emailOrUsername}
+                onChangeText={setEmailOrUsername}
                 keyboardType="email-address"
                 autoCapitalize="none"
             />
