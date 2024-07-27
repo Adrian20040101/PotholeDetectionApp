@@ -78,6 +78,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    errorText: {
+        color: 'red',
+        marginBottom: 10,
+        textAlign: 'center',
+    }
     
 })
 

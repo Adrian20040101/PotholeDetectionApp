@@ -35,26 +35,6 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         borderRadius: 5,
     },
-    googleButton: {
-        marginTop: 20,
-        marginBottom: 20,
-        padding: 10,
-        borderRadius: 30,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        width: 50,
-        height: 50,
-    },
-    googleButtonHover: {
-        transform: [{ scale: 1.05 }],
-        transition: 'transform 0.3s'
-    },
-    googleLogo: {
-        width: 24,
-        height: 24,
-    },
     button: {
         flex: 1,
         alignItems: 'center',
@@ -63,6 +43,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 25,
         borderRadius: 30,
         marginHorizontal: 10,
+        marginTop: 25,
+        marginBottom: 5,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.8,
@@ -78,6 +60,16 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    errorText: {
+        color: 'red',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    validationText: {
+        color: 'green',
+        marginBottom: 10,
+        textAlign: 'center',
+    }
     
 })
 
