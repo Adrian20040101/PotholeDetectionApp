@@ -3,7 +3,7 @@ import { View, Text, TextInput, Pressable, Image, Alert, Platform } from 'react-
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, signInAnonymously, GoogleAuthProvider } from 'firebase/auth';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, setDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import styles from './login.style';
 import * as Google from 'expo-auth-session/providers/google';
@@ -44,13 +44,52 @@ const Login = ({ onBackPress }) => {
         scopes: ['profile', 'email'],
     });
 
+    const handleGoogleUser = async (user, profile) => {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists()) {
+            // generate a unique username
+            let username = profile.displayName.replace(/\s+/g, '').toLowerCase();
+            const usernameExists = await checkUsernameExists(username);
+
+            if (usernameExists) {
+                // prompt the user to choose a unique username or generate one
+                username = await generateUniqueUsername(username);
+            }
+
+            // if user doesn't exist in Firestore, create a new record
+            await setDoc(doc(db, 'users', user.uid), {
+                username,
+                email: user.email,
+            });
+        }
+    };
+
+    const checkUsernameExists = async (username) => {
+        const q = query(collection(db, 'users'), where('username', '==', username));
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    };
+
+    const generateUniqueUsername = async (baseUsername) => {
+        let username = baseUsername;
+        let count = 1;
+        while (await checkUsernameExists(username)) {
+            username = `${baseUsername}${count}`;
+            count++;
+        }
+        return username;
+    };
+
     useEffect(() => {
         if (response?.type === 'success') {
             const { id_token } = response.params;
             const credential = GoogleAuthProvider.credential(id_token);
             signInWithCredential(auth, credential)
-                .then(() => {
-                    navigation.navigate('HomePage');
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    const profile = user.providerData[0]; // get the user's profile data from Google
+                    await handleGoogleUser(user, profile);
+                    navigateToHome(userCredential.user);
                 })
                 .catch((error) => {
                     console.error('Error signing in with Google:', error);
@@ -58,6 +97,13 @@ const Login = ({ onBackPress }) => {
                 });
         }
     }, [response]);
+
+    const navigateToHome = async (user) => {
+        // fetch user id and other user data to passed to the home page component
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userData = userDoc.data();
+        navigation.navigate('HomePage', { user: { ...user, ...userData } });
+    };
 
     const handleLogin = async () => {
         setError('');
@@ -87,8 +133,13 @@ const Login = ({ onBackPress }) => {
         }
     
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            navigation.navigate('HomePage');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            if (user) {
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              const userData = userDoc.data();
+              navigation.navigate('HomePage', { user: { ...userData, email: user.email } });
+            }
             console.log(`Login successful. Welcome ${emailOrUsername}`)
         } catch (error) {
             console.error('Error signing you in:', error.message);
