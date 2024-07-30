@@ -9,21 +9,21 @@ const CitySelection = ({ onCitySelect }) => {
   const [suggestions, setSuggestions] = useState([]);
 
   const fetchSuggestions = async (input) => {
-    const url = 'http://localhost:3000/places-autocomplete';
+    const url = 'https://road-guard.netlify.app/.netlify/functions/places_api_function';
+  
     const params = {
       input,
-      key: GOOGLE_API_KEY,
-      types:'(cities)'
     };
-
-    // construct the full URL for logging
+  
+    // Construct the full URL for logging and debugging
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = `${url}?${queryString}`;
     console.log('Full URL:', fullUrl);
-
+  
     try {
       const response = await axios.get(url, { params });
       console.log('API Response:', response.data);
+      
       setSuggestions(response.data.predictions);
     } catch (error) {
       console.error('Error fetching suggestions:', error);
