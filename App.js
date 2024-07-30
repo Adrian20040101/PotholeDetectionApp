@@ -6,7 +6,7 @@ import { auth, db } from './config/firebase/firebase-config';
 import Welcome from './components/start-page/welcome/welcome';
 import Login from './components/start-page/login/login';
 import Signup from './components/start-page/signup/signup';
-import HomePage from './components/home-page/home';
+import HomePage from './components/home-page/home/home';
 import { doc, getDoc } from 'firebase/firestore';
 
 const Stack = createStackNavigator();
