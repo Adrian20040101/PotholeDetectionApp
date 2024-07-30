@@ -33,17 +33,32 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    padding: 20,
     marginLeft: 0,
-    transition: 'margin-left 0.3s',
+    transition: 'margin-left 0.5s',
   },
   contentShift: {
-    marginLeft: 250,
+    marginLeft: isMobile ? 150 : 250,
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  cityText: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    zIndex: 1,
   },
 });
 
