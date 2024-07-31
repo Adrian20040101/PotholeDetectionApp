@@ -19,42 +19,30 @@ const HomePage = () => {
   const sidebarAnim = useRef(new Animated.Value(-250)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
 
-  // function to fetch user data from Firestore
-  const fetchUserData = async (uid) => {
-    try {
-      const userDocRef = doc(db, 'users', uid);
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setUserData(userData);
-        setFavoriteCity(userData.favoriteCity || 'New York');
-        if (userData.favoriteCity) {
-          fetchCoordinates(userData.favoriteCity);
-        } else {
-          setFavoriteCityLocation({ lat: 40.7128, lng: -74.0060 });
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  };
+  // Set up navigation options and side menu toggle
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Pressable onPress={toggleSidebar} style={{ paddingLeft: 20 }}>
+          <Icon name="menu" size={24} color="#fff" />
+        </Pressable>
+      ),
+      headerTitle: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ color: '#fff', fontSize: 20, marginLeft: 20 }}>RoadGuard</Text>
+        </View>
+      ),
+      headerStyle: {
+        backgroundColor: 'blue',
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    });
+  }, [navigation, sidebarVisible]);
 
-  // function to fetch coordinates using serverless function
-  const fetchCoordinates = async (city) => {
-    try {
-      const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/get_fav_city_coordinates`);
-      const data = await response.json();
-      if (response.ok) {
-        setFavoriteCityLocation({ lat: data.lat, lng: data.lng });
-      } else {
-        console.error('Error fetching location:', data.message);
-      }
-    } catch (error) {
-      console.error('Error fetching location:', error);
-    }
-  };
-
-  // useEffect to check authentication state and fetch user data
+  // Monitor authentication state and fetch user data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -72,10 +60,69 @@ const HomePage = () => {
     return () => unsubscribe();
   }, [navigation]);
 
-  // sidebar toggle function
+  // Fetch user data from Firestore
+  const fetchUserData = async (uid) => {
+    try {
+      const userDocRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUserData(userData);
+        setFavoriteCity(userData.favoriteCity || 'New York');
+        if (userData.favoriteCity) {
+          fetchCoordinates(userData.favoriteCity);
+        } else {
+          setFavoriteCityLocation({ lat: 40.7128, lng: -74.0060 }); // Default to New York City
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  // Fetch city coordinates using serverless function
+  const fetchCoordinates = async (city) => {
+    try {
+      const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/get_fav_city_coordinates?city=${encodeURIComponent(city)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Received data:', data);
+      if (data.lat && data.lng) {
+        setFavoriteCityLocation({ lat: data.lat, lng: data.lng });
+      } else {
+        throw new Error('Location data is incomplete.');
+      }
+    } catch (error) {
+      console.error('Error fetching location:', error);
+    }
+  };
+
+  // Handle city selection
+  const handleCitySelect = async (city) => {
+    setFavoriteCity(city);
+    // Call the serverless function to fetch coordinates
+    await fetchCoordinates(city);
+
+    // Update Firestore with the new city
+    const user = auth.currentUser;
+    if (user) {
+      const userDocRef = doc(db, 'users', user.uid);
+      try {
+        await setDoc(userDocRef, { favoriteCity: city }, { merge: true });
+      } catch (error) {
+        console.error("Error updating favorite city:", error);
+      }
+    } else {
+      console.error("User is undefined. Cannot update favorite city.");
+    }
+  };
+
+  // Toggle sidebar visibility
   const toggleSidebar = () => {
     const isOpening = !sidebarVisible;
-    const duration = 300;
+    const duration = isOpening ? 300 : 200;
 
     Animated.timing(sidebarAnim, {
       toValue: sidebarVisible ? -250 : 0,
@@ -94,23 +141,35 @@ const HomePage = () => {
     setSidebarVisible(isOpening);
   };
 
-  // handle city selection
-  const handleCitySelect = async (city) => {
-    setFavoriteCity(city);
-    // call the serverless function to fetch coordinates
-    fetchCoordinates(city);
+  // Handle user logout
+  const handleLogout = async () => {
+    await auth.signOut();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Welcome' }],
+    });
+  };
 
-    // update Firestore with the new city
-    const user = auth.currentUser;
-    if (user) {
-      const userDocRef = doc(db, 'users', user.uid);
-      try {
-        await setDoc(userDocRef, { favoriteCity: city }, { merge: true });
-      } catch (error) {
-        console.error("Error updating favorite city:", error);
-      }
-    } else {
-      console.error("User is undefined. Cannot update favorite city.");
+  // Handle menu item selection
+  const handleMenuItemPress = (item) => {
+    switch (item) {
+      case 'Settings':
+        Alert.alert('Settings clicked');
+        break;
+      case 'Change Password':
+        Alert.alert('Change Password clicked');
+        break;
+      case 'Change Username':
+        Alert.alert('Change Username clicked');
+        break;
+      case 'Delete Account':
+        Alert.alert('Delete Account clicked');
+        break;
+      case 'Logout':
+        handleLogout();
+        break;
+      default:
+        break;
     }
   };
 
@@ -142,7 +201,7 @@ const HomePage = () => {
         <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
         <Text style={styles.cityText}>Your favorite city is: {favoriteCity}</Text>
         <CitySelection onCitySelect={handleCitySelect} />
-        <Map favoriteCityLocation={favoriteCityLocation} />
+        <Map city={favoriteCity} />
       </View>
     </View>
   );
