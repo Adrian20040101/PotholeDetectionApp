@@ -19,7 +19,7 @@ const Map = ({ city }) => {
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
       try {
-        const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/get_fav_city_coordinates?city=${encodeURIComponent(cityName)}`);
+        const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/city_coordinates?city=${encodeURIComponent(cityName)}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
