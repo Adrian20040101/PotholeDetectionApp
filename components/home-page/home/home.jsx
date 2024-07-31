@@ -199,7 +199,7 @@ const HomePage = () => {
       </Animated.View>
       <View style={[styles.content, sidebarVisible && styles.contentShift]}>
         <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
-        <Text style={styles.cityText}>Your favorite city is: {favoriteCity}</Text>
+        <Text style={styles.cityText}>Your favorite city is set to: {favoriteCity}</Text>
         <CitySelection onCitySelect={handleCitySelect} />
         <Map city={favoriteCity} />
       </View>
