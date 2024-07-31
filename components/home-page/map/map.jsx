@@ -15,6 +15,7 @@ const initialCenter = {
 const Map = ({ city }) => {
   const [markers, setMarkers] = useState([]);
   const [center, setCenter] = useState(initialCenter);
+  const [zoom, setZoom] = useState(12);  // can be changed if needed (i.e. dynamically based on city size)
 
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
@@ -48,7 +49,7 @@ const Map = ({ city }) => {
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
-        zoom={10}
+        zoom={zoom}
       >
         {markers.map(marker => (
           <Marker key={marker.id} position={marker.position} />
