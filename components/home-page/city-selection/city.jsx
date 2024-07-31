@@ -15,7 +15,7 @@ const CitySelection = ({ onCitySelect }) => {
       input,
     };
   
-    // Construct the full URL for logging and debugging
+    // construct the full URL for logging and debugging
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = `${url}?${queryString}`;
     console.log('Full URL:', fullUrl);
