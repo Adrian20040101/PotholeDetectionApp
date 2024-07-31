@@ -83,7 +83,7 @@ const HomePage = () => {
   // Fetch city coordinates using serverless function
   const fetchCoordinates = async (city) => {
     try {
-      const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/get_fav_city_coordinates?city=${encodeURIComponent(city)}`);
+      const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/city_coordinates?city=${encodeURIComponent(city)}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
