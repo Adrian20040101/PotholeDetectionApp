@@ -13,39 +13,35 @@ const initialCenter = {
 };
 
 const Map = ({ city }) => {
-  const [map, setMap] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [center, setCenter] = useState(initialCenter);
 
   useEffect(() => {
-    const fetchCoordinates = async () => {
-      if (city) {
-        try {
-          const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/get_fav_city_coordinates`);
-          const data = await response.json();
-          if (response.ok) {
-            const location = { lat: data.lat, lng: data.lng };
-            setCenter(location);
-            setMarkers([{ id: 1, position: location }]);
-          } else {
-            console.error('Error fetching location:', data.message);
-          }
-        } catch (error) {
-          console.error('Error fetching location:', error);
+    const fetchCoordinates = async (cityName) => {
+      try {
+        const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/get_fav_city_coordinates?city=${encodeURIComponent(cityName)}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        if (data.lat && data.lng) {
+          const location = { lat: data.lat, lng: data.lng };
+          setCenter(location);
+          setMarkers([{ id: 1, position: location }]);
+        } else {
+          throw new Error('Location data is incomplete.');
+        }
+      } catch (error) {
+        console.error('Error fetching location:', error);
+        setCenter(initialCenter);
       }
     };
 
-    fetchCoordinates();
+    if (city) {
+      fetchCoordinates(city);
+    }
   }, [city]);
-
-  const onLoad = (mapInstance) => {
-    setMap(mapInstance);
-  };
-
-  const onUnmount = () => {
-    setMap(null);
-  };
 
   return (
     <LoadScript googleMapsApiKey={GOOGLE_API_KEY}>
@@ -53,8 +49,6 @@ const Map = ({ city }) => {
         mapContainerStyle={containerStyle}
         center={center}
         zoom={10}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
       >
         {markers.map(marker => (
           <Marker key={marker.id} position={marker.position} />
