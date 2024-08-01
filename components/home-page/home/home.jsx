@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../../config/firebase/firebase-config';
@@ -7,10 +7,13 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
 import CitySelection from '../city-selection/city';
 import Map from '../map/map';
+import DesktopSidebar from '../sidebar-animation/desktop-animation';
+import MobileSidebar from '../sidebar-animation/mobile-animation';
 import styles from './home.style';
 
 const HomePage = () => {
   const navigation = useNavigation();
+  const [isMobile, setIsMobile] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [favoriteCity, setFavoriteCity] = useState('');
   const [favoriteCityLocation, setFavoriteCityLocation] = useState({ lat: 40.7128, lng: -74.0060 }); // default to New York City coordinates
@@ -18,8 +21,22 @@ const HomePage = () => {
   const [userData, setUserData] = useState({});
   const sidebarAnim = useRef(new Animated.Value(-250)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
+  const menuAnim = useRef(new Animated.Value(0)).current;
 
-  // Set up navigation options and side menu toggle
+  useEffect(() => {
+    const updateDimensions = () => {
+      const { width } = Dimensions.get('window');
+      setIsMobile(width < 800);
+    };
+
+    updateDimensions();
+    Dimensions.addEventListener('change', updateDimensions);
+    return () => {
+      Dimensions.removeEventListener('change', updateDimensions);
+    };
+  }, []);
+
+  // set up navigation options and side menu toggle
   useEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
@@ -42,7 +59,7 @@ const HomePage = () => {
     });
   }, [navigation, sidebarVisible]);
 
-  // Monitor authentication state and fetch user data
+  // monitor authentication state and fetch user data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -60,7 +77,7 @@ const HomePage = () => {
     return () => unsubscribe();
   }, [navigation]);
 
-  // Fetch user data from Firestore
+  // fetch user data from Firestore
   const fetchUserData = async (uid) => {
     try {
       const userDocRef = doc(db, 'users', uid);
@@ -72,7 +89,7 @@ const HomePage = () => {
         if (userData.favoriteCity) {
           fetchCoordinates(userData.favoriteCity);
         } else {
-          setFavoriteCityLocation({ lat: 40.7128, lng: -74.0060 }); // Default to New York City
+          setFavoriteCityLocation({ lat: 40.7128, lng: -74.0060 });
         }
       }
     } catch (error) {
@@ -80,7 +97,7 @@ const HomePage = () => {
     }
   };
 
-  // Fetch city coordinates using serverless function
+  // fetch city coordinates using serverless function
   const fetchCoordinates = async (city) => {
     try {
       const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/city_coordinates?city=${encodeURIComponent(city)}`);
@@ -99,13 +116,13 @@ const HomePage = () => {
     }
   };
 
-  // Handle city selection
+  // handle city selection
   const handleCitySelect = async (city) => {
     setFavoriteCity(city);
-    // Call the serverless function to fetch coordinates
+    // call the serverless function to fetch coordinates
     await fetchCoordinates(city);
 
-    // Update Firestore with the new city
+    // update Firestore with the new city
     const user = auth.currentUser;
     if (user) {
       const userDocRef = doc(db, 'users', user.uid);
@@ -119,29 +136,39 @@ const HomePage = () => {
     }
   };
 
-  // Toggle sidebar visibility
+  // toggle sidebar visibility
   const toggleSidebar = () => {
     const isOpening = !sidebarVisible;
+
     const duration = isOpening ? 300 : 200;
 
-    Animated.timing(sidebarAnim, {
-      toValue: sidebarVisible ? -250 : 0,
-      duration,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: false,
-    }).start();
+    if (isMobile) {
+      Animated.timing(menuAnim, {
+        toValue: isOpening ? 1 : 0,
+        duration,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start();
+    } else {
+      Animated.timing(sidebarAnim, {
+        toValue: isOpening ? 0 : -250,
+        duration,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start();
 
-    Animated.timing(overlayAnim, {
-      toValue: isOpening ? 1 : 0,
-      duration,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: false,
-    }).start();
+      Animated.timing(overlayAnim, {
+        toValue: isOpening ? 1 : 0,
+        duration,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start();
+    }
 
     setSidebarVisible(isOpening);
   };
 
-  // Handle user logout
+  // handle user logout
   const handleLogout = async () => {
     await auth.signOut();
     navigation.reset({
@@ -150,28 +177,15 @@ const HomePage = () => {
     });
   };
 
-  // Handle menu item selection
-  const handleMenuItemPress = (item) => {
-    switch (item) {
-      case 'Settings':
-        Alert.alert('Settings clicked');
-        break;
-      case 'Change Password':
-        Alert.alert('Change Password clicked');
-        break;
-      case 'Change Username':
-        Alert.alert('Change Username clicked');
-        break;
-      case 'Delete Account':
-        Alert.alert('Delete Account clicked');
-        break;
-      case 'Logout':
-        handleLogout();
-        break;
-      default:
-        break;
-    }
-  };
+  // handle menu item selection
+  const menuItems = [
+    { label: 'Settings', action: () => console.log('Settings clicked') },
+    { label: 'Change Password', action: () => console.log('Change Password clicked') },
+    { label: 'Change Username', action: () => console.log('Change Username clicked') },
+    { label: 'Delete Account', action: () => console.log('Delete Account clicked') },
+    { label: 'Logout', action: handleLogout },
+  ];
+
 
   if (!user) {
     return (
@@ -183,23 +197,25 @@ const HomePage = () => {
 
   return (
     <View style={styles.container}>
-      {sidebarVisible && (
-        <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
-          <TouchableWithoutFeedback onPress={toggleSidebar}>
-            <View style={{ flex: 1 }} />
-          </TouchableWithoutFeedback>
-        </Animated.View>
+      {isMobile ? (
+        <MobileSidebar
+          menuAnim={menuAnim}
+          sidebarVisible={sidebarVisible}
+          toggleSidebar={toggleSidebar}
+          menuItems={menuItems}
+        />
+      ) : (
+        <DesktopSidebar
+          sidebarAnim={sidebarAnim}
+          overlayAnim={overlayAnim}
+          sidebarVisible={sidebarVisible}
+          toggleSidebar={toggleSidebar}
+          menuItems={menuItems}
+        />
       )}
-      <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
-        {['Settings', 'Change Password', 'Change Username', 'Delete Account', 'Logout'].map((item) => (
-          <Pressable key={item} onPress={() => handleMenuItemPress(item)}>
-            <Text style={styles.menuItem}>{item}</Text>
-          </Pressable>
-        ))}
-      </Animated.View>
-      <View style={[styles.content, sidebarVisible && styles.contentShift]}>
+      <View style={[styles.content, sidebarVisible && !isMobile && styles.contentShift]}>
         <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
-        <Text style={styles.cityText}>Your favorite city is set to: {favoriteCity}</Text>
+        <Text style={styles.cityText}>Your favorite city is: {favoriteCity}</Text>
         <CitySelection onCitySelect={handleCitySelect} />
         <Map city={favoriteCity} />
       </View>

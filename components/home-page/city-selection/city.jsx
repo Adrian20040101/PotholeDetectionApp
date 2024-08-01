@@ -15,11 +15,6 @@ const CitySelection = ({ onCitySelect }) => {
       input,
     };
   
-    // construct the full URL for logging and debugging
-    const queryString = new URLSearchParams(params).toString();
-    const fullUrl = `${url}?${queryString}`;
-    console.log('Full URL:', fullUrl);
-  
     try {
       const response = await axios.get(url, { params });
       console.log('API Response:', response.data);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { View, Text, GoogleMap, LoadScript, ActivityIndicator, Marker } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
+import styles from './map.style';
 
 const containerStyle = {
   width: '100%',
@@ -51,9 +52,6 @@ const Map = ({ city }) => {
         center={center}
         zoom={zoom}
       >
-        {markers.map(marker => (
-          <Marker key={marker.id} position={marker.position} />
-        ))}
       </GoogleMap>
     </LoadScript>
   );
