@@ -13,39 +13,50 @@ const styles = StyleSheet.create({
     top: 20,
     left: 20,
     zIndex: 1,
-    marginBottom: 10
+    marginBottom: 10,
   },
   sidebar: {
-    width: isMobile ? 150 : 250,
+    width: 250,
     backgroundColor: '#333',
     padding: 20,
     position: 'absolute',
     top: 0,
     bottom: 0,
-    left: 0,
+    left: -250, // hidden state
     zIndex: 2,
+  },
+  menuDropdown: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#333',
+    zIndex: 3,
+    padding: 10,
+  },
+  menuContainer: {
+    flexDirection: 'column',
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   menuItem: {
     color: '#fff',
     fontSize: 18,
     paddingVertical: 10,
-    marginTop: 10
   },
   content: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: 0,
     transition: 'margin-left 0.5s',
   },
   contentShift: {
-    marginLeft: isMobile ? 150 : 250,
+    marginLeft: 250,
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
   cityText: {
     fontSize: 18,

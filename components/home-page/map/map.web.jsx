@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { View, Text, GoogleMap, LoadScript, ActivityIndicator, Marker } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
+import styles from './map.style';
 
 const containerStyle = {
   width: '100%',
@@ -15,6 +16,7 @@ const initialCenter = {
 const Map = ({ city }) => {
   const [markers, setMarkers] = useState([]);
   const [center, setCenter] = useState(initialCenter);
+  const [zoom, setZoom] = useState(12);  // can be changed if needed (i.e. dynamically based on city size)
 
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
@@ -48,11 +50,8 @@ const Map = ({ city }) => {
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
-        zoom={10}
+        zoom={zoom}
       >
-        {markers.map(marker => (
-          <Marker key={marker.id} position={marker.position} />
-        ))}
       </GoogleMap>
     </LoadScript>
   );

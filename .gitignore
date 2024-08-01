@@ -2,6 +2,7 @@
 
 # dependencies
 node_modules/
+app.json
 
 # Expo
 .expo/
@@ -28,8 +29,12 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+#android
+android/
+
+# (local) env files
 .env*.local
+.env
 
 # typescript
 *.tsbuildinfo
