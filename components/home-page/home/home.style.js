@@ -46,9 +46,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
     marginLeft: 0,
+    marginBottom: 20,
+    paddingLeft: 20,
     transition: 'margin-left 0.5s',
   },
   contentShift: {
