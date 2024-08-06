@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback, Dimensions, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
-import CitySelection from '../city-selection/city';
 import Map from '../map/map';
 import DesktopSidebar from '../sidebar-animation/desktop-animation';
 import MobileSidebar from '../sidebar-animation/mobile-animation';
+import SettingsModal from '../sidebar-options/settings/settings';
+import ThemeToggle from '../sidebar-options/settings/theme/theme-toggle';
+import { useTheme } from '../sidebar-options/settings/theme/theme-context';
+import { lightTheme, darkTheme } from '../sidebar-options/settings/theme/theme';
+import { themeStyle } from '../sidebar-options/settings/theme/theme.style';
 import styles from './home.style';
 
 const HomePage = () => {
@@ -19,9 +23,18 @@ const HomePage = () => {
   const [favoriteCityLocation, setFavoriteCityLocation] = useState({ lat: 40.7128, lng: -74.0060 }); // default to New York City coordinates
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState({});
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const { theme } = useTheme();
+  const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
+  const currentStyles = themeStyle(currentTheme);
   const sidebarAnim = useRef(new Animated.Value(-250)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
   const menuAnim = useRef(new Animated.Value(0)).current;
+
+  const toggleSettingsModal = () => {
+    console.log('Toggling settings modal:', !settingsModalVisible);
+    setSettingsModalVisible(!settingsModalVisible);
+  };
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -179,7 +192,7 @@ const HomePage = () => {
 
   // handle menu item selection
   const menuItems = [
-    { label: 'Settings', action: () => console.log('Settings clicked') },
+    { label: 'Settings', action: toggleSettingsModal },
     { label: 'Change Password', action: () => console.log('Change Password clicked') },
     { label: 'Change Username', action: () => console.log('Change Username clicked') },
     { label: 'Delete Account', action: () => console.log('Delete Account clicked') },
@@ -216,9 +229,13 @@ const HomePage = () => {
       <View style={[styles.content, sidebarVisible && !isMobile && styles.contentShift]}>
         <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
         <Text style={styles.cityText}>Your favorite city is: {favoriteCity}</Text>
-        <CitySelection onCitySelect={handleCitySelect} />
         <Map city={favoriteCity} />
       </View>
+      <SettingsModal
+        isVisible={settingsModalVisible}
+        onClose={toggleSettingsModal}
+        onCitySelect={handleCitySelect}
+      />
     </View>
   );
 };

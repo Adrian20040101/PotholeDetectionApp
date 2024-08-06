@@ -7,6 +7,7 @@ import Welcome from './components/start-page/welcome/welcome';
 import Login from './components/start-page/login/login';
 import Signup from './components/start-page/signup/signup';
 import HomePage from './components/home-page/home/home';
+import { ThemeProvider } from './components/home-page/sidebar-options/settings/theme/theme-context';
 import { doc, getDoc } from 'firebase/firestore';
 
 const Stack = createStackNavigator();
@@ -34,19 +35,21 @@ const App = () => {
   if (initializing) return null;
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName={user ? 'HomePage' : 'Welcome'}>
-        {!user ? (
-          <>
-            <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
-            <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
-            <Stack.Screen name="Signup" component={Signup} options={{ headerShown: false }} />
-          </>
-        ) : (
-          <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <ThemeProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName={user ? 'HomePage' : 'Welcome'}>
+          {!user ? (
+            <>
+              <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
+              <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+              <Stack.Screen name="Signup" component={Signup} options={{ headerShown: false }} />
+            </>
+          ) : (
+              <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ThemeProvider>
   );
 };
 
