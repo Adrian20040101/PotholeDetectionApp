@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, GoogleMap, LoadScript, ActivityIndicator, Marker } from '@react-google-maps/api';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { GoogleMap, LoadScript } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
 import styles from './map.style';
 
@@ -14,12 +15,13 @@ const initialCenter = {
 };
 
 const Map = ({ city }) => {
-  const [markers, setMarkers] = useState([]);
   const [center, setCenter] = useState(initialCenter);
   const [zoom, setZoom] = useState(12);  // can be changed if needed (i.e. dynamically based on city size)
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
+      setLoading(true);
       try {
         const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/city_coordinates?city=${encodeURIComponent(cityName)}`);
         if (!response.ok) {
@@ -30,13 +32,14 @@ const Map = ({ city }) => {
         if (data.lat && data.lng) {
           const location = { lat: data.lat, lng: data.lng };
           setCenter(location);
-          setMarkers([{ id: 1, position: location }]);
         } else {
           throw new Error('Location data is incomplete.');
         }
       } catch (error) {
         console.error('Error fetching location:', error);
         setCenter(initialCenter);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -46,14 +49,23 @@ const Map = ({ city }) => {
   }, [city]);
 
   return (
-    <LoadScript googleMapsApiKey={GOOGLE_API_KEY}>
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={center}
-        zoom={zoom}
-      >
-      </GoogleMap>
-    </LoadScript>
+    <View style={styles.container}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text>Loading map...</Text>
+        </View>
+      ) : (
+        <LoadScript googleMapsApiKey={GOOGLE_API_KEY}>
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={zoom}
+          >
+          </GoogleMap>
+        </LoadScript>
+      )}
+    </View>
   );
 };
 
