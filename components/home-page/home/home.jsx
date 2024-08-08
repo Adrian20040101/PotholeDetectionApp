@@ -8,6 +8,7 @@ import { setDoc, doc, getDoc } from 'firebase/firestore';
 import Map from '../map/map';
 import DesktopSidebar from '../sidebar-animation/desktop-animation';
 import MobileSidebar from '../sidebar-animation/mobile-animation';
+import ImageUpload from '../upload-photo/upload-photo';
 import SettingsModal from '../sidebar-options/settings/settings';
 import ThemeToggle from '../sidebar-options/settings/theme/theme-toggle';
 import { useTheme } from '../sidebar-options/settings/theme/theme-context';
@@ -230,6 +231,7 @@ const HomePage = () => {
         <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
         <Text style={styles.cityText}>Your favorite city is: {favoriteCity}</Text>
         <Map city={favoriteCity} />
+        <ImageUpload />
       </View>
       <SettingsModal
         isVisible={settingsModalVisible}
