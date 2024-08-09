@@ -1,34 +1,68 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
   },
-  image: {
-    width: 200,
-    height: 200,
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ddd',
+    padding: 15,
+    borderRadius: 5,
+    marginTop: 10,
+    width: '80%',
+    justifyContent: 'center',
+  },
+  icon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+  },
+  text: {
+    fontSize: 16,
+    color: '#000',
+  },
+  selectedImage: {
+    width: 300,
+    height: 300,
     marginTop: 20,
+    borderRadius: 10,
   },
   cameraContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
   },
   camera: {
     flex: 1,
-    width: '100%',
+    justifyContent: 'flex-end',
   },
   cameraControls: {
-    position: 'absolute',
-    bottom: 0,
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    padding: 16,
+    justifyContent: 'space-between',
+    margin: 20,
+  },
+  cameraButton: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 5,
+  },
+  cameraButtonText: {
+    fontSize: 18,
+    color: '#000',
+  },
+  zoomControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  zoomText: {
+    fontSize: 16,
+    marginRight: 10,
   },
 });
 
