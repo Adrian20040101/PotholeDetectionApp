@@ -7,7 +7,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1,
   },
   overlay: {
     position: 'absolute',
@@ -16,6 +15,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 2,
   },
   menuContainer: {
     position: 'absolute',
@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     paddingTop: 20, 
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
+    zIndex: 3,
   },
   menuContent: {
     paddingHorizontal: 20,

@@ -11,7 +11,12 @@ const MobileSidebar = ({ menuAnim, sidebarVisible, toggleSidebar, menuItems }) =
   });
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        sidebarVisible ? { zIndex: 3 } : { zIndex: 1 },
+      ]}
+    >
       {sidebarVisible && (
         <Pressable style={styles.overlay} onPress={toggleSidebar} />
       )}

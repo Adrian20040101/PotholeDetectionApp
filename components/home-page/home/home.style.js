@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 20,
     left: 20,
-    zIndex: 1,
+    zIndex: 4,
     marginBottom: 10,
   },
   sidebar: {
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: -250, // hidden state
-    zIndex: 2,
+    zIndex: 3,
   },
   menuDropdown: {
     position: 'absolute',
@@ -38,6 +38,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     paddingTop: 10,
     paddingBottom: 10,
+    zIndex: 3,
   },
   menuItem: {
     color: '#fff',
@@ -52,6 +53,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingLeft: 20,
     transition: 'margin-left 0.5s',
+    zIndex: 1,
   },
   contentShift: {
     marginLeft: 250,
@@ -71,7 +73,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.2)',
-    zIndex: 1,
+    zIndex: 2,
   },
 });
 
