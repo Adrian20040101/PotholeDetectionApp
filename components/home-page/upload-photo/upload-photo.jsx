@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, Modal, Alert, PanResponder } from 'react-native';
-import { CameraView, Camera } from 'expo-camera';
+import { CameraView } from 'expo-camera';  // Make sure this import is correct
 import * as ImagePicker from 'expo-image-picker';
 import styles from './upload-photo.style';
 
 const ImageUpload = () => {
   const [hasPermission, setHasPermission] = useState(null);
-  const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
+  const [cameraType, setCameraType] = useState(ImagePicker.CameraType.back);
   const [zoom, setZoom] = useState(0);
   const cameraRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -15,7 +15,7 @@ const ImageUpload = () => {
 
   useEffect(() => {
     (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
       setHasPermission(status === 'granted');
       if (status !== 'granted') {
         Alert.alert('Sorry, we need camera permissions to make this work!');
@@ -79,10 +79,14 @@ const ImageUpload = () => {
 
   const toggleCameraType = () => {
     setCameraType(
-      cameraType === Camera.Constants.Type.back
-        ? Camera.Constants.Type.front
-        : Camera.Constants.Type.back
+      cameraType === ImagePicker.CameraType.back
+        ? ImagePicker.CameraType.front
+        : ImagePicker.CameraType.back
     );
+  };
+
+  const closeCamera = () => {
+    setIsCameraActive(false);
   };
 
   return (
@@ -112,7 +116,7 @@ const ImageUpload = () => {
           animationType="slide"
           transparent={false}
           visible={isCameraActive}
-          onRequestClose={() => setIsCameraActive(false)}
+          onRequestClose={closeCamera}
         >
           <View style={styles.cameraContainer}>
             <CameraView
@@ -139,7 +143,7 @@ const ImageUpload = () => {
 
                 <TouchableOpacity
                   style={styles.cameraButton}
-                  onPress={() => setIsCameraActive(false)}
+                  onPress={closeCamera}
                 >
                   <Text style={styles.cameraButtonText}>Close</Text>
                 </TouchableOpacity>
