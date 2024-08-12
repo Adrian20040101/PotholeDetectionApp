@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     left: -sidebarWidth,
     width: sidebarWidth,
     backgroundColor: '#333',
-    zIndex: 2,
+    zIndex: 3,
     paddingVertical: 20,
     paddingHorizontal: 15,
   },
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 1,
+    zIndex: 2,
   },
   menuContainer: {
     flex: 1,

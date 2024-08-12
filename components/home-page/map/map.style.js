@@ -1,11 +1,13 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
+const isMobile = screenWidth < 800;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
     width: '100%',
     height: '400px',
   },
@@ -13,11 +15,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     position: 'absolute',
     width: '100%',
-    height: '100%',
-    zIndex: 10,
+    height: isMobile ? '35%' : '100%',
+    marginTop: 80,
   },
   activityIndicator: {
     marginBottom: 10,
