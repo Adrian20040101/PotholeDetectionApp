@@ -78,8 +78,8 @@ const ImageUpload = () => {
   ).current;
 
   const toggleCameraType = () => {
-    setCameraType(
-      cameraType === ImagePicker.CameraType.back
+    setCameraType((prevType) =>
+      prevType === ImagePicker.CameraType.back
         ? ImagePicker.CameraType.front
         : ImagePicker.CameraType.back
     );
@@ -87,6 +87,7 @@ const ImageUpload = () => {
 
   const closeCamera = () => {
     setIsCameraActive(false);
+    setZoom(0);
   };
 
   return (
@@ -120,6 +121,7 @@ const ImageUpload = () => {
         >
           <View style={styles.cameraContainer}>
             <CameraView
+              key={cameraType}
               style={styles.camera}
               type={cameraType}
               ref={cameraRef}
