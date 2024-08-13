@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, Alert, PanResponder } from 'react-native';
-import { CameraView } from 'expo-camera';  // Make sure this import is correct
+import { View, Text, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { CameraView } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { toast } from 'react-toastify';
+import { storage } from '../../../config/firebase/firebase-config';
 import styles from './upload-photo.style';
 
 const ImageUpload = () => {
@@ -11,6 +14,8 @@ const ImageUpload = () => {
   const cameraRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadURL, setUploadURL] = useState(null);
   const lastPinchDistance = useRef(null);
 
   useEffect(() => {
@@ -18,7 +23,7 @@ const ImageUpload = () => {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       setHasPermission(status === 'granted');
       if (status !== 'granted') {
-        Alert.alert('Sorry, we need camera permissions to make this work!');
+        toast.error('Sorry, we need camera permissions to make this work!');
       }
     })();
   }, []);
@@ -28,6 +33,8 @@ const ImageUpload = () => {
       const photo = await cameraRef.current.takePictureAsync();
       setSelectedImage(photo.uri);
       setIsCameraActive(false);
+      await uploadImageToFirebase(photo.uri);
+      toast.success('Photo captured and uploaded successfully!');
     }
   };
 
@@ -37,45 +44,34 @@ const ImageUpload = () => {
       allowsEditing: true,
       quality: 1,
     });
-
+  
     if (!result.canceled) {
-      setSelectedImage(result.uri);
+      const uri = result.uri || (result.assets && result.assets[0] && result.assets[0].uri);
+      if (uri) {
+        await uploadImageToFirebase(uri);
+        toast.success('Photo uplaoded successfully!')
+      } else {
+        console.error('Error: Image URI is undefined');
+      }
     }
   };
+  
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: (evt, gestureState) =>
-        gestureState.numberActiveTouches === 2, // only respond to touches when two fingers are active
-      onMoveShouldSetPanResponder: (evt, gestureState) =>
-        gestureState.numberActiveTouches === 2,
-      onPanResponderGrant: () => {
-        lastPinchDistance.current = null;
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        if (gestureState.numberActiveTouches === 2) {
-          const touches = evt.nativeEvent.touches;
-          const pinchDistance = Math.sqrt(
-            Math.pow(touches[0].pageX - touches[1].pageX, 2) +
-              Math.pow(touches[0].pageY - touches[1].pageY, 2)
-          );
-
-          if (lastPinchDistance.current !== null) {
-            const zoomChange = (pinchDistance - lastPinchDistance.current) / 400;
-            let newZoom = zoom + zoomChange;
-            if (newZoom < 0) newZoom = 0;
-            if (newZoom > 1) newZoom = 1;
-            setZoom(newZoom);
-          }
-
-          lastPinchDistance.current = pinchDistance;
-        }
-      },
-      onPanResponderRelease: () => {
-        lastPinchDistance.current = null;
-      },
-    })
-  ).current;
+  const uploadImageToFirebase = async (uri) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const fileName = uri.substring(uri.lastIndexOf('/') + 1);
+      const storageRef = ref(storage, `images/${fileName}`);
+      const snapshot = await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('File available at', downloadURL);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Alert.alert("Upload failed", "Please try again.");
+    }
+  };
 
   const toggleCameraType = () => {
     setCameraType((prevType) =>
@@ -87,7 +83,7 @@ const ImageUpload = () => {
 
   const closeCamera = () => {
     setIsCameraActive(false);
-    setZoom(0);
+    setZoom(0); 
   };
 
   return (
@@ -108,9 +104,7 @@ const ImageUpload = () => {
         <Text style={styles.text}>CLICK HERE TO TAKE A PHOTO</Text>
       </TouchableOpacity>
 
-      {selectedImage && (
-        <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-      )}
+      {uploading && <ActivityIndicator size="large" color="#0000ff" />}
 
       {isCameraActive && hasPermission && (
         <Modal
@@ -126,7 +120,6 @@ const ImageUpload = () => {
               type={cameraType}
               ref={cameraRef}
               zoom={zoom}
-              {...panResponder.panHandlers}
             >
               <View style={styles.cameraControls}>
                 <TouchableOpacity
