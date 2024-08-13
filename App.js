@@ -7,6 +7,8 @@ import Welcome from './components/start-page/welcome/welcome';
 import Login from './components/start-page/login/login';
 import Signup from './components/start-page/signup/signup';
 import HomePage from './components/home-page/home/home';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { ThemeProvider } from './components/home-page/sidebar-options/settings/theme/theme-context';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -49,6 +51,7 @@ const App = () => {
           )}
         </Stack.Navigator>
       </NavigationContainer>
+      <ToastContainer />
     </ThemeProvider>
   );
 };
