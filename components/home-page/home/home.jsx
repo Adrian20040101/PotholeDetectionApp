@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
+import { toast } from 'react-toastify';
 import Map from '../map/map';
 import DesktopSidebar from '../sidebar-animation/desktop-animation';
 import MobileSidebar from '../sidebar-animation/mobile-animation';
@@ -65,6 +66,11 @@ const HomePage = () => {
       ),
       headerStyle: {
         backgroundColor: 'blue',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
       },
       headerTintColor: '#fff',
       headerTitleStyle: {
@@ -194,9 +200,9 @@ const HomePage = () => {
   // handle menu item selection
   const menuItems = [
     { label: 'Settings', action: toggleSettingsModal },
-    { label: 'Change Password', action: () => console.log('Change Password clicked') },
-    { label: 'Change Username', action: () => console.log('Change Username clicked') },
-    { label: 'Delete Account', action: () => console.log('Delete Account clicked') },
+    { label: 'Change Password', action: () => toast.success('Change Password Clicked') },
+    { label: 'Change Username', action: () => toast.success('Change Username Clicked') },
+    { label: 'Delete Account', action: () => toast.success('Delete Account Clicked') },
     { label: 'Logout', action: handleLogout },
   ];
 
