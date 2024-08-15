@@ -6,6 +6,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    zIndex: 1,
   },
   overlay: {
     position: 'absolute',
@@ -13,15 +14,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 10,
-  },
-  analyzingText: {
-    marginTop: 20,
-    fontSize: 18,
-    color: '#ffffff',
   },
   button: {
     flexDirection: 'row',
@@ -50,6 +46,7 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     flex: 1,
+    zIndex: 3,
   },
   camera: {
     flex: 1,
@@ -69,6 +66,17 @@ const styles = StyleSheet.create({
   cameraButtonText: {
     fontSize: 18,
     color: '#000',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    zIndex: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   zoomControls: {
     flexDirection: 'row',
