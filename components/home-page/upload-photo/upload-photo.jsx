@@ -34,7 +34,7 @@ const ImageUpload = () => {
   const triggerServerlessFunction = async (imageUrl) => {
     setAnalyzing(true);
     try {
-      const response = await fetch('../../../netlify/functions/image_analysis.js', {
+      const response = await fetch('https://road-guard.netlify.app/.netlify/functions/image_analysis', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
