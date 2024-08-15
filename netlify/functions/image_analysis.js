@@ -1,8 +1,36 @@
 const { PythonShell } = require('python-shell');
-const pythonScriptPath = "C:/Users/oinac/OneDrive/Desktop/personal_projects/pothole-detection/Pothole-model2/predict-photos.py";
+const path = require('path');
+
+const pythonScriptPath = path.resolve(__dirname, "../../trained-model/predict-photos.py");
 
 exports.handler = async function (event, context) {
-  const { imageUrl } = JSON.parse(event.body);
+  if (!event.body) {
+    return {
+      statusCode: 400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Bad Request: No body provided' }),
+    };
+  }
+
+  let imageUrl;
+  try {
+    const body = JSON.parse(event.body);
+    imageUrl = body.imageUrl;
+  } catch (error) {
+    return {
+      statusCode: 400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Bad Request: Invalid JSON' }),
+    };
+  }
+
+  if (!imageUrl) {
+    return {
+      statusCode: 400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Bad Request: imageUrl is required' }),
+    };
+  }
 
   console.log(`Image uploaded: ${imageUrl}`);
 
