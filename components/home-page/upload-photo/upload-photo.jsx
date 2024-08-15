@@ -40,6 +40,7 @@ const ImageUpload = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ imageUrl }),
+        mode: 'no-cors',
       });
 
       if (!response.ok) {
@@ -143,7 +144,7 @@ const ImageUpload = () => {
       {analyzing && (
         <View style={styles.overlay}>
           <ActivityIndicator size="large" color="#ff0000" /> 
-          <Text style={styles.analyzingText}>Analyzing Image...</Text>
+          <Text style={{ color: '#fff', marginTop: 10 }}>Analyzing Image...</Text>
         </View>
       )}
 
