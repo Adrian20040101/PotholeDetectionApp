@@ -34,29 +34,30 @@ const ImageUpload = () => {
   const triggerServerlessFunction = async (imageUrl) => {
     setAnalyzing(true);
     try {
-      const response = await fetch('https://road-guard.netlify.app/.netlify/functions/image_analysis', {
+      const response = await fetch('https://europe-central2-pothole-detection-430514.cloudfunctions.net/image-analysis', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ imageUrl }),
-        mode: 'no-cors',
       });
-
+  
       if (!response.ok) {
-        throw new Error('Serverless function failed');
+        const errorText = await response.text(); // get error message if response is not OK
+        throw new Error(`Serverless function failed: ${errorText}`);
       }
-
+  
       const result = await response.json();
       console.log('Analysis result:', result);
-      toast.success("Image analysis complete.");
+      toast.success(result.message);
     } catch (error) {
       console.error('Error triggering serverless function:', error);
-      toast.error("Image analysis failed", "Please try again.");
+      toast.error("Image analysis failed, please try again.");
     } finally {
       setAnalyzing(false);
     }
   };
+  
 
   const takePhoto = async () => {
     if (cameraRef.current) {
