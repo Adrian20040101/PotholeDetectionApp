@@ -1,9 +1,8 @@
-import sys
+from flask import Flask, request, jsonify, make_response
 from ultralytics import YOLO
 import requests
 from PIL import Image
 from io import BytesIO
-from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
@@ -13,13 +12,12 @@ model = YOLO(model_path)
 @app.route('/', methods=['POST', 'OPTIONS'])
 def predict_potholes():
     if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        }
-        return ('', 204, headers)
-
+        response = make_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    
     try:
         request_json = request.get_json()
         image_url = request_json['imageUrl']
@@ -36,26 +34,23 @@ def predict_potholes():
             'message': 'Potholes were detected in the image.' if pothole_detected else 'No potholes detected in the image.'
         }
 
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        }
+        response = make_response(jsonify(response_data), 200)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 
-        return jsonify(response_data), 200, headers
+        return response
 
     except Exception as e:
         error_response = {
             'error': str(e)
         }
+        response = make_response(jsonify(error_response), 500)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        }
-
-        return jsonify(error_response), 500, headers
+        return response
 
 def predict_potholes_handler(request):
     return predict_potholes()

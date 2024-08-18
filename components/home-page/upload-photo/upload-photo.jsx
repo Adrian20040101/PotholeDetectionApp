@@ -38,8 +38,10 @@ const ImageUpload = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({ imageUrl }),
+        mode: 'cors'
       });
   
       if (!response.ok) {
