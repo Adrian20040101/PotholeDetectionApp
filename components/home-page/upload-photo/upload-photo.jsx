@@ -18,6 +18,7 @@ const ImageUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadURL, setUploadURL] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [markers, setMarkers] = useState([]);
   const lastPinchDistance = useRef(null);
   const user = auth.currentUser;
 
@@ -52,6 +53,20 @@ const ImageUpload = () => {
       const result = await response.json();
       console.log('Analysis result:', result);
       toast.success(result.message);
+
+      // store coordinates of the photo if available (to do: if not available, prompt user to input a marker on the map)
+      if (result.latitude && result.longitude) {
+        setMarkers((prevMarkers) => [
+          ...prevMarkers,
+          {
+            latitude: result.latitude,
+            longitude: result.longitude,
+            title: 'Pothole Detected',
+            description: result.message
+          }
+        ]);
+      }
+
     } catch (error) {
       console.error('Error triggering serverless function:', error);
       toast.error("Image analysis failed, please try again.");
