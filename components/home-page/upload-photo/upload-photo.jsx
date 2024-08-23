@@ -79,6 +79,7 @@ const ImageUpload = () => {
    
         if (result.coordinates) {
           setMarkers((prevMarkers) => [...prevMarkers, { lat: result.coordinates[0], lng: result.coordinates[1] }]);
+          saveMarkerToFirestore(result.coordinates[0], result.coordinates[1]);
         } else {
           toast.warning('No GPS location detected, manual input needed.');
           setManualInputNeeded(true);
@@ -96,14 +97,8 @@ const ImageUpload = () => {
   };
   
   const handleManualLocationSubmit = () => {
-    console.log("Raw latitude:", latitude);
-    console.log("Raw longitude:", longitude);
-  
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
-  
-    console.log("Parsed latitude:", lat);
-    console.log("Parsed longitude:", lng);
   
     if (!isNaN(lat) && !isNaN(lng)) {
       saveMarkerToFirestore(lat, lng);
