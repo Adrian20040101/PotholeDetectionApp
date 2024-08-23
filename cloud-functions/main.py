@@ -10,54 +10,42 @@ app = Flask(__name__)
 model_path = 'best.pt'
 model = YOLO(model_path)
 
-def get_exif_data(image):
-    exif_data = {}
-    try:
-        info = image._getexif()
-        if info:
-            for tag, value in info.items():
-                tag_name = TAGS.get(tag, tag)
-                if tag_name == 'GPSInfo':
-                    gps_data = {}
-                    for t in value:
-                        sub_tag_name = GPSTAGS.get(t, t)
-                        gps_data[sub_tag_name] = value[t]
-                    exif_data['GPSInfo'] = gps_data
-    except Exception as e:
-        print(f"Error getting EXIF data: {e}")
-    return exif_data
-
-def get_coordinates(exif_data):
-    gps_info = exif_data.get("GPSInfo")
-    if not gps_info:
+def get_gps_info(exif_data):
+    if not exif_data:
         return None
+    
+    gps_info = {}
+    for tag, value in exif_data.items():
+        decoded = TAGS.get(tag, tag)
+        if decoded == "GPSInfo":
+            for t in value:
+                sub_decoded = GPSTAGS.get(t, t)
+                gps_info[sub_decoded] = value[t]
+    return gps_info
 
-    def _convert_to_degress(value):
-        d0 = value[0][0] / float(value[0][1])
-        d1 = value[1][0] / float(value[1][1])
-        d2 = value[2][0] / float(value[2][1])
-        return d0 + (d1 / 60.0) + (d2 / 3600.0)
+def convert_to_degrees(value):
+    """Convert GPS coordinates from EXIF data to degrees format"""
+    d = float(value[0])
+    m = float(value[1]) / 60.0
+    s = float(value[2]) / 3600.0
+    return d + m + s
 
-    lat = None
-    lon = None
-    if gps_info:
-        gps_latitude = gps_info.get("GPSLatitude")
-        gps_latitude_ref = gps_info.get('GPSLatitudeRef')
-        gps_longitude = gps_info.get("GPSLongitude")
-        gps_longitude_ref = gps_info.get('GPSLongitudeRef')
+def extract_coordinates(gps_info):
+    """Extract latitude and longitude from GPSInfo dictionary"""
+    if 'GPSLatitude' in gps_info and 'GPSLongitude' in gps_info:
+        lat = convert_to_degrees(gps_info['GPSLatitude'])
+        lon = convert_to_degrees(gps_info['GPSLongitude'])
 
-        if gps_latitude and gps_latitude_ref and gps_longitude and gps_longitude_ref:
-            lat = _convert_to_degress(gps_latitude)
-            if gps_latitude_ref != "N":
-                lat = 0 - lat
+        # Handle the direction (N/S, E/W)
+        if gps_info.get('GPSLatitudeRef') == 'S':
+            lat = -lat
+        if gps_info.get('GPSLongitudeRef') == 'W':
+            lon = -lon
 
-            lon = _convert_to_degress(gps_longitude)
-            if gps_longitude_ref != "E":
-                lon = 0 - lon
+        return lat, lon
+    return None
 
-    return lat, lon
-
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['POST', 'OPTIONS'])
 def predict_potholes():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -73,9 +61,9 @@ def predict_potholes():
         response = requests.get(image_url)
         img = Image.open(BytesIO(response.content))
 
-        # extract EXIF data
-        exif_data = get_exif_data(img)
-        lat, lon = get_coordinates(exif_data)
+        exif_data = img._getexif()
+        gps_info = get_gps_info(exif_data)
+        coordinates = extract_coordinates(gps_info) if gps_info else None
 
         results = model.predict(source=img, conf=0.25)
 
@@ -83,8 +71,6 @@ def predict_potholes():
 
         response_data = {
             'pothole_detected': pothole_detected,
-            'latitude': lat,
-            'longitude': lon,
             'message': 'Potholes were detected in the image.' if pothole_detected else 'No potholes detected in the image.'
         }
 

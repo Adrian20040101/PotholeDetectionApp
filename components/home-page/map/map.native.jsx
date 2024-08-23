@@ -3,7 +3,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { View, Text, ActivityIndicator } from 'react-native';
 import styles from './map.style';
 
-const Map = ({ location, markers }) => {
+const Map = ({ location }) => {
   if (!location || !location.lat || !location.lng) {
     return (
       <View style={styles.loadingContainer}>
@@ -25,14 +25,6 @@ const Map = ({ location, markers }) => {
         }}
         provider={MapView.PROVIDER_GOOGLE}
       >
-        {markers && markers.map((marker, index) => (
-          <Marker
-            key={index}
-            coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
-            title={marker.title}
-            description={marker.description}
-          />
-        ))}
       </MapView>
     </View>
   );
