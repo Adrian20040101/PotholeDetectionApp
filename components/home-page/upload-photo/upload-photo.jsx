@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Modal, Alert, ActivityIndicator, TextInput, Button } from 'react-native';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { CameraView } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
 import { storage } from '../../../config/firebase/firebase-config';
 import { auth } from '../../../config/firebase/firebase-config';
+import { db } from '../../../config/firebase/firebase-config';
+import { collection, addDoc } from 'firebase/firestore';
 import styles from './upload-photo.style';
 
 const ImageUpload = () => {
@@ -19,6 +21,9 @@ const ImageUpload = () => {
   const [uploadURL, setUploadURL] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [markers, setMarkers] = useState([]);
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [manualInputNeeded, setManualInputNeeded] = useState(false);
   const lastPinchDistance = useRef(null);
   const user = auth.currentUser;
 
@@ -31,6 +36,22 @@ const ImageUpload = () => {
       }
     })();
   }, []);
+
+  const saveMarkerToFirestore = async (lat, lng) => {
+    try {
+      const markersCollectionRef = collection(db, 'markers');
+      await addDoc(markersCollectionRef, {
+        lat: lat,
+        lon: lng,
+        timestamp: new Date(),
+        setUserId: auth.currentUser.uid
+      });
+  
+      console.log('Marker saved to Firestore:', { lat, lng });
+    } catch (error) {
+      console.error("Error saving marker to Firestore:", error);
+    }
+  };
 
   const triggerServerlessFunction = async (imageUrl) => {
     setAnalyzing(true);
@@ -46,25 +67,24 @@ const ImageUpload = () => {
       });
   
       if (!response.ok) {
-        const errorText = await response.text(); // get error message if response is not OK
+        const errorText = await response.text();
         throw new Error(`Serverless function failed: ${errorText}`);
       }
   
       const result = await response.json();
       console.log('Analysis result:', result);
-      toast.success(result.message);
-
-      // store coordinates of the photo if available (to do: if not available, prompt user to input a marker on the map)
-      if (result.latitude && result.longitude) {
-        setMarkers((prevMarkers) => [
-          ...prevMarkers,
-          {
-            latitude: result.latitude,
-            longitude: result.longitude,
-            title: 'Pothole Detected',
-            description: result.message
-          }
-        ]);
+  
+      if (result.pothole_detected) {
+        toast.success(result.message);
+   
+        if (result.coordinates) {
+          setMarkers((prevMarkers) => [...prevMarkers, { lat: result.coordinates[0], lng: result.coordinates[1] }]);
+        } else {
+          toast.warning('No GPS location detected, manual input needed.');
+          setManualInputNeeded(true);
+        }
+      } else {
+        toast.info('No potholes detected in the image.');
       }
 
     } catch (error) {
@@ -75,6 +95,25 @@ const ImageUpload = () => {
     }
   };
   
+  const handleManualLocationSubmit = () => {
+    console.log("Raw latitude:", latitude);
+    console.log("Raw longitude:", longitude);
+  
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+  
+    console.log("Parsed latitude:", lat);
+    console.log("Parsed longitude:", lng);
+  
+    if (!isNaN(lat) && !isNaN(lng)) {
+      saveMarkerToFirestore(lat, lng);
+      setManualInputNeeded(false);
+      setLatitude('');
+      setLongitude('');
+    } else {
+      toast.error('Please enter valid latitude and longitude.');
+    }
+  };
 
   const takePhoto = async () => {
     if (cameraRef.current) {
@@ -164,6 +203,34 @@ const ImageUpload = () => {
           <ActivityIndicator size="large" color="#ff0000" /> 
           <Text style={{ color: '#fff', marginTop: 10 }}>Analyzing Image...</Text>
         </View>
+      )}
+
+      {manualInputNeeded && (
+        <Modal
+          transparent={true}
+          visible={manualInputNeeded}
+          onRequestClose={() => setManualInputNeeded(false)}
+          animationType="fade"
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text>Please enter the location manually:</Text>
+              <TextInput 
+                style={styles.modalInput} 
+                placeholder="Latitude" 
+                onChangeText={setLatitude}
+                keyboardType='numeric'
+              />
+              <TextInput 
+                style={styles.modalInput} 
+                placeholder="Longitude" 
+                onChangeText={setLongitude}
+                keyboardType='numeric'
+              />
+              <Button title="Submit" onPress={handleManualLocationSubmit} />
+            </View>
+          </View>
+        </Modal>
       )}
 
       {isCameraActive && hasPermission && (
