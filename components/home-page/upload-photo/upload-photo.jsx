@@ -86,7 +86,6 @@ const ImageUpload = () => {
                 if (isValidCoordinates(lat, lng)) {
                     console.log('Valid coordinates received:', result.coordinates);
                     saveMarkerToFirestore(lat, lng);
-                    await uploadImageToFirebase(imageUrl);
                 } else {
                     console.warn('Invalid GPS location detected, manual input needed.');
                     toast.warning('Invalid GPS location detected, manual input needed.');
@@ -145,7 +144,7 @@ const isValidCoordinates = (lat, lng) => {
       const photo = await cameraRef.current.takePictureAsync();
       setSelectedImage(photo.uri);
       setIsCameraActive(false);
-      await triggerServerlessFunction(photo.uri);
+      await uploadImageToFirebase(photo.uri);
       toast.success('Photo captured and uploaded successfully!');
     }
   };
@@ -161,7 +160,7 @@ const isValidCoordinates = (lat, lng) => {
       const uri = result.uri || (result.assets && result.assets[0] && result.assets[0].uri);
       if (uri) {
         setSelectedImage(uri);
-        await triggerServerlessFunction(uri);
+        await uploadImageToFirebase(uri);
         toast.success('Photo uploaded successfully!')
       } else {
         console.error('Error: Image URI is undefined');
@@ -184,6 +183,9 @@ const isValidCoordinates = (lat, lng) => {
         const snapshot = await uploadBytes(storageRef, blob);
         const downloadURL = await getDownloadURL(snapshot.ref);
         console.log('File available at', downloadURL);
+
+        await triggerServerlessFunction(downloadURL);
+
         return downloadURL;
     } catch (error) {
         console.error("Error uploading image:", error);
