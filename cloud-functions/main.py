@@ -11,39 +11,53 @@ model = YOLO(model_path)
 
 def get_exif_data(image):
     """Extract EXIF data from an image."""
-    exif_data = image._getexif()
-    if not exif_data:
+    try:
+        exif_data = image._getexif()
+        if not exif_data:
+            raise ValueError("No EXIF data found.")
+        return {
+            ExifTags.TAGS.get(k, k): v
+            for k, v in exif_data.items()
+            if k in ExifTags.TAGS
+        }
+    except Exception as e:
+        print(f"Error extracting EXIF data: {e}")
         return None
-    return {
-        ExifTags.TAGS[k]: v
-        for k, v in exif_data.items()
-        if k in ExifTags.TAGS
-    }
 
 def extract_coordinates(exif_data):
     """Extract and convert GPS coordinates to decimal degrees."""
-    if not exif_data or 'GPSInfo' not in exif_data:
+    try:
+        if not exif_data or 'GPSInfo' not in exif_data:
+            raise ValueError("No GPSInfo found in EXIF data.")
+
+        gps_info = exif_data['GPSInfo']
+        
+        lat_tuple = gps_info.get(2)
+        lng_tuple = gps_info.get(4)
+        lat_ref = gps_info.get(1)
+        lng_ref = gps_info.get(3)
+
+        # validate GPS tuples
+        if not lat_tuple or not lng_tuple or len(lat_tuple) != 3 or len(lng_tuple) != 3:
+            raise ValueError("Invalid GPS data format.")
+
+        # convert to decimal degrees
+        lat = (lat_tuple[0] + lat_tuple[1] / 60 + lat_tuple[2] / 3600)
+        lng = (lng_tuple[0] + lng_tuple[1] / 60 + lng_tuple[2] / 3600)
+
+        # apply hemisphere
+        if lat_ref == 'S':
+            lat = -lat
+        if lng_ref == 'W':
+            lng = -lng
+
+        lat = float(lat)
+        lng = float(lng)
+
+        return lat, lng
+    except Exception as e:
+        print(f"Error extracting coordinates: {e}")
         return None
-
-    gps_info = exif_data['GPSInfo']
-    
-    north = gps_info[2]
-    east = gps_info[4]
-
-    lat = ((((north[0] * 60) + north[1]) * 60) + north[2]) / 60 / 60
-    lng = ((((east[0] * 60) + east[1]) * 60) + east[2]) / 60 / 60
-    lat = float(lat)
-    lng = float(lng)
-
-    lat_ref = gps_info.get(1)
-    lng_ref = gps_info.get(3)
-
-    if lat_ref == 'S':
-        lat = -lat
-    if lng_ref == 'W':
-        lng = -lng
-
-    return lat, lng
 
 @app.route('/', methods=['POST', 'OPTIONS'])
 def predict_potholes():
@@ -56,24 +70,33 @@ def predict_potholes():
     
     try:
         request_json = request.get_json()
-        image_url = request_json['imageUrl']
+        image_url = request_json.get('imageUrl')
+
+        if not image_url:
+            raise ValueError("No image URL provided.")
 
         response = requests.get(image_url)
         img = Image.open(BytesIO(response.content))
 
         exif_data = get_exif_data(img)
-
         coordinates = extract_coordinates(exif_data)
 
-        results = model.predict(source=img, conf=0.25)
+        if not coordinates:
+            # if coordinates extraction failed, return a prompt for manual input
+            response_data = {
+                'pothole_detected': False,
+                'coordinates': None,
+                'message': 'No GPS location detected, please input manually.'
+            }
+        else:
+            results = model.predict(source=img, conf=0.25)
+            pothole_detected = any(result.boxes.shape[0] > 0 for result in results)
 
-        pothole_detected = any(result.boxes.shape[0] > 0 for result in results)
-
-        response_data = {
-            'pothole_detected': pothole_detected,
-            'coordinates': coordinates,
-            'message': 'Potholes were detected in the image.' if pothole_detected else 'No potholes detected in the image.'
-        }
+            response_data = {
+                'pothole_detected': pothole_detected,
+                'coordinates': coordinates,
+                'message': 'Potholes were detected in the image.' if pothole_detected else 'No potholes detected in the image.'
+            }
 
         response = make_response(jsonify(response_data), 200)
         response.headers['Access-Control-Allow-Origin'] = '*'
@@ -83,8 +106,10 @@ def predict_potholes():
         return response
 
     except Exception as e:
+        print(f"Error processing request: {e}")
         error_response = {
-            'error': str(e)
+            'error': str(e),
+            'message': 'An error occurred during processing. Please try again or provide manual input.'
         }
         response = make_response(jsonify(error_response), 500)
         response.headers['Access-Control-Allow-Origin'] = '*'
