@@ -81,22 +81,21 @@ def predict_potholes():
         exif_data = get_exif_data(img)
         coordinates = extract_coordinates(exif_data)
 
-        if not coordinates:
-            # if coordinates extraction failed, return a prompt for manual input
-            response_data = {
-                'pothole_detected': False,
-                'coordinates': None,
-                'message': 'No GPS location detected, please input manually.'
-            }
-        else:
-            results = model.predict(source=img, conf=0.25)
-            pothole_detected = any(result.boxes.shape[0] > 0 for result in results)
+        results = model.predict(source=img, conf=0.25)
+        pothole_detected = any(result.boxes.shape[0] > 0 for result in results)
 
+        if pothole_detected and not coordinates:
+            response_data = {
+                'pothole_detected': True,
+                'coordinates': None,
+                'message': 'Pothole detected, but no GPS location found. Please input manually.'
+        }
+        else:
             response_data = {
                 'pothole_detected': pothole_detected,
                 'coordinates': coordinates,
-                'message': 'Potholes were detected in the image.' if pothole_detected else 'No potholes detected in the image.'
-            }
+                'message': 'No potholes detected in the image.' if not pothole_detected else 'Pothole detected, GPS coordinates found.'
+        }
 
         response = make_response(jsonify(response_data), 200)
         response.headers['Access-Control-Allow-Origin'] = '*'

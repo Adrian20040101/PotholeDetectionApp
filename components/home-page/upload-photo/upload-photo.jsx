@@ -54,72 +54,98 @@ const ImageUpload = () => {
 
   const triggerServerlessFunction = async (imageUrl) => {
     setAnalyzing(true);
-    
+
     try {
-      const response = await fetch('https://europe-central2-pothole-detection-430514.cloudfunctions.net/image-analysis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({ imageUrl }),
-        mode: 'cors'
-      });
-  
-      console.log('Serverless function response status:', response.status);
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Serverless function failed with response text:', errorText);
-        throw new Error(`Serverless function failed: ${errorText}`);
-      }
-  
-      const result = await response.json();
-      console.log('Analysis result:', result);
-  
-      if (result.pothole_detected) {
-        toast.success(result.message);
-  
-        if (result.coordinates) {
-          console.log('Valid coordinates received:', result.coordinates);
-          saveMarkerToFirestore(result.coordinates[0], result.coordinates[1]);
-        } else {
-          console.warn('No GPS location detected, manual input needed.');
-          toast.warning('No GPS location detected, manual input needed.');
-          setManualInputNeeded(true);
+        const response = await fetch('https://europe-central2-pothole-detection-430514.cloudfunctions.net/image-analysis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ imageUrl }),
+            mode: 'cors'
+        });
+
+        console.log('Serverless function response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Serverless function failed with response text:', errorText);
+            throw new Error(`Serverless function failed: ${errorText}`);
         }
-      } else {
-        toast.info('No potholes detected in the image.');
-      }
+
+        const result = await response.json();
+        console.log('Analysis result:', result);
+
+        if (result.pothole_detected) {
+            toast.success(result.message);
+
+            if (result.coordinates) {
+                const [lat, lng] = result.coordinates;
+
+                if (isValidCoordinates(lat, lng)) {
+                    console.log('Valid coordinates received:', result.coordinates);
+                    saveMarkerToFirestore(lat, lng);
+                    await uploadImageToFirebase(imageUrl);
+                } else {
+                    console.warn('Invalid GPS location detected, manual input needed.');
+                    toast.warning('Invalid GPS location detected, manual input needed.');
+                    setManualInputNeeded(true);
+                }
+            } else {
+                console.warn('No GPS location detected, manual input needed.');
+                toast.warning('No GPS location detected, manual input needed.');
+                setManualInputNeeded(true);
+            }
+        } else {
+            toast.info(result.message);
+        }
     } catch (error) {
-      console.error('Error triggering serverless function:', error.stack || error);
-      toast.error("Image analysis failed, please try again.");
+        console.error('Error triggering serverless function:', error.stack || error);
+        toast.error("Image analysis failed, please try again.");
     } finally {
-      setAnalyzing(false);
+        setAnalyzing(false);
     }
-  };
+};
+
+const isValidCoordinates = (lat, lng) => {
+    if (typeof lat !== 'number' || typeof lng !== 'number') {
+        return false;
+    }
+    if (isNaN(lat) || isNaN(lng)) {
+        return false;
+    }
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return false;
+    }
+    return true;
+};
   
   
-  const handleManualLocationSubmit = () => {
+  const handleManualLocationSubmit = async () => {
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
-  
+
     if (!isNaN(lat) && !isNaN(lng)) {
-      saveMarkerToFirestore(lat, lng);
-      setManualInputNeeded(false);
-      setLatitude('');
-      setLongitude('');
+        saveMarkerToFirestore(lat, lng);
+        setManualInputNeeded(false);
+        setLatitude('');
+        setLongitude('');
+
+        if (selectedImage) {
+            await uploadImageToFirebase(selectedImage);
+        }
     } else {
-      toast.error('Please enter valid latitude and longitude.');
+        toast.error('Please enter valid latitude and longitude.');
     }
-  };
+};
 
   const takePhoto = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync();
       setSelectedImage(photo.uri);
       setIsCameraActive(false);
-      await uploadImageToFirebase(photo.uri);
+      await triggerServerlessFunction(photo.uri);
       toast.success('Photo captured and uploaded successfully!');
     }
   };
@@ -134,8 +160,9 @@ const ImageUpload = () => {
     if (!result.canceled) {
       const uri = result.uri || (result.assets && result.assets[0] && result.assets[0].uri);
       if (uri) {
-        await uploadImageToFirebase(uri);
-        toast.success('Photo uplaoded successfully!')
+        setSelectedImage(uri);
+        await triggerServerlessFunction(uri);
+        toast.success('Photo uploaded successfully!')
       } else {
         console.error('Error: Image URI is undefined');
       }
@@ -145,25 +172,24 @@ const ImageUpload = () => {
 
   const uploadImageToFirebase = async (uri) => {
     try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const fileName = uri.substring(uri.lastIndexOf('/') + 1);
-      let storageRef;
-      if (user) {
-        storageRef = ref(storage, `images/${user.uid}/${fileName}`);
-      } else {
-        storageRef = ref(storage, `images/anonymous-user/${fileName}`);
-      }
-      const snapshot = await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      console.log('File available at', downloadURL);
-      await triggerServerlessFunction(downloadURL);
-      return downloadURL;
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const fileName = uri.substring(uri.lastIndexOf('/') + 1);
+        let storageRef;
+        if (user) {
+            storageRef = ref(storage, `images/${user.uid}/${fileName}`);
+        } else {
+            storageRef = ref(storage, `images/anonymous-user/${fileName}`);
+        }
+        const snapshot = await uploadBytes(storageRef, blob);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        console.log('File available at', downloadURL);
+        return downloadURL;
     } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error("Upload failed", "Please try again.");
+        console.error("Error uploading image:", error);
+        toast.error("Upload failed", "Please try again.");
     }
-  };
+};
 
   const toggleCameraType = () => {
     setCameraType((prevType) =>
