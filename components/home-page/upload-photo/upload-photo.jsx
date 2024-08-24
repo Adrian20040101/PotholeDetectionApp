@@ -20,7 +20,6 @@ const ImageUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadURL, setUploadURL] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [markers, setMarkers] = useState([]);
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [manualInputNeeded, setManualInputNeeded] = useState(false);
@@ -55,6 +54,7 @@ const ImageUpload = () => {
 
   const triggerServerlessFunction = async (imageUrl) => {
     setAnalyzing(true);
+    
     try {
       const response = await fetch('https://europe-central2-pothole-detection-430514.cloudfunctions.net/image-analysis', {
         method: 'POST',
@@ -66,8 +66,11 @@ const ImageUpload = () => {
         mode: 'cors'
       });
   
+      console.log('Serverless function response status:', response.status);
+  
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('Serverless function failed with response text:', errorText);
         throw new Error(`Serverless function failed: ${errorText}`);
       }
   
@@ -76,25 +79,26 @@ const ImageUpload = () => {
   
       if (result.pothole_detected) {
         toast.success(result.message);
-   
+  
         if (result.coordinates) {
-          setMarkers((prevMarkers) => [...prevMarkers, { lat: result.coordinates[0], lng: result.coordinates[1] }]);
+          console.log('Valid coordinates received:', result.coordinates);
           saveMarkerToFirestore(result.coordinates[0], result.coordinates[1]);
         } else {
+          console.warn('No GPS location detected, manual input needed.');
           toast.warning('No GPS location detected, manual input needed.');
           setManualInputNeeded(true);
         }
       } else {
         toast.info('No potholes detected in the image.');
       }
-
     } catch (error) {
-      console.error('Error triggering serverless function:', error);
+      console.error('Error triggering serverless function:', error.stack || error);
       toast.error("Image analysis failed, please try again.");
     } finally {
       setAnalyzing(false);
     }
   };
+  
   
   const handleManualLocationSubmit = () => {
     const lat = parseFloat(latitude);
