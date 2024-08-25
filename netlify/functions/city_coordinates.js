@@ -2,16 +2,16 @@ const axios = require('axios');
 
 exports.handler = async (event, context) => {
   try {
-    const { city } = event.queryStringParameters;
+    const { address } = event.queryStringParameters;
     const key = process.env.GOOGLE_API_KEY;
 
-    console.log(`Fetching geocode for city: ${city}`);
+    console.log(`Fetching geocode for address: ${address}`);
 
     const response = await axios.get(
       `https://maps.googleapis.com/maps/api/geocode/json`,
       {
         params: {
-          address: city,
+          address,
           key,
         },
       }
@@ -38,7 +38,7 @@ exports.handler = async (event, context) => {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ message: 'No results found for the provided city name.' }),
+        body: JSON.stringify({ message: 'No results found for the provided address.' }),
       };
     }
   } catch (error) {

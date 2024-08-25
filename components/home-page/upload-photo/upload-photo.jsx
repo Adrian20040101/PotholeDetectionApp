@@ -156,7 +156,7 @@ const isValidCoordinates = (lat, lng) => {
       quality: 1,
     });
   
-    if (!result.canceled) {
+    if (!result.canceled) {compont
       const uri = result.uri || (result.assets && result.assets[0] && result.assets[0].uri);
       if (uri) {
         setSelectedImage(uri);
