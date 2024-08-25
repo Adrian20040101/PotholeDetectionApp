@@ -27,6 +27,52 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#FFF',
   },
+  infoWindow: {
+    width: 200,
+    padding: 5,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    marginBottom: 5,
+    alignItems: 'center',
+  },
+  profilePicture: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  userInfo: {
+    marginLeft: 10,
+    flex: 1,
+  },
+  userName: {
+    fontWeight: 'bold',
+  },
+  timestamp: {
+    fontSize: 10,
+    color: 'gray',
+  },
+  uploadedImage: {
+    width: '100%',
+    height: 80,
+    marginTop: 5,
+    marginBottom: 10,
+  },
+  votingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  upvoteButton: {
+    fontSize: 14,
+    color: 'green',
+  },
+  downvoteButton: {
+    fontSize: 14,
+    color: 'red',
+  },
 });
 
 export default styles;

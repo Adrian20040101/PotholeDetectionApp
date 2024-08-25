@@ -1,26 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { View, Text, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../config/firebase/firebase-config";
 import styles from './map.style';
 
 const containerStyle = {
   width: '100%',
-  height: '400px'
+  height: '400px',
 };
 
 const initialCenter = {
   lat: 40.730610,
-  lng: -73.935242
+  lng: -73.935242,
 };
 
 const Map = ({ city }) => {
   const [center, setCenter] = useState(initialCenter);
-  const [zoom, setZoom] = useState(12);  // can be changed if needed (i.e. dynamically based on city size)
+  const [zoom, setZoom] = useState(12);
   const [loading, setLoading] = useState(true);
   const [markers, setMarkers] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState(null);
 
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
@@ -58,8 +59,8 @@ const Map = ({ city }) => {
         const markersCollection = collection(db, 'markers');
         const markerSnapshot = await getDocs(markersCollection);
         const markersList = markerSnapshot.docs.map(doc => ({
-          lat: doc.data().lat,
-          lng: doc.data().lon
+          id: doc.id,
+          ...doc.data(),
         }));
         setMarkers(markersList);
       } catch (error) {
@@ -70,6 +71,28 @@ const Map = ({ city }) => {
     fetchMarkers();
   }, []);
 
+  const handleVote = async (markerId, type) => {
+    const markerRef = doc(db, 'markers', markerId);
+    const markerDoc = await getDoc(markerRef);
+
+    if (markerDoc.exists()) {
+      const markerData = markerDoc.data();
+      const updatedVotes = {
+        upvotes: type === 'upvote' ? markerData.upvotes + 1 : markerData.upvotes,
+        downvotes: type === 'downvote' ? markerData.downvotes + 1 : markerData.downvotes,
+      };
+      await updateDoc(markerRef, updatedVotes);
+      setMarkers(markers.map(marker => marker.id === markerId ? { ...marker, ...updatedVotes } : marker));
+    }
+  };
+
+  const handleMarkerClick = (marker) => {
+    setSelectedMarker(marker);
+  };
+
+  const handleInfoWindowClose = () => {
+    setSelectedMarker(null);
+  };
 
   return (
     <View style={styles.container}>
@@ -85,9 +108,39 @@ const Map = ({ city }) => {
             center={center}
             zoom={zoom}
           >
-            {markers && markers.map((marker, index) => (
-              <Marker key={index} position={{ lat: marker.lat, lng: marker.lng }} />
+            {markers.map((marker) => (
+              <Marker
+                key={marker.id}
+                position={{ lat: marker.lat, lng: marker.lon }}
+                onClick={() => handleMarkerClick(marker)}
+              />
             ))}
+
+            {selectedMarker && (
+              <InfoWindow
+                position={{ lat: selectedMarker.lat, lng: selectedMarker.lon }}
+                onCloseClick={handleInfoWindowClose}
+              >
+                <View style={styles.infoWindow}>
+                  <View style={styles.infoHeader}>
+                    <Image source={{ uri: selectedMarker.userProfilePicture }} style={styles.profilePicture} />
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userName}>{selectedMarker.username}</Text>
+                      <Text style={styles.timestamp}>{new Date(selectedMarker.timestamp.seconds * 1000).toLocaleString()}</Text>
+                    </View>
+                  </View>
+                  <Image source={{ uri: selectedMarker.imageUrl }} style={styles.uploadedImage} />
+                  <View style={styles.votingContainer}>
+                    <TouchableOpacity onPress={() => handleVote(selectedMarker.id, 'upvote')}>
+                      <Text style={styles.upvoteButton}>👍 {selectedMarker.upvotes}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleVote(selectedMarker.id, 'downvote')}>
+                      <Text style={styles.downvoteButton}>👎 {selectedMarker.downvotes}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </InfoWindow>
+            )}
           </GoogleMap>
         </LoadScript>
       )}
