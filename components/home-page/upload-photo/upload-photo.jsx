@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, Alert, ActivityIndicator, TextInput, Button } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Modal, ActivityIndicator, TextInput, Button, FlatList } from 'react-native';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { CameraView } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
 import { storage } from '../../../config/firebase/firebase-config';
@@ -12,9 +11,6 @@ import styles from './upload-photo.style';
 
 const ImageUpload = () => {
   const [hasPermission, setHasPermission] = useState(null);
-  const [cameraType, setCameraType] = useState(ImagePicker.CameraType.back);
-  const [zoom, setZoom] = useState(0);
-  const cameraRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -22,8 +18,9 @@ const ImageUpload = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
-  const [manualInputNeeded, setManualInputNeeded] = useState(false);
-  const lastPinchDistance = useRef(null);
+  const [address, setAddress] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showAddressModal, setShowAddressModal] = useState(false);
   const user = auth.currentUser;
 
   useEffect(() => {
@@ -49,6 +46,36 @@ const ImageUpload = () => {
       console.log('Marker saved to Firestore:', { lat, lng });
     } catch (error) {
       console.error("Error saving marker to Firestore:", error);
+    }
+  };
+
+  const fetchSuggestions = async (input) => {
+    try {
+      const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/address_autocomplete?input=${encodeURIComponent(input)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch suggestions');
+      }
+      const data = await response.json();
+      setSuggestions(data);
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+    }
+  };
+
+  const geocodeAddress = async (address) => {
+    try {
+      const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/address_coordinates?address=${encodeURIComponent(address)}`);
+      if (!response.ok) {
+        throw new Error('Failed to geocode address');
+      }
+      const location = await response.json();
+      setLatitude(location.lat);
+      setLongitude(location.lng);
+      return location;
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+      toast.error('Failed to geocode address. Please try again.');
+      return null;
     }
   };
 
@@ -86,28 +113,35 @@ const ImageUpload = () => {
                 if (isValidCoordinates(lat, lng)) {
                     console.log('Valid coordinates received:', result.coordinates);
                     saveMarkerToFirestore(lat, lng);
+                    setLatitude(lat);
+                    setLongitude(lng);
+                    return { lat, lng };
                 } else {
-                    console.warn('Invalid GPS location detected, manual input needed.');
-                    toast.warning('Invalid GPS location detected, manual input needed.');
-                    setManualInputNeeded(true);
+                    console.warn('Invalid GPS location detected, manual address input needed.');
+                    toast.warning('Invalid GPS location detected, manual address input needed.');
+                    setShowAddressModal(true);
+                    return null;
                 }
             } else {
-                console.warn('No GPS location detected, manual input needed.');
-                toast.warning('No GPS location detected, manual input needed.');
-                setManualInputNeeded(true);
+                console.warn('No GPS location detected, manual address input needed.');
+                toast.warning('No GPS location detected, manual address input needed.');
+                setShowAddressModal(true);
+                return null;
             }
         } else {
-            toast.info(result.message);
+            toast.info("No pothole detected.");
+            return null;
         }
     } catch (error) {
         console.error('Error triggering serverless function:', error.stack || error);
         toast.error("Image analysis failed, please try again.");
+        return null;
     } finally {
         setAnalyzing(false);
     }
-};
+  };
 
-const isValidCoordinates = (lat, lng) => {
+  const isValidCoordinates = (lat, lng) => {
     if (typeof lat !== 'number' || typeof lng !== 'number') {
         return false;
     }
@@ -120,34 +154,46 @@ const isValidCoordinates = (lat, lng) => {
     return true;
 };
   
-  
-  const handleManualLocationSubmit = async () => {
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
 
-    if (!isNaN(lat) && !isNaN(lng)) {
-        saveMarkerToFirestore(lat, lng);
-        setManualInputNeeded(false);
-        setLatitude('');
-        setLongitude('');
-
+  const handleAddressSubmit = async () => {
+    if (address) {
+      const location = await geocodeAddress(address);
+      if (location) {
+        saveMarkerToFirestore(location.lat, location.lng);
+        setShowAddressModal(false);
         if (selectedImage) {
             await uploadImageToFirebase(selectedImage);
         }
+      } else {
+        setShowAddressModal(true);
+      }
     } else {
-        toast.error('Please enter valid latitude and longitude.');
-    }
-};
-
-  const takePhoto = async () => {
-    if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync();
-      setSelectedImage(photo.uri);
-      setIsCameraActive(false);
-      await uploadImageToFirebase(photo.uri);
-      toast.success('Photo captured and uploaded successfully!');
+      toast.error('Please enter an address.');
     }
   };
+
+  const handleAddressChange = (text) => {
+    setAddress(text);
+    if (text.length > 2) {
+      fetchSuggestions(text);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionSelect = (suggestion) => {
+    setAddress(suggestion.description);
+    setSuggestions([]);
+  };
+
+  const handleImageSelection = async (uri) => {
+    setSelectedImage(uri);
+    const downloadURL = await uploadImageToFirebase(uri);
+    const coordinates = await triggerServerlessFunction(downloadURL);
+    if (coordinates === null && showAddressModal) {
+        setShowAddressModal(true);
+    }
+};
 
   const selectFromGallery = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -159,15 +205,12 @@ const isValidCoordinates = (lat, lng) => {
     if (!result.canceled) {
       const uri = result.uri || (result.assets && result.assets[0] && result.assets[0].uri);
       if (uri) {
-        setSelectedImage(uri);
-        await uploadImageToFirebase(uri);
-        toast.success('Photo uploaded successfully!')
+        await handleImageSelection(uri);
       } else {
         console.error('Error: Image URI is undefined');
       }
     }
   };
-  
 
   const uploadImageToFirebase = async (uri) => {
     try {
@@ -184,27 +227,14 @@ const isValidCoordinates = (lat, lng) => {
         const downloadURL = await getDownloadURL(snapshot.ref);
         console.log('File available at', downloadURL);
 
-        await triggerServerlessFunction(downloadURL);
-
         return downloadURL;
     } catch (error) {
         console.error("Error uploading image:", error);
-        toast.error("Upload failed", "Please try again.");
+        toast.error("Upload failed, please try again.");
+        return null;
     }
-};
-
-  const toggleCameraType = () => {
-    setCameraType((prevType) =>
-      prevType === ImagePicker.CameraType.back
-        ? ImagePicker.CameraType.front
-        : ImagePicker.CameraType.back
-    );
   };
 
-  const closeCamera = () => {
-    setIsCameraActive(false);
-    setZoom(0); 
-  };
 
   return (
     <View style={styles.container}>
@@ -216,14 +246,6 @@ const isValidCoordinates = (lat, lng) => {
         <Text style={styles.text}>CLICK HERE TO SELECT A FILE</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => setIsCameraActive(true)} style={styles.button}>
-        <Image
-          source={{ uri: 'https://img.icons8.com/material-outlined/24/000000/camera--v1.png' }}
-          style={styles.icon}
-        />
-        <Text style={styles.text}>CLICK HERE TO TAKE A PHOTO</Text>
-      </TouchableOpacity>
-
       {uploading && <ActivityIndicator size="large" color="#0000ff" />}
       {analyzing && (
         <View style={styles.overlay}>
@@ -232,75 +254,36 @@ const isValidCoordinates = (lat, lng) => {
         </View>
       )}
 
-      {manualInputNeeded && (
-        <Modal
-          transparent={true}
-          visible={manualInputNeeded}
-          onRequestClose={() => setManualInputNeeded(false)}
-          animationType="fade"
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text>Please enter the location manually:</Text>
-              <TextInput 
-                style={styles.modalInput} 
-                placeholder="Latitude" 
-                onChangeText={setLatitude}
-                keyboardType='numeric'
+      <Modal
+        transparent={true}
+        visible={showAddressModal}
+        onRequestClose={() => setShowAddressModal(false)}
+        animationType="fade"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text>Please enter the location address:</Text>
+            <TextInput 
+              style={styles.modalInput} 
+              placeholder="Address" 
+              value={address}
+              onChangeText={handleAddressChange}
+            />
+            {suggestions.length > 0 && (
+              <FlatList
+                data={suggestions}
+                keyExtractor={(item) => item.place_id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity onPress={() => handleSuggestionSelect(item)}>
+                    <Text style={styles.suggestionItem}>{item.description}</Text>
+                  </TouchableOpacity>
+                )}
               />
-              <TextInput 
-                style={styles.modalInput} 
-                placeholder="Longitude" 
-                onChangeText={setLongitude}
-                keyboardType='numeric'
-              />
-              <Button title="Submit" onPress={handleManualLocationSubmit} />
-            </View>
+            )}
+            <Button title="Submit" onPress={handleAddressSubmit} />
           </View>
-        </Modal>
-      )}
-
-      {isCameraActive && hasPermission && (
-        <Modal
-          animationType="slide"
-          transparent={false}
-          visible={isCameraActive}
-          onRequestClose={closeCamera}
-        >
-          <View style={styles.cameraContainer}>
-            <CameraView
-              key={cameraType}
-              style={styles.camera}
-              type={cameraType}
-              ref={cameraRef}
-              zoom={zoom}
-            >
-              <View style={styles.cameraControls}>
-                <TouchableOpacity
-                  style={styles.cameraButton}
-                  onPress={takePhoto}
-                >
-                  <Text style={styles.cameraButtonText}>Capture</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.cameraButton}
-                  onPress={toggleCameraType}
-                >
-                  <Text style={styles.cameraButtonText}>Flip</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.cameraButton}
-                  onPress={closeCamera}
-                >
-                  <Text style={styles.cameraButtonText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </CameraView>
-          </View>
-        </Modal>
-      )}
+        </View>
+      </Modal>
     </View>
   );
 };
