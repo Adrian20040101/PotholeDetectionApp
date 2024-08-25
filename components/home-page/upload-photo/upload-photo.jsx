@@ -33,17 +33,22 @@ const ImageUpload = () => {
     })();
   }, []);
 
-  const saveMarkerToFirestore = async (lat, lng) => {
+  const saveMarkerToFirestore = async (lat, lng, imageUrl) => {
     try {
       const markersCollectionRef = collection(db, 'markers');
       await addDoc(markersCollectionRef, {
         lat: lat,
         lon: lng,
         timestamp: new Date(),
-        setUserId: auth.currentUser.uid
+        userId: auth.currentUser.uid,
+        username: auth.currentUser.displayName,
+        userProfilePicture: auth.currentUser.photoURL,
+        imageUrl: imageUrl,
+        upvotes: 0,
+        downvotes: 0
       });
   
-      console.log('Marker saved to Firestore:', { lat, lng });
+      console.log('Marker saved to Firestore:', { lat, lng, imageUrl });
     } catch (error) {
       console.error("Error saving marker to Firestore:", error);
     }
@@ -112,7 +117,7 @@ const ImageUpload = () => {
 
                 if (isValidCoordinates(lat, lng)) {
                     console.log('Valid coordinates received:', result.coordinates);
-                    saveMarkerToFirestore(lat, lng);
+                    saveMarkerToFirestore(lat, lng, imageUrl);
                     setLatitude(lat);
                     setLongitude(lng);
                     return { lat, lng };
