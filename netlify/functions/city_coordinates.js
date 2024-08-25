@@ -2,16 +2,14 @@ const axios = require('axios');
 
 exports.handler = async (event, context) => {
   try {
-    const { address } = event.queryStringParameters;
+    const { city } = event.queryStringParameters;
     const key = process.env.GOOGLE_API_KEY;
-
-    console.log(`Fetching geocode for address: ${address}`);
 
     const response = await axios.get(
       `https://maps.googleapis.com/maps/api/geocode/json`,
       {
         params: {
-          address,
+          address: city,
           key,
         },
       }
