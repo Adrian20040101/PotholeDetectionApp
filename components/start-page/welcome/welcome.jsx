@@ -1,22 +1,33 @@
-import React, { useRef, useEffect } from "react";
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useState } from "react";
-import { View, Text, Pressable, ImageBackground, Dimensions, TextInput, Image } from 'react-native'
+import React, { useState, useEffect } from "react";
+import { View, Text, Pressable, ImageBackground, Dimensions } from 'react-native';
 import Login from "../login/login";
 import Signup from "../signup/signup";
 import styles from "./welcome.style";
 
-const backgroundImage = require('../../../assets/images/pothole-cinematic-2.jpg');
-
 const Welcome = () => {
-    const [view, setView] = useState('welcome'); // possible states are 'welcome', 'login', 'signup'
+    const [view, setView] = useState('welcome');
     const [typedText, setTypedText] = useState('');
     const [isTyped, setIsTyped] = useState(false);
-    const [isHovered, setIsHovered] = 
-        useState({ loginWelcome: false, signupWelcome: false, login: false, signup: false, googleButton: false });
-    const googleLogo = require('../../../assets/logos/google-logo-2.png')
+    const [isHovered, setIsHovered] = useState({ loginWelcome: false, signupWelcome: false });
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
+    const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
 
-    // typewriter effect for app slogan
+    const updateLayout = () => {
+        setIsMobile(window.innerWidth < 700);
+        setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+
+    useEffect(() => {
+        updateLayout();
+
+        const handleResize = () => {
+            updateLayout();
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     useEffect(() => {
         if (view === 'welcome' && !isTyped) {
             const slogan = "Making roads safer, one pothole at a time.";
@@ -69,16 +80,26 @@ const Welcome = () => {
     };
 
     return (
-        <ImageBackground 
-        source={{uri: 'https://img.freepik.com/premium-photo/pothole-road-ground-view-cinematic-lighting-generative-aixa_40453-3640.jpg'}} 
-            style={styles.background}
-            imageStyle={styles.imageBackground}
-        >
-            <View style={[styles.overlay, view === 'welcome' ? styles.welcomeOverlay : styles.formOverlay]}>
-                {renderContent()}
-            </View>
-        </ImageBackground>
+        <View style={styles.container}>
+            <ImageBackground 
+                source={{ uri: 'https://img.freepik.com/premium-photo/pothole-road-ground-view-cinematic-lighting-generative-aixa_40453-3640.jpg' }} 
+                style={styles.imageBackground}
+            >
+                {isMobile && !isLandscape && (
+                    <View style={[styles.overlay, styles.overlayMobile]}>
+                        {renderContent()}
+                    </View>
+                )}
+            </ImageBackground>
+            {!isMobile || isLandscape ? (
+                <View style={styles.rightSection}>
+                    <View style={styles.overlay}>
+                        {renderContent()}
+                    </View>
+                </View>
+            ) : null}
+        </View>
     );
 };
 
-export default Welcome
+export default Welcome;
