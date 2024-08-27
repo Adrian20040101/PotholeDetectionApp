@@ -1,5 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
-
+import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
     formContainer: {
@@ -19,9 +18,6 @@ const styles = StyleSheet.create({
         height: 24,
         tintColor: '#fff',
     },
-    backButtonHovered: {
-        transform: [{ scale: 1.2 }],
-    },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
@@ -30,39 +26,21 @@ const styles = StyleSheet.create({
     },
     input: {
         width: '100%',
-        backgroundColor: '#fff',
-        padding: 10,
+        padding: 12,
         marginVertical: 10,
         borderRadius: 5,
-    },
-    googleButton: {
-        marginTop: 20,
-        marginBottom: 20,
-        padding: 10,
-        borderRadius: 30,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        width: 50,
-        height: 50,
-    },
-    googleButtonHover: {
-        transform: [{ scale: 1.05 }],
-        transition: 'transform 0.3s'
-    },
-    googleLogo: {
-        width: 24,
-        height: 24,
+        backgroundColor: '#333',
+        color: '#fff',
+        fontSize: 16,
     },
     button: {
-        flex: 1,
+        width: '100%',
         alignItems: 'center',
         backgroundColor: '#1E90FF',
         paddingVertical: 15,
         paddingHorizontal: 25,
         borderRadius: 30,
-        marginHorizontal: 10,
+        marginTop: 25,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.8,
@@ -78,12 +56,51 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    googleButton: {
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 30,
+        marginVertical: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 2,
+        elevation: 5,
+        transition: 'transform 0.3s',
+    },
+    googleButtonHover: {
+        transform: [{ scale: 1.05 }],
+    },
+    googleLogo: {
+        width: 24,
+        height: 24,
+        marginLeft: 10,
+    },
+    signUpText: {
+        marginVertical: 15,
+        color: '#fff',
+        fontSize: 14,
+    },
+    signUpLink: {
+        color: '#1E90FF',
+        fontWeight: 'bold',
+    },
+    forgotPasswordText: {
+        marginVertical: 15,
+        color: '#1E90FF',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
     errorText: {
         color: 'red',
         marginBottom: 10,
         textAlign: 'center',
-    }
-    
-})
+    },
+});
 
-export default styles
+export default styles;
