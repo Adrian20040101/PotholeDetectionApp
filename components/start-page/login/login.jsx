@@ -1,41 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Image, Alert, Platform } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, signInAnonymously, GoogleAuthProvider } from 'firebase/auth';
-import { collection, query, where, getDocs, getDoc, setDoc, doc } from 'firebase/firestore';
+import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
+import { getDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../../config/firebase/firebase-config';
+import { toast } from 'react-toastify';
 import styles from './login.style';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
-import * as Font from 'expo-font';
-import AppLoading from 'expo-app-loading';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const googleLogo = require('../../../assets/logos/google-logo-2.png');
 const backArrow = require('../../../assets/icons/back-arrow-icon.png');
 
-const Login = ({ onBackPress }) => {
+const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
     const navigation = useNavigation();
-    const [isHovered, setIsHovered] =  useState({ login: false, googleButton: false})
+    const [isHovered, setIsHovered] =  useState({ login: false, googleButton: false });
     const [emailOrUsername, setEmailOrUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    //const navigation = useNavigation();
-
-    // const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    //     clientId: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
-    //     redirectUri: AuthSession.makeRedirectUri({
-    //         useProxy: true,
-    //     }),
-    //     scopes: ['profile', 'email'],
-    // });
 
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
         clientId: Platform.select({
-            android: '280319253024-hf4rrb3lgl0s052upabndsnpvdaiui7m.apps.googleusercontent.com',
             web: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
         }),
         redirectUri: AuthSession.makeRedirectUri({
@@ -44,42 +32,6 @@ const Login = ({ onBackPress }) => {
         scopes: ['profile', 'email'],
     });
 
-    const handleGoogleUser = async (user, profile) => {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (!userDoc.exists()) {
-            // generate a unique username
-            let username = profile.displayName.replace(/\s+/g, '').toLowerCase();
-            const usernameExists = await checkUsernameExists(username);
-
-            if (usernameExists) {
-                // prompt the user to choose a unique username or generate one
-                username = await generateUniqueUsername(username);
-            }
-
-            // if user doesn't exist in Firestore, create a new record
-            await setDoc(doc(db, 'users', user.uid), {
-                username,
-                email: user.email,
-            });
-        }
-    };
-
-    const checkUsernameExists = async (username) => {
-        const q = query(collection(db, 'users'), where('username', '==', username));
-        const querySnapshot = await getDocs(q);
-        return !querySnapshot.empty;
-    };
-
-    const generateUniqueUsername = async (baseUsername) => {
-        let username = baseUsername;
-        let count = 1;
-        while (await checkUsernameExists(username)) {
-            username = `${baseUsername}${count}`;
-            count++;
-        }
-        return username;
-    };
-
     useEffect(() => {
         if (response?.type === 'success') {
             const { id_token } = response.params;
@@ -87,8 +39,6 @@ const Login = ({ onBackPress }) => {
             signInWithCredential(auth, credential)
                 .then(async (userCredential) => {
                     const user = userCredential.user;
-                    const profile = user.providerData[0]; // get the user's profile data from Google
-                    await handleGoogleUser(user, profile);
                     navigateToHome(userCredential.user);
                 })
                 .catch((error) => {
@@ -99,7 +49,6 @@ const Login = ({ onBackPress }) => {
     }, [response]);
 
     const navigateToHome = async (user) => {
-        // fetch user id and other user data to passed to the home page component
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.data();
         navigation.navigate('HomePage', { user: { ...user, ...userData } });
@@ -116,7 +65,6 @@ const Login = ({ onBackPress }) => {
 
         if (!email.includes('@')) {
             try {
-                // if the input is a username (doesn't contain an '@' symbol), fetch the corresponding email
                 const usernamesRef = collection(db, 'users');
                 const q = query(usernamesRef, where('username', '==', emailOrUsername));
                 const querySnapshot = await getDocs(q);
@@ -140,7 +88,7 @@ const Login = ({ onBackPress }) => {
               const userData = userDoc.data();
               navigation.navigate('HomePage', { user: { ...userData, email: user.email } });
             }
-            console.log(`Login successful. Welcome ${emailOrUsername}`)
+            console.log(`Login successful. Welcome ${emailOrUsername}`);
         } catch (error) {
             console.error('Error signing you in:', error.message);
             if (error.code === 'auth/invalid-email') {
@@ -156,6 +104,22 @@ const Login = ({ onBackPress }) => {
     const handleGoogleLogin = async () => {
         promptAsync(); 
     }
+
+    const handleForgotPassword = () => {
+        if (!emailOrUsername) {
+            toast.error('Please enter your email to reset your password.');
+            return;
+        }
+
+        sendPasswordResetEmail(auth, emailOrUsername)
+            .then(() => {
+              toast.success('Reset Link has been sent! Check your email.')  
+            })
+            .catch((error) => {
+                console.error('Error sending password reset email:', error.message);
+                toast.error('An error occurred. Please make sure you typed your email correctly and try again.')
+            });
+    };
 
     return (
         <View style={styles.formContainer}>
@@ -179,6 +143,9 @@ const Login = ({ onBackPress }) => {
                 onChangeText={setPassword}
                 secureTextEntry
             />
+            <Pressable onPress={onSignupPress}>
+                <Text style={styles.signUpText}>New here? <Text style={styles.signUpLink}>Sign Up</Text></Text>
+            </Pressable>
             <Text style={{color: 'white'}}>- or -</Text>
             <Pressable 
                 style={[styles.googleButton, isHovered.googleButton && styles.googleButtonHover]} 
@@ -186,7 +153,7 @@ const Login = ({ onBackPress }) => {
                 onMouseEnter={() => setIsHovered({ ...isHovered, googleButton: true })}
                 onMouseLeave={() => setIsHovered({ ...isHovered, googleButton: false })}
             >
-                <Image source={googleLogo} style={styles.googleLogo} />
+                Continue With Google <Image source={googleLogo} style={styles.googleLogo} />
             </Pressable>
             <Pressable 
                 style={[styles.button, isHovered.login && styles.buttonHover]} 
@@ -195,6 +162,9 @@ const Login = ({ onBackPress }) => {
                 onMouseLeave={() => setIsHovered({ ...isHovered, login: false })}
             >
                 <Text style={styles.buttonText}>Login</Text>
+            </Pressable>
+            <Pressable onPress={handleForgotPassword}>
+            <Text style={styles.signUpText}>Forgot your password? <Text style={styles.forgotPasswordText}>Reset it</Text></Text>
             </Pressable>
         </View>
     );

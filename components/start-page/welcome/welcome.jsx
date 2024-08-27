@@ -48,9 +48,9 @@ const Welcome = () => {
     const renderContent = () => {
         switch (view) {
             case 'login':
-                return <Login onBackPress={() => setView('welcome')} />;
+                return <Login onBackPress={() => setView('welcome')} onSignupPress={() => setView('signup')} />;
             case 'signup':
-                return <Signup onBackPress={() => setView('welcome')} />;
+                return <Signup onBackPress={() => setView('welcome')} onLoginPress={() => setView('login')} />;
             default:
                 return (
                     <>

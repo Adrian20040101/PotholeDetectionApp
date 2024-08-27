@@ -1,5 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
-
+import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
     formContainer: {
@@ -30,13 +29,16 @@ const styles = StyleSheet.create({
     },
     input: {
         width: '100%',
-        backgroundColor: '#fff',
-        padding: 10,
+        padding: 12,
         marginVertical: 10,
         borderRadius: 5,
+        backgroundColor: '#333',
+        color: '#fff',
+        fontSize: 16,
     },
     button: {
         flex: 1,
+        width: '100%',
         alignItems: 'center',
         backgroundColor: '#1E90FF',
         paddingVertical: 15,
@@ -69,8 +71,16 @@ const styles = StyleSheet.create({
         color: 'green',
         marginBottom: 10,
         textAlign: 'center',
-    }
-    
-})
+    },
+    signUpText: {
+        marginTop: 20,
+        marginBottom: 10,
+        color: '#d3d3d3',
+    },
+    signUpLink: {
+        color: '#1E90FF',
+        fontWeight: 'bold',
+    },
+});
 
-export default styles
+export default styles;
