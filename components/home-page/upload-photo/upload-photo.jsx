@@ -21,6 +21,7 @@ const ImageUpload = () => {
   const [address, setAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const user = auth.currentUser;
   const anonymousUsername = 'Anonymous User';
 
@@ -247,7 +248,12 @@ const handleAddressSubmit = async () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={selectFromGallery} style={styles.button}>
+      <TouchableOpacity 
+        onPress={selectFromGallery} 
+        style={[styles.button, isHovered && styles.buttonHover]}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <Image
           source={{ uri: 'https://img.icons8.com/material-outlined/24/000000/upload--v1.png' }}
           style={styles.icon}
