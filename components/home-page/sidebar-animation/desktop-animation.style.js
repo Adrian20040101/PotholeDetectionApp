@@ -1,7 +1,7 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
-const sidebarWidth = screenWidth < 800 ? 150 : 250;
+const sidebarWidth = 250;
 
 const styles = StyleSheet.create({
   sidebar: {
@@ -35,6 +35,15 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#444',
+    transition: 'all 0.3s ease-in-out',
+  },
+  menuItemHover: {
+    color: '#2563EB',
+    transform: 'scale(1.05)',
+    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+  },
+  deleteAccountHover: {
+    color: '#FF4D4F',
   },
 });
 

@@ -8,15 +8,22 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   button: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: '#2563EB',
+    padding: 12,
+    borderRadius: 8,
     alignItems: 'center',
     marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   text: {
     color: '#ffffff',
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  buttonHover: {
+    backgroundColor: '#1D4ED8',
   },
   icon: {
     width: 24,
