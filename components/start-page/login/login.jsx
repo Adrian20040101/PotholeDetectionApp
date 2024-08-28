@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Image, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
-import { getDoc, doc } from 'firebase/firestore';
+import { getDoc, getDocs, doc, collection, query, where } from 'firebase/firestore';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import { toast } from 'react-toastify';
 import styles from './login.style';
