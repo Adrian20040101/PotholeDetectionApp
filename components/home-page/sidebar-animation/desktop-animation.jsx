@@ -14,7 +14,7 @@ const DesktopSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggleSideba
       )}
       <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
         <View style={styles.menuContainer}>
-          {menuItems.map((item) => (
+          {menuItems().map((item) => (
             <Pressable key={item.label} onPress={() => item.action()}>
               <Text style={styles.menuItem}>{item.label}</Text>
             </Pressable>

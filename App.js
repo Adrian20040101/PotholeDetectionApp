@@ -17,16 +17,18 @@ const Stack = createStackNavigator();
 const App = () => {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // fetch additional user info
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.data();
         setUser({ ...userData, email: user.email });
+        setIsAnonymous(user.isAnonymous);
       } else {
         setUser(null);
+        setIsAnonymous(false);
       }
       if (initializing) setInitializing(false);
     });
@@ -40,14 +42,17 @@ const App = () => {
     <ThemeProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName={user ? 'HomePage' : 'Welcome'}>
-          {!user ? (
+          {user && !isAnonymous ? (
+            <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
+          ) : (
             <>
               <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
               <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
               <Stack.Screen name="Signup" component={Signup} options={{ headerShown: false }} />
+              {user && isAnonymous && (
+                <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
+              )}
             </>
-          ) : (
-              <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
           )}
         </Stack.Navigator>
       </NavigationContainer>

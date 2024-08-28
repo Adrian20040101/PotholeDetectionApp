@@ -197,14 +197,25 @@ const HomePage = () => {
     });
   };
 
-  // handle menu item selection
-  const menuItems = [
-    { label: 'Settings', action: toggleSettingsModal },
-    { label: 'Change Password', action: () => toast.success('Change Password Clicked') },
-    { label: 'Change Username', action: () => toast.success('Change Username Clicked') },
-    { label: 'Delete Account', action: () => toast.success('Delete Account Clicked') },
-    { label: 'Logout', action: handleLogout },
-  ];
+  // handle menu item selection based on authenticated user or guest
+  const getMenuItems = () => {
+    const user = auth.currentUser;
+  
+    if (user && user.isAnonymous) {
+      return [
+        { label: 'Settings', action: toggleSettingsModal },
+        { label: 'Sign In', action: () => navigation.navigate('Welcome') },
+      ];
+    } else if (user) {
+      return [
+        { label: 'Settings', action: toggleSettingsModal },
+        { label: 'Change Password', action: () => toast.success('Change Password Clicked') },
+        { label: 'Change Username', action: () => toast.success('Change Username Clicked') },
+        { label: 'Delete Account', action: () => toast.success('Delete Account Clicked') },
+        { label: 'Logout', action: handleLogout },
+      ];
+    };
+  }
 
 
   if (!user) {
@@ -222,7 +233,7 @@ const HomePage = () => {
           menuAnim={menuAnim}
           sidebarVisible={sidebarVisible}
           toggleSidebar={toggleSidebar}
-          menuItems={menuItems}
+          menuItems={getMenuItems}
         />
       ) : (
         <DesktopSidebar
@@ -230,12 +241,21 @@ const HomePage = () => {
           overlayAnim={overlayAnim}
           sidebarVisible={sidebarVisible}
           toggleSidebar={toggleSidebar}
-          menuItems={menuItems}
+          menuItems={getMenuItems}
         />
       )}
       <View style={[styles.content, sidebarVisible && !isMobile && styles.contentShift]}>
-        <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
-        <Text style={styles.cityText}>Your favorite city is set to: {favoriteCity}</Text>
+        {user.isAnonymous ? (
+          <>
+            <Text style={styles.welcomeText}>Welcome!</Text>
+            <Text style={styles.cityText}>Sign in to experience all benefits</Text>
+          </>
+        ) : (
+          <>
+          <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
+          <Text style={styles.cityText}>Your favorite city is set to: {favoriteCity}</Text>
+          </>
+        )}
         <Map city={favoriteCity} />
         <ImageUpload />
       </View>
