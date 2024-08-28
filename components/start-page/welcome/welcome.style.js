@@ -80,6 +80,19 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         whiteSpace: 'nowrap',
     },
+    buttonHover: {
+        transform: [{ scale: 1.05 }],
+    },
+    guestLoginText: {
+        marginVertical: 10,
+        textAlign: 'center',
+        color: '#fff',
+        fontSize: 14,
+    },
+    guestLoginLink: {
+        color: '#1E90FF',
+        fontWeight: 'bold',
+    },
 });
 
 export default styles;

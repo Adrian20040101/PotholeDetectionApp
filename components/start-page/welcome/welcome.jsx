@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ImageBackground, Dimensions } from 'react-native';
+import { auth } from "../../../config/firebase/firebase-config";
+import { signInAnonymously } from "firebase/auth";
 import Login from "../login/login";
 import Signup from "../signup/signup";
 import styles from "./welcome.style";
@@ -45,6 +47,26 @@ const Welcome = () => {
         }
     }, [view, isTyped]);
 
+    useEffect(() => {
+        const checkIfAnonymous = () => {
+            if (auth.currentUser && auth.currentUser.isAnonymous) {
+                setView('login');
+            }
+        }
+        checkIfAnonymous();
+    }, [])
+
+    const handleGuestLogin = async () => {
+        try {
+            const userCredential = await signInAnonymously(auth);
+            console.log('Guest login successful:', userCredential.user);
+            navigation.navigate('HomePage', { user: userCredential.user });
+        } catch (error) {
+            console.error('Error with guest login:', error);
+            alert('Failed to log in as guest. Please try again.');
+        }
+    };
+
     const renderContent = () => {
         switch (view) {
             case 'login':
@@ -74,6 +96,9 @@ const Welcome = () => {
                                 <Text style={styles.buttonText}>Sign Up</Text>
                             </Pressable>
                         </View>
+                        <Pressable onPress={handleGuestLogin}>
+                            <Text style={styles.guestLoginText}>Don't need an account? <Text style={styles.guestLoginLink}>Continue as Guest</Text></Text>
+                        </Pressable>
                     </>
                 );
         }

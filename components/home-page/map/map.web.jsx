@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
-import { db } from "../../../config/firebase/firebase-config";
+import { collection, getDocs, getDoc, doc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../../../config/firebase/firebase-config";
 import styles from './map.style';
 
 const containerStyle = {
@@ -22,6 +22,9 @@ const Map = ({ city }) => {
   const [loading, setLoading] = useState(true);
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
+  const user = auth.currentUser;
+  const anonymousUserProfilePicture = '../../../assets/images/default-profile-picture.webp';
+  const anonymousUsername = 'Anonymous User';
 
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
@@ -123,7 +126,10 @@ const Map = ({ city }) => {
               >
                 <View style={styles.infoWindow}>
                   <View style={styles.infoHeader}>
-                    <Image source={{ uri: selectedMarker.userProfilePicture }} style={styles.profilePicture} />
+                    <Image 
+                      source={{ uri: selectedMarker.userProfilePicture }}
+                      style={styles.profilePicture} 
+                    />
                     <View style={styles.userInfo}>
                       <Text style={styles.userName}>{selectedMarker.username}</Text>
                       <Text style={styles.timestamp}>{new Date(selectedMarker.timestamp.seconds * 1000).toLocaleString()}</Text>

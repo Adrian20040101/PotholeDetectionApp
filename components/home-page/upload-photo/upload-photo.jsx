@@ -22,6 +22,7 @@ const ImageUpload = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const user = auth.currentUser;
+  const anonymousUsername = 'Anonymous User';
 
   useEffect(() => {
     (async () => {
@@ -36,13 +37,14 @@ const ImageUpload = () => {
   const saveMarkerToFirestore = async (lat, lng, imageUrl) => {
     try {
       const markersCollectionRef = collection(db, 'markers');
+      const user = auth.currentUser;
       await addDoc(markersCollectionRef, {
         lat: lat,
         lon: lng,
         timestamp: new Date(),
-        userId: auth.currentUser.uid,
-        username: auth.currentUser.displayName,
-        userProfilePicture: auth.currentUser.photoURL,
+        userId: user.uid,
+        username: user.isAnonymous ? anonymousUsername : user.displayName,
+        userProfilePicture: user.isAnonymous ? 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg' : user.photoURL,
         imageUrl: imageUrl,
         upvotes: 0,
         downvotes: 0
@@ -160,22 +162,29 @@ const ImageUpload = () => {
 };
   
 
-  const handleAddressSubmit = async () => {
-    if (address) {
+const handleAddressSubmit = async () => {
+  if (address) {
       const location = await geocodeAddress(address);
       if (location) {
-        saveMarkerToFirestore(location.lat, location.lng);
-        setShowAddressModal(false);
-        if (selectedImage) {
-            await uploadImageToFirebase(selectedImage);
-        }
+          if (selectedImage) {
+              const downloadURL = await uploadImageToFirebase(selectedImage);
+              if (downloadURL) {
+                  saveMarkerToFirestore(location.lat, location.lng, downloadURL);
+                  setShowAddressModal(false);
+              } else {
+                  toast.error('Failed to upload image.');
+              }
+          } else {
+              toast.error('No image selected.');
+          }
       } else {
-        setShowAddressModal(true);
+          setShowAddressModal(true);
       }
-    } else {
+  } else {
       toast.error('Please enter an address.');
-    }
-  };
+  }
+};
+
 
   const handleAddressChange = (text) => {
     setAddress(text);
@@ -222,12 +231,7 @@ const ImageUpload = () => {
         const response = await fetch(uri);
         const blob = await response.blob();
         const fileName = uri.substring(uri.lastIndexOf('/') + 1);
-        let storageRef;
-        if (user) {
-            storageRef = ref(storage, `images/${user.uid}/${fileName}`);
-        } else {
-            storageRef = ref(storage, `images/anonymous-user/${fileName}`);
-        }
+        const storageRef = ref(storage, `images/${user.uid}/${fileName}`);
         const snapshot = await uploadBytes(storageRef, blob);
         const downloadURL = await getDownloadURL(snapshot.ref);
         console.log('File available at', downloadURL);
