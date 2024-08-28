@@ -16,6 +16,9 @@ import { useTheme } from '../sidebar-options/settings/theme/theme-context';
 import { lightTheme, darkTheme } from '../sidebar-options/settings/theme/theme';
 import { themeStyle } from '../sidebar-options/settings/theme/theme.style';
 import styles from './home.style';
+import ChangePasswordModal from '../sidebar-options/change-password/change-password';
+import ChangeUsernameModal from '../sidebar-options/change-username/change-username';
+import DeleteAccountModal from '../sidebar-options/delete-account/delete-account';
 
 const HomePage = () => {
   const navigation = useNavigation();
@@ -26,6 +29,9 @@ const HomePage = () => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState({});
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
+  const [changeUsernameModalVisible, setChangeUsernameModalVisible] = useState(false);
+  const [deleteAccountModalVisible, setDeleteAcconuntModalVisible] = useState(false);
   const { theme } = useTheme();
   const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
   const currentStyles = themeStyle(currentTheme);
@@ -36,6 +42,21 @@ const HomePage = () => {
   const toggleSettingsModal = () => {
     console.log('Toggling settings modal:', !settingsModalVisible);
     setSettingsModalVisible(!settingsModalVisible);
+  };
+
+  const toggleChangePasswordModalVisible = () => {
+    console.log('Toggling change password modal:', !changePasswordModalVisible);
+    setChangePasswordModalVisible(!changePasswordModalVisible);
+  };
+
+  const toggleChangeUsernameModalVisible = () => {
+    console.log('Toggling change username modal:', !changeUsernameModalVisible);
+    setChangeUsernameModalVisible(!changeUsernameModalVisible);
+  };
+
+  const toggleDeleteAccountModalVisible = () => {
+    console.log('Toggling delete account modal:', !deleteAccountModalVisible);
+    setDeleteAcconuntModalVisible(!deleteAccountModalVisible);
   };
 
   useEffect(() => {
@@ -209,9 +230,9 @@ const HomePage = () => {
     } else if (user) {
       return [
         { label: 'Settings', action: toggleSettingsModal },
-        { label: 'Change Password', action: () => toast.success('Change Password Clicked') },
-        { label: 'Change Username', action: () => toast.success('Change Username Clicked') },
-        { label: 'Delete Account', action: () => toast.success('Delete Account Clicked') },
+        { label: 'Change Password', action: toggleChangePasswordModalVisible },
+        { label: 'Change Username', action: toggleChangeUsernameModalVisible },
+        { label: 'Delete Account', action: toggleDeleteAccountModalVisible },
         { label: 'Logout', action: handleLogout },
       ];
     };
@@ -263,6 +284,18 @@ const HomePage = () => {
         isVisible={settingsModalVisible}
         onClose={toggleSettingsModal}
         onCitySelect={handleCitySelect}
+      />
+      <ChangePasswordModal
+        isVisible={changePasswordModalVisible}
+        onClose={toggleChangePasswordModalVisible}
+      />
+      <ChangeUsernameModal 
+        isVisible={changeUsernameModalVisible}
+        onClose={toggleChangeUsernameModalVisible}
+      />
+      <DeleteAccountModal 
+        isVisible={deleteAccountModalVisible}
+        onClose={toggleDeleteAccountModalVisible}
       />
     </View>
   );
