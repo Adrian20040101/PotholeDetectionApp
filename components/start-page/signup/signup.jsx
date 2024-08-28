@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, Image } from 'react-native';
+import { collection, where, query, getDocs, getDoc, setDoc, doc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../../../config/firebase/firebase-config';
 import styles from './signup.style';
 
 const googleLogo = require('../../../assets/logos/google-logo-2.png');
