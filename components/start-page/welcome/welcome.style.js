@@ -1,34 +1,44 @@
-import { StyleSheet, Platform, Dimensions } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 
-const { width: screenWidth } = Dimensions.get('window');
-const isMobile = screenWidth < 800;
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isMobile = screenWidth < 700;
 
 const styles = StyleSheet.create({
-    background: {
+    container: {
         flex: 1,
+        flexDirection: isMobile ? 'column' : 'row',
         width: '100%',
         height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'black'
     },
     imageBackground: {
         flex: 1,
-        width: isMobile ? '100%' : '50%',
+        width: '100%',
         height: '100%',
+        resizeMode: 'cover', 
+    },
+    rightSection: {
+        flex: 1, 
+        backgroundColor: 'black',
         justifyContent: 'center',
         alignItems: 'center',
+        display: isMobile ? 'none' : 'flex',
     },
     overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         padding: 30,
         borderRadius: 15,
-        border: '0.5px solid white',
+        borderWidth: 0.5,
+        borderColor: 'white',
         alignItems: 'center',
-        marginHorizontal: 10,
         width: '90%',
         maxWidth: 500,
-        marginLeft: isMobile ? 10 : 760
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    overlayMobile: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     welcomeText: {
         fontSize: 32,
@@ -46,7 +56,8 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        width: isMobile ? '100%' : '65%'
+        width: '100%',
+        maxWidth: 400,
     },
     button: {
         flex: 1,
@@ -61,56 +72,27 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.8,
         shadowRadius: 2,
         elevation: 5,
-        transition: 'background-color 0.3s, transform 0.3s',
+        whiteSpace: 'nowrap',
     },
     buttonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+        whiteSpace: 'nowrap',
     },
     buttonHover: {
-        backgroundColor: '#1C86EE',
         transform: [{ scale: 1.05 }],
     },
-    googleButtonHover: {
-        backgroundColor: '#FFF',
-        transform: [{ scale: 1.10 }],
-    },
-    googleButton: {
-        marginTop: 20,
-        marginBottom: 20,
-        padding: 10,
-        borderRadius: 30,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        width: 50,
-        height: 50,
-        transition: 'transform 0.3s'
-    },
-    googleLogo: {
-        width: 24,
-        height: 24,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 20,
-    },
-    input: {
-        width: '100%',
-        backgroundColor: '#fff',
-        padding: 10,
+    guestLoginText: {
         marginVertical: 10,
-        borderRadius: 5,
+        textAlign: 'center',
+        color: '#fff',
+        fontSize: 14,
     },
-    backButton: {
-        alignSelf: 'flex-start',
-        marginBottom: 20,
+    guestLoginLink: {
+        color: '#1E90FF',
+        fontWeight: 'bold',
     },
-    
-})
+});
 
-export default styles
+export default styles;

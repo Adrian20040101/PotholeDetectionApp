@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, Image, Alert } from 'react-native';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
-import { auth, db } from '../../../config/firebase/firebase-config';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { View, Text, TextInput, Pressable, Image } from 'react-native';
 import styles from './signup.style';
 
 const googleLogo = require('../../../assets/logos/google-logo-2.png');
 const backArrow = require('../../../assets/icons/back-arrow-icon.png');
 
-const Signup = ({ onBackPress }) => {
+const Signup = ({ onBackPress, onLoginPress }) => {
     const [isHovered, setIsHovered] = useState({ signup: false, googleButton: false });
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
@@ -50,7 +46,7 @@ const Signup = ({ onBackPress }) => {
                 return;
             }
 
-            // check if username already exists
+            // Check if username already exists
             const usernamesRef = collection(db, 'users');
             const q = query(usernamesRef, where('username', '==', username));
             const querySnapshot = await getDocs(q);
@@ -65,7 +61,7 @@ const Signup = ({ onBackPress }) => {
             const user = userCredential.user;
             console.log('User signed up:', user);
 
-            // save the username in Firestore
+            // Save the username in Firestore
             await setDoc(doc(db, 'users', user.uid), { username, email });
         } catch (error) {
             console.error('Error signing up:', error.message);
@@ -122,6 +118,9 @@ const Signup = ({ onBackPress }) => {
                 onMouseLeave={() => setIsHovered({ ...isHovered, signup: false })}
             >
                 <Text style={styles.buttonText}>Sign Up</Text>
+            </Pressable>
+            <Pressable onPress={onLoginPress}>
+                <Text style={styles.signUpText}>Already have an account? <Text style={styles.signUpLink}>Log In</Text></Text>
             </Pressable>
         </View>
     );

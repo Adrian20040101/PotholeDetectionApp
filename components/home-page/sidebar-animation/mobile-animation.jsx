@@ -22,7 +22,7 @@ const MobileSidebar = ({ menuAnim, sidebarVisible, toggleSidebar, menuItems }) =
       )}
       <Animated.View style={[styles.menuContainer, { transform: [{ translateY }] }]}>
         <View style={styles.menuContent}>
-          {menuItems.map((item, index) => (
+          {menuItems().map((item, index) => (
             <Pressable key={index} onPress={item.action} style={styles.menuItem}>
               <Text style={styles.menuText}>{item.label}</Text>
             </Pressable>
