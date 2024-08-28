@@ -24,35 +24,39 @@ const MobileSidebar = ({ menuAnim, sidebarVisible, toggleSidebar, menuItems }) =
   }, [sidebarVisible]);
 
   return (
-    <View style={[ styles.container, { zIndex: containerZIndex }]}>
+    <View style={[styles.container, { zIndex: containerZIndex }]}>
       {sidebarVisible && (
         <Pressable style={styles.overlay} onPress={toggleSidebar} />
       )}
       <Animated.View style={[styles.menuContainer, { transform: [{ translateY }] }]}>
         <View style={styles.menuContent}>
-          {menuItems().map((item, index) => (
-            <Pressable
-              key={index}
-              onPress={item.action}
-              onMouseEnter={() => setHoveredItem(index)}
-              onMouseLeave={() => setHoveredItem(null)}
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-                hoveredItem === index && styles.menuItemHover,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.menuText,
-                  hoveredItem === index && styles.menuTextHover,
-                  item.label === 'Delete Account' && hoveredItem === index && styles.deleteAccountHover,
+          {menuItems() && Array.isArray(menuItems()) && menuItems().length > 0 ? (
+            menuItems().map((item, index) => (
+              <Pressable
+                key={index}
+                onPress={item.action}
+                onMouseEnter={() => setHoveredItem(index)}
+                onMouseLeave={() => setHoveredItem(null)}
+                style={({ pressed }) => [
+                  styles.menuItem,
+                  pressed && styles.menuItemPressed,
+                  hoveredItem === index && styles.menuItemHover,
                 ]}
               >
-                {item.label}
-              </Text>
-            </Pressable>
-          ))}
+                <Text
+                  style={[
+                    styles.menuText,
+                    hoveredItem === index && styles.menuTextHover,
+                    item.label === 'Delete Account' && hoveredItem === index && styles.deleteAccountHover,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            ))
+          ) : (
+            <Text style={styles.noMenuItemsText}>No menu items available</Text>
+          )}
         </View>
       </Animated.View>
     </View>
