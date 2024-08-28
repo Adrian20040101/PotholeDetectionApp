@@ -1,4 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
+const sidebarWidth = screenWidth < 800 ? 150 : 250;
 
 const styles = StyleSheet.create({
   container: {
@@ -7,6 +10,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    zIndex: 1,
   },
   overlay: {
     position: 'absolute',
@@ -22,23 +26,47 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
-    paddingTop: 20, 
+    backgroundColor: '#333',
+    paddingTop: 20,
+    paddingBottom: 20,
+    zIndex: 3,
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
-    zIndex: 3,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   menuContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
   },
   menuItem: {
-    paddingVertical: 15,
+    paddingVertical: 10,
+    marginVertical: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: '#444',
+    transition: 'all 0.3s ease-in-out',
+  },
+  menuItemHover: {
+    transform: [{ scale: 1.05 }],
+    shadowColor: 'rgba(0, 0, 0, 0.1)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+  },
+  menuItemPressed: {
+    backgroundColor: '#222',
   },
   menuText: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: 18,
+    color: '#fff',
+  },
+  menuTextHover: {
+    color: '#2563EB',
+  },
+  deleteAccountHover: {
+    color: '#FF4D4F',
   },
 });
 
