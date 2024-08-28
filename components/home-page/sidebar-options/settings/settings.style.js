@@ -1,4 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isMobile = screenWidth < 700;
 
 const styles = StyleSheet.create({
   modalOverlay: {
@@ -7,12 +10,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    width: '40%',
+    width: isMobile ? '80%' : '50%',
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
     alignItems: 'flex-start',
     maxHeight: '80%',
+    minWidth: 350,
   },
   modalTitle: {
     fontSize: 24,
