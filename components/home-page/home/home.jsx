@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback, Dimensions, Modal } from 'react-native';
+import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback, Dimensions, Modal, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../../config/firebase/firebase-config';
@@ -19,11 +19,13 @@ import styles from './home.style';
 import ChangePasswordModal from '../sidebar-options/change-password/change-password';
 import ChangeUsernameModal from '../sidebar-options/change-username/change-username';
 import DeleteAccountModal from '../sidebar-options/delete-account/delete-account';
+import AccountDetailsSidebar from '../account-details-animation/desktop-animation';
 
 const HomePage = () => {
   const navigation = useNavigation();
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [accountDetailsVisible, setAccountDetailsVisible] = useState(false);
   const [favoriteCity, setFavoriteCity] = useState('');
   const [favoriteCityLocation, setFavoriteCityLocation] = useState({ lat: 40.7128, lng: -74.0060 }); // default to New York City coordinates
   const [user, setUser] = useState(null);
@@ -36,8 +38,10 @@ const HomePage = () => {
   const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
   const currentStyles = themeStyle(currentTheme);
   const sidebarAnim = useRef(new Animated.Value(-250)).current;
+  const accountSidebarAnim = useRef(new Animated.Value(-250)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
   const menuAnim = useRef(new Animated.Value(0)).current;
+  const [profilePictureUrl, setProfilePictureUrl] = useState(null);
 
   const toggleSettingsModal = () => {
     console.log('Toggling settings modal:', !settingsModalVisible);
@@ -72,6 +76,31 @@ const HomePage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchUserProfilePicture = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(userDocRef);
+          if (docSnap.exists()) {
+            setProfilePictureUrl(docSnap.data().profilePictureUrl);
+          } else {
+            console.log('No such document!');
+            setProfilePictureUrl('https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg');
+          }
+        } catch (error) {
+          console.error('Error fetching user profile picture:', error);
+          setProfilePictureUrl('https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg');
+        }
+      } else {
+        setProfilePictureUrl('https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg');
+      }
+    };
+
+    fetchUserProfilePicture();
+  }, []);
+
   // set up navigation options and side menu toggle
   useEffect(() => {
     navigation.setOptions({
@@ -84,6 +113,16 @@ const HomePage = () => {
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ color: '#fff', fontSize: 20, marginLeft: 20 }}>RoadGuard</Text>
         </View>
+      ),
+      headerRight: () => (
+        profilePictureUrl && (
+          <Pressable onPress={toggleAccountDetails} style={{ paddingRight: 20 }}>
+            <Image
+              source={{ uri: profilePictureUrl }}
+              style={styles.userProfilePicture}
+            />
+          </Pressable>
+        )
       ),
       headerStyle: {
         backgroundColor: 'blue',
@@ -98,7 +137,7 @@ const HomePage = () => {
         fontWeight: 'bold',
       },
     });
-  }, [navigation, sidebarVisible]);
+  }, [navigation, sidebarVisible, profilePictureUrl]);
 
   // monitor authentication state and fetch user data
   useEffect(() => {
@@ -209,6 +248,28 @@ const HomePage = () => {
     setSidebarVisible(isOpening);
   };
 
+  const toggleAccountDetails = () => {
+    const isOpening = !accountDetailsVisible;
+    const duration = isOpening ? 300 : 200;
+  
+    Animated.timing(accountSidebarAnim, {
+      toValue: isOpening ? 0 : -250,
+      duration,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  
+    Animated.timing(overlayAnim, {
+      toValue: isOpening ? 1 : 0,
+      duration,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  
+    setAccountDetailsVisible(isOpening);
+  };
+  
+
   // handle user logout
   const handleLogout = async () => {
     await auth.signOut();
@@ -243,6 +304,8 @@ const HomePage = () => {
     return (
       <View style={styles.container}>
         <Text>Loading...</Text>
+        <br />
+        <Text>If nothing is being displayed, refresh the page</Text>
       </View>
     );
   }
@@ -265,7 +328,14 @@ const HomePage = () => {
           menuItems={getMenuItems}
         />
       )}
-      <View style={[styles.content, sidebarVisible && !isMobile && styles.contentShift]}>
+      <AccountDetailsSidebar
+        sidebarAnim={accountSidebarAnim}
+        overlayAnim={overlayAnim}
+        sidebarVisible={accountDetailsVisible}
+        toggleSidebar={toggleAccountDetails}
+        user={user}
+      />
+      <View style={[styles.content, sidebarVisible && !isMobile && styles.rightContentShift, accountDetailsVisible && !isMobile && styles.leftContentShift]}>
         {user.isAnonymous ? (
           <>
             <Text style={styles.welcomeText}>Welcome!</Text>
