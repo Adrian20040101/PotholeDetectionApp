@@ -123,15 +123,20 @@ const Map = ({ city }) => {
               <InfoWindow
                 position={{ lat: selectedMarker.lat, lng: selectedMarker.lon }}
                 onCloseClick={handleInfoWindowClose}
+                headerContent={ // Adding the header content here
+                  <View style={styles.infoHeader}>
+                    <Text style={styles.headerTitle}>{selectedMarker.title || "Marker Title"}</Text>
+                  </View>
+                }
               >
                 <View style={styles.infoWindow}>
                   <View style={styles.infoHeader}>
                     <Image 
-                      source={{ uri: selectedMarker.userProfilePicture }}
+                      source={{ uri: selectedMarker.userProfilePicture || anonymousUserProfilePicture }}
                       style={styles.profilePicture} 
                     />
                     <View style={styles.userInfo}>
-                      <Text style={styles.userName}>{selectedMarker.username}</Text>
+                      <Text style={styles.userName}>{selectedMarker.username || anonymousUsername}</Text>
                       <Text style={styles.timestamp}>{new Date(selectedMarker.timestamp.seconds * 1000).toLocaleString()}</Text>
                     </View>
                   </View>

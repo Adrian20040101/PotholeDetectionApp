@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Image, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
-import { getDoc, getDocs, doc, collection, query, where } from 'firebase/firestore';
+import { getDoc, getDocs, doc, collection, query, where, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import { toast } from 'react-toastify';
 import styles from './login.style';
@@ -39,6 +39,19 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
             signInWithCredential(auth, credential)
                 .then(async (userCredential) => {
                     const user = userCredential.user;
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
+
+                    if (!userDoc.exists()) {
+                    // if new google user, save google profile picture
+                    const googleProfilePictureUrl = user.photoURL;
+
+                    await setDoc(userDocRef, {
+                        username: user.displayName,
+                        email: user.email,
+                        profilePictureUrl: googleProfilePictureUrl,
+                    });
+                }
                     navigateToHome(userCredential.user);
                 })
                 .catch((error) => {
