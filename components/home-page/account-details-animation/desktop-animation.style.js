@@ -1,7 +1,7 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
-const sidebarWidth = 250;
+const sidebarWidth = 350;
 
 const styles = StyleSheet.create({
   sidebar: {
@@ -26,16 +26,39 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
   },
-  profilePicture: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  manageAccountText: {
+    color: '#fff',
+    padding: 20,
+    fontSize: 'xx-large',
+    fontWeight: 'bold',
+  },
+  profilePictureContainer: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+    marginTop: 30,
     marginBottom: 20,
+  },
+  profilePicture: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
     borderColor: '#fff',
     borderWidth: 2,
+  },
+  editButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 30,
+    height: 30,
+    backgroundColor: 'rgba(0, 0, 0, 1)',
+    borderRadius: 15,
+    padding: 5,
+    zIndex: 5,
   },
   username: {
     color: '#fff',
