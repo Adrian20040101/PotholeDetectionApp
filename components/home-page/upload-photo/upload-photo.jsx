@@ -35,6 +35,16 @@ const ImageUpload = () => {
     })();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      setHasPermission(status === 'granted');
+      if (status !== 'granted') {
+        toast.error('Sorry, we need gallery permissions to make this work!');
+      }
+    })();
+  }, []);
+
   const saveMarkerToFirestore = async (lat, lng, imageUrl) => {
     try {
       const markersCollectionRef = collection(db, 'markers');

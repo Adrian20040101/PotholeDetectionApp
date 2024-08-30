@@ -49,7 +49,7 @@ const Signup = ({ onBackPress, onLoginPress }) => {
                 return;
             }
 
-            // Check if username already exists
+            // check if username already exists
             const usernamesRef = collection(db, 'users');
             const q = query(usernamesRef, where('username', '==', username));
             const querySnapshot = await getDocs(q);
@@ -64,8 +64,11 @@ const Signup = ({ onBackPress, onLoginPress }) => {
             const user = userCredential.user;
             console.log('User signed up:', user);
 
-            // Save the username in Firestore
-            await setDoc(doc(db, 'users', user.uid), { username, email });
+            // save a default profile picture along with username and email (can be changed later on)
+            const defaultProfilePictureUrl = 'https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg';
+
+            // save the username in Firestore
+            await setDoc(doc(db, 'users', user.uid), { username, email, profilePictureUrl: defaultProfilePictureUrl });
         } catch (error) {
             console.error('Error signing up:', error.message);
             if (error.code === 'auth/email-already-in-use') {

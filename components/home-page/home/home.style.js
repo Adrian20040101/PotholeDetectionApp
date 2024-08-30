@@ -55,11 +55,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingLeft: 20,
     paddingRight: 20,
-    transition: 'margin-left 0.5s',
+    transition: 'margin-left 0.5s, margin-right 0.5s',
     zIndex: 1,
   },
-  contentShift: {
+  rightContentShift: {
     marginLeft: 250,
+  },
+  leftContentShift: {
+    marginRight: 350,
   },
   welcomeText: {
     fontSize: 26,
@@ -80,6 +83,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.2)',
     zIndex: 2,
   },
+  userProfilePicture: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderColor: '#FFF',
+  }
 });
 
 export default styles;
