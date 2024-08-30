@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     marginLeft: 250,
   },
   leftContentShift: {
-    marginRight: 250,
+    marginRight: 350,
   },
   welcomeText: {
     fontSize: 26,

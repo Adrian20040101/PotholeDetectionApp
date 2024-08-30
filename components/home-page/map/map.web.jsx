@@ -5,6 +5,7 @@ import { GOOGLE_API_KEY } from '@env';
 import { collection, getDocs, getDoc, doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../../../config/firebase/firebase-config";
 import styles from './map.style';
+import { useUser } from '../../../context-components/user-context';
 
 const containerStyle = {
   width: '100%',
@@ -22,7 +23,7 @@ const Map = ({ city }) => {
   const [loading, setLoading] = useState(true);
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
-  const user = auth.currentUser;
+  const { userData } = useUser();
   const anonymousUserProfilePicture = '../../../assets/images/default-profile-picture.webp';
   const anonymousUsername = 'Anonymous User';
 
@@ -61,18 +62,44 @@ const Map = ({ city }) => {
       try {
         const markersCollection = collection(db, 'markers');
         const markerSnapshot = await getDocs(markersCollection);
-        const markersList = markerSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setMarkers(markersList);
+  
+        const markersList = await Promise.all(
+          markerSnapshot.docs.map(async (markerDoc) => {
+            const markerData = markerDoc.data();
+  
+            if (!markerData.userId) {
+              console.warn(`Marker ${markerDoc.id} is missing user UID.`);
+              return null;
+            }
+  
+            try {
+              const userDocRef = doc(db, 'users', markerData.userId);
+              const userDoc = await getDoc(userDocRef);
+              const userData = userDoc.exists() ? userDoc.data() : {};
+  
+              return {
+                id: markerDoc.id,
+                ...markerData,
+                username: userData.username || anonymousUsername,
+                userProfilePicture: userData.profilePictureUrl || anonymousUserProfilePicture,
+              };
+            } catch (error) {
+              console.error(`Error fetching user data for UID ${markerData.userId}:`, error);
+              return null;
+            }
+          })
+        );
+  
+        const validMarkers = markersList.filter(marker => marker !== null);
+        setMarkers(validMarkers);
       } catch (error) {
         console.error("Error fetching markers from Firestore:", error);
       }
     };
-
+  
     fetchMarkers();
   }, []);
+  
 
   const handleVote = async (markerId, type) => {
     const markerRef = doc(db, 'markers', markerId);

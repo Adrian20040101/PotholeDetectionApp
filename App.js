@@ -11,6 +11,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ThemeProvider } from './components/home-page/sidebar-options/settings/theme/theme-context';
 import { doc, getDoc } from 'firebase/firestore';
+import { UserProvider } from './context-components/user-context';
 
 const Stack = createStackNavigator();
 
@@ -39,25 +40,27 @@ const App = () => {
   if (initializing) return null;
 
   return (
-    <ThemeProvider>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName={user ? 'HomePage' : 'Welcome'}>
-          {user && !isAnonymous ? (
-            <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
-          ) : (
-            <>
-              <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
-              <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
-              <Stack.Screen name="Signup" component={Signup} options={{ headerShown: false }} />
-              {user && isAnonymous && (
-                <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
-              )}
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-      <ToastContainer />
-    </ThemeProvider>
+    <UserProvider>
+      <ThemeProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName={user ? 'HomePage' : 'Welcome'}>
+            {user && !isAnonymous ? (
+              <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
+            ) : (
+              <>
+                <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
+                <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+                <Stack.Screen name="Signup" component={Signup} options={{ headerShown: false }} />
+                {user && isAnonymous && (
+                  <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
+                )}
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+        <ToastContainer />
+      </ThemeProvider>
+    </UserProvider>
   );
 };
 

@@ -15,6 +15,7 @@ import ThemeToggle from '../sidebar-options/settings/theme/theme-toggle';
 import { useTheme } from '../sidebar-options/settings/theme/theme-context';
 import { lightTheme, darkTheme } from '../sidebar-options/settings/theme/theme';
 import { themeStyle } from '../sidebar-options/settings/theme/theme.style';
+import { useUser } from '../../../context-components/user-context';
 import styles from './home.style';
 import ChangePasswordModal from '../sidebar-options/change-password/change-password';
 import ChangeUsernameModal from '../sidebar-options/change-username/change-username';
@@ -29,7 +30,6 @@ const HomePage = () => {
   const [favoriteCity, setFavoriteCity] = useState('');
   const [favoriteCityLocation, setFavoriteCityLocation] = useState({ lat: 40.7128, lng: -74.0060 }); // default to New York City coordinates
   const [user, setUser] = useState(null);
-  const [userData, setUserData] = useState({});
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
   const [changeUsernameModalVisible, setChangeUsernameModalVisible] = useState(false);
@@ -38,10 +38,10 @@ const HomePage = () => {
   const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
   const currentStyles = themeStyle(currentTheme);
   const sidebarAnim = useRef(new Animated.Value(-250)).current;
-  const accountSidebarAnim = useRef(new Animated.Value(-250)).current;
+  const accountSidebarAnim = useRef(new Animated.Value(-350)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
   const menuAnim = useRef(new Animated.Value(0)).current;
-  const [profilePictureUrl, setProfilePictureUrl] = useState(null);
+  const { userData } = useUser();
 
   const toggleSettingsModal = () => {
     console.log('Toggling settings modal:', !settingsModalVisible);
@@ -76,31 +76,6 @@ const HomePage = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const fetchUserProfilePicture = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const docSnap = await getDoc(userDocRef);
-          if (docSnap.exists()) {
-            setProfilePictureUrl(docSnap.data().profilePictureUrl);
-          } else {
-            console.log('No such document!');
-            setProfilePictureUrl('https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg');
-          }
-        } catch (error) {
-          console.error('Error fetching user profile picture:', error);
-          setProfilePictureUrl('https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg');
-        }
-      } else {
-        setProfilePictureUrl('https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg');
-      }
-    };
-
-    fetchUserProfilePicture();
-  }, []);
-
   // set up navigation options and side menu toggle
   useEffect(() => {
     navigation.setOptions({
@@ -115,10 +90,10 @@ const HomePage = () => {
         </View>
       ),
       headerRight: () => (
-        profilePictureUrl && (
+        userData.profilePictureUrl && (
           <Pressable onPress={toggleAccountDetails} style={{ paddingRight: 20 }}>
             <Image
-              source={{ uri: profilePictureUrl }}
+              source={{ uri: userData.profilePictureUrl }}
               style={styles.userProfilePicture}
             />
           </Pressable>
@@ -137,7 +112,7 @@ const HomePage = () => {
         fontWeight: 'bold',
       },
     });
-  }, [navigation, sidebarVisible, profilePictureUrl]);
+  }, [navigation, sidebarVisible, userData.profilePictureUrl]);
 
   // monitor authentication state and fetch user data
   useEffect(() => {
@@ -253,17 +228,17 @@ const HomePage = () => {
     const duration = isOpening ? 300 : 200;
   
     Animated.timing(accountSidebarAnim, {
-      toValue: isOpening ? 0 : -250,
+      toValue: isOpening ? 0 : -350,
       duration,
       easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   
     Animated.timing(overlayAnim, {
       toValue: isOpening ? 1 : 0,
       duration,
       easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   
     setAccountDetailsVisible(isOpening);
@@ -344,10 +319,10 @@ const HomePage = () => {
         ) : (
           <>
           <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
-          <Text style={styles.cityText}>Your favorite city is set to: {favoriteCity}</Text>
+          <Text style={styles.cityText}>Your favorite city is set to: {userData.favoriteCity}</Text>
           </>
         )}
-        <Map city={favoriteCity} />
+        <Map city={userData.favoriteCity} />
         <ImageUpload />
       </View>
       <SettingsModal
