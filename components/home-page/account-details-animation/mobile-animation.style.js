@@ -1,27 +1,29 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  sidebar: {
+  mobileSidebar: {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    right: -350,
-    width: 350,
+    left: screenWidth,
+    width: '100%',
+    height: '100%',
     backgroundColor: '#333',
-    zIndex: 3,
-    paddingVertical: 20,
-    paddingHorizontal: 15,
+    zIndex: 4,
     justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 10,
   },
-  overlay: {
+  backButton: {
     position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 2,
+    top: 10,
+    left: 10,
+    zIndex: 5,
+    backgroundColor: '#444',
+    borderRadius: 20,
+    padding: 8,
   },
   contentContainer: {
     width: '100%',
