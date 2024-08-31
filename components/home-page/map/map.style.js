@@ -9,13 +9,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    minWidth: 300,
     height: '400px',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.5)',
     borderRadius: 8,
   },
-  
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

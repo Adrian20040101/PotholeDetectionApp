@@ -1,5 +1,5 @@
-import React, {useState, useEffect} from 'react';
-import { View, Text, Image, Pressable, Animated, TouchableWithoutFeedback } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Image, Pressable, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
@@ -10,8 +10,18 @@ import { toast } from 'react-toastify';
 import styles from './desktop-animation.style';
 
 const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggleSidebar }) => {
+  const [shouldRender, setShouldRender] = useState(sidebarVisible);
   const { userData, setUserData } = useUser();
   const [hasPermission, setHasPermission] = useState(null);
+
+  useEffect(() => {
+    if (sidebarVisible) {
+      setShouldRender(true);
+    } else {
+      const timeout = setTimeout(() => setShouldRender(false), 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [sidebarVisible]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -92,18 +102,20 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
     }
   };
 
-  if (!sidebarVisible) {
+  if (!shouldRender) {
     return null;
   }
 
   return (
     <>
-      <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
-        <TouchableWithoutFeedback onPress={toggleSidebar}>
-          <View style={{ flex: 1 }} />
-        </TouchableWithoutFeedback>
-      </Animated.View>
-      <Animated.View style={[styles.sidebar, { right: sidebarAnim }]}>
+      {sidebarVisible && (
+        <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
+          <TouchableWithoutFeedback onPress={toggleSidebar}>
+            <View style={{ flex: 1 }} />
+          </TouchableWithoutFeedback>
+        </Animated.View>
+      )}
+      <Animated.View style={[styles.sidebar,{ right: sidebarAnim }]}>
         <View style={styles.contentContainer}>
           <Text style={styles.manageAccountText}>Manage Account</Text>
           <View style={styles.profilePictureContainer}>
@@ -114,12 +126,10 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
           </View>
           <Text style={styles.username}>{userData?.username}</Text>
           <Text style={styles.email}>{userData?.email}</Text>
-          {/* add more account details as needed */}
         </View>
       </Animated.View>
     </>
   );
 };
-
 
 export default AccountDetailsSidebar;

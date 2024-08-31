@@ -20,7 +20,8 @@ import styles from './home.style';
 import ChangePasswordModal from '../sidebar-options/change-password/change-password';
 import ChangeUsernameModal from '../sidebar-options/change-username/change-username';
 import DeleteAccountModal from '../sidebar-options/delete-account/delete-account';
-import AccountDetailsSidebar from '../account-details-animation/desktop-animation';
+import AccountDetailsSidebarMobile from '../account-details-animation/mobile-animation';
+import AccountDetailsSidebarPC from '../account-details-animation/desktop-animation';
 
 const HomePage = () => {
   const navigation = useNavigation();
@@ -303,13 +304,19 @@ const HomePage = () => {
           menuItems={getMenuItems}
         />
       )}
-      <AccountDetailsSidebar
-        sidebarAnim={accountSidebarAnim}
-        overlayAnim={overlayAnim}
-        sidebarVisible={accountDetailsVisible}
-        toggleSidebar={toggleAccountDetails}
-        user={user}
-      />
+      {isMobile ? (
+        <AccountDetailsSidebarMobile
+          sidebarVisible={accountDetailsVisible}
+          toggleSidebar={toggleAccountDetails}
+        />
+      ) : (
+        <AccountDetailsSidebarPC
+          sidebarAnim={accountSidebarAnim}
+          overlayAnim={overlayAnim}
+          sidebarVisible={accountDetailsVisible}
+          toggleSidebar={toggleAccountDetails}
+        />
+      )}
       <View style={[styles.content, sidebarVisible && !isMobile && styles.rightContentShift, accountDetailsVisible && !isMobile && styles.leftContentShift]}>
         {user.isAnonymous ? (
           <>
