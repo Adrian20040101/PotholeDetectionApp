@@ -3,7 +3,7 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width: screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  mobileSidebar: {
+ mobileSidebar: {
     position: 'absolute',
     top: 0,
     bottom: 0,
@@ -18,16 +18,17 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 10,
-    left: 10,
+    top: 15,
+    left: 12,
     zIndex: 5,
     backgroundColor: '#444',
     borderRadius: 20,
     padding: 8,
   },
   contentContainer: {
-    width: '100%',
+    width: '80%',
     alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   manageAccountText: {
     color: '#fff',
@@ -54,7 +55,9 @@ const styles = StyleSheet.create({
     right: 5,
     bottom: 5,
     backgroundColor: 'rgba(0, 0, 0, 1)',
-    borderRadius: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     padding: 5,
   },
   username: {
@@ -69,6 +72,89 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     textAlign: 'center',
+  },
+  linkedAccountsContainer: {
+    width: '100%',
+    marginTop: 20,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#444',
+  },
+  linkedAccountsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  linkedAccountsText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  collapsedAccountsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  collapsedAccountProfilePicture: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderColor: '#fff',
+    borderWidth: 2,
+    marginRight: 5,
+  },
+  collapsedAccountText: {
+    fontSize: 16,
+    color: '#fff',
+  },
+  accountBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#444',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+    width: '100%',
+  },
+  accountBoxesScrollView: {
+    maxHeight: 180,
+    marginTop: 10,
+  },
+  accountProfilePicture: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderColor: '#fff',
+    borderWidth: 2,
+    marginRight: 10,
+  },
+  accountInfo: {
+    flex: 1,
+  },
+  accountUsername: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  accountEmail: {
+    fontSize: 14,
+    color: '#bbb',
+  },
+  addAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 8,
+    width: '100%',
+    marginTop: 10,
+  },
+  addAccountText: {
+    fontSize: 16,
+    color: '#fff',
+    marginLeft: 5,
   },
 });
 

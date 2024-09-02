@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 0,
+    paddingBottom: 20, // Padding to accommodate the Add Account button
   },
   scrollView: {
     width: '100%',
@@ -121,7 +121,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   accountBoxesScrollView: {
-    maxHeight: 200,
+    maxHeight: 180,
+    marginTop: 10,
+  },
+  nonScrollableAccountsContainer: {
     marginTop: 10,
   },
   accountProfilePicture: {
@@ -148,25 +151,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#555',
+    backgroundColor: '#007bff',
     padding: 10,
     borderRadius: 8,
     width: '100%',
-    position: 'absolute',
-    bottom: 35,
-    backgroundColor:'#007bff',
-  },
-  addAccountButtonCollapsed: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#555',
-    padding: 10,
-    borderRadius: 8,
     marginTop: 10,
-    marginBottom: 10,
-    width: '100%',
-    backgroundColor:'#007bff',
   },
   addAccountText: {
     fontSize: 16,

@@ -17,30 +17,22 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
   const animation = useRef(new Animated.Value(0)).current;
   const [linkedAccounts, setLinkedAccounts] = useState([
     {
-      profilePictureUrl: 'https://example.com/profile1.jpg',
+      profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
       username: 'User1',
       email: 'user1@example.com',
     },
     {
-      profilePictureUrl: 'https://example.com/profile2.jpg',
-      username: 'User2',
-      email: 'user2@example.com',
+      profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
+      username: 'User1',
+      email: 'user1@example.com',
     },
     {
-      profilePictureUrl: 'https://example.com/profile3.jpg',
-      username: 'User3',
-      email: 'user3@example.com',
+      profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
+      username: 'User1',
+      email: 'user1@example.com',
     },
-    {
-      profilePictureUrl: 'https://example.com/profile4.jpg',
-      username: 'User4',
-      email: 'user4@example.com',
-    },
-    {
-      profilePictureUrl: 'https://example.com/profile4.jpg',
-      username: 'User5',
-      email: 'user5@example.com',
-    },
+
+
   ]);
 
   useEffect(() => {
@@ -143,7 +135,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
 
   const animatedHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, linkedAccounts.length * 60], // 60 for each account box being 60px high
+    outputRange: [0, linkedAccounts.length > 3 ? 180 : linkedAccounts.length * 70], // 60 for account box height and 10 for the margin between eac account box
   });
 
   const animatedOpacity = animation.interpolate({
@@ -174,7 +166,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
           <Text style={styles.manageAccountText}>Manage Account</Text>
           <View style={styles.profilePictureContainer}>
             <Image source={{ uri: userData?.profilePictureUrl }} style={styles.profilePicture} />
-            <Pressable style={styles.editButton} onPress={() => console.log('Edit profile picture')}>
+            <Pressable style={styles.editButton} onPress={selectFromGallery}>
               <Icon name="edit" size={20} color="#fff" />
             </Pressable>
           </View>
@@ -188,22 +180,36 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
               </Pressable>
             </View>
             <Animated.View style={{ height: animatedHeight, opacity: animatedOpacity, overflow: 'hidden' }}>
-              <ScrollView 
-                contentContainerStyle={styles.scrollViewContent}
-                style={styles.accountBoxesScrollView}
-                showsVerticalScrollIndicator={false}
-                indicatorStyle="white"
-              >
-                {linkedAccounts.map((account, index) => (
-                  <View key={index} style={styles.accountBox}>
-                    <Image source={{ uri: account.profilePictureUrl }} style={styles.accountProfilePicture} />
-                    <View style={styles.accountInfo}>
-                      <Text style={styles.accountUsername}>{account.username}</Text>
-                      <Text style={styles.accountEmail}>{account.email}</Text>
+              {linkedAccounts.length <= 3 ? (
+                <View style={styles.nonScrollableAccountsContainer}>
+                  {linkedAccounts.map((account, index) => (
+                    <View key={index} style={styles.accountBox}>
+                      <Image source={{ uri: account.profilePictureUrl }} style={styles.accountProfilePicture} />
+                      <View style={styles.accountInfo}>
+                        <Text style={styles.accountUsername}>{account.username}</Text>
+                        <Text style={styles.accountEmail}>{account.email}</Text>
+                      </View>
                     </View>
-                  </View>
-                ))}
-              </ScrollView>
+                  ))}
+                </View>
+              ) : (
+                <ScrollView 
+                  contentContainerStyle={styles.scrollViewContent}
+                  style={styles.accountBoxesScrollView}
+                  showsVerticalScrollIndicator={false}
+                  indicatorStyle="white"
+                >
+                  {linkedAccounts.map((account, index) => (
+                    <View key={index} style={styles.accountBox}>
+                      <Image source={{ uri: account.profilePictureUrl }} style={styles.accountProfilePicture} />
+                      <View style={styles.accountInfo}>
+                        <Text style={styles.accountUsername}>{account.username}</Text>
+                        <Text style={styles.accountEmail}>{account.email}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
             </Animated.View>
             {isCollapsed && (
               <View style={styles.collapsedAccountsContainer}>
@@ -221,10 +227,10 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
                 )}
               </View>
             )}
-            <Pressable style={isCollapsed ? styles.addAccountButtonCollapsed : styles.addAccountButton} onPress={() => toast.success('Add account button pressed')}>
-              <Icon name="add" size={20} color="#fff" />
-              <Text style={styles.addAccountText}>Add another account</Text>
-            </Pressable>
+              <Pressable style={styles.addAccountButton} onPress={() => toast.success('Add account button pressed')}>
+                <Icon name="add" size={20} color="#fff" />
+                <Text style={styles.addAccountText}>Add another account</Text>
+              </Pressable>
           </View>
         </ScrollView>
       </Animated.View>
