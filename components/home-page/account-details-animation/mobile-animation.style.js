@@ -1,37 +1,34 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  sidebar: {
+ mobileSidebar: {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    right: -350,
-    width: 350,
-    backgroundColor: '#333',
-    zIndex: 3,
-    paddingVertical: 20,
-    paddingHorizontal: 15,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 2,
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingBottom: 20, // Padding to accommodate the Add Account button
-  },
-  scrollView: {
+    left: screenWidth,
     width: '100%',
-    paddingRight: 5,
+    height: '100%',
+    backgroundColor: '#333',
+    zIndex: 4,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 15,
+    left: 12,
+    zIndex: 5,
+    backgroundColor: '#444',
+    borderRadius: 20,
+    padding: 8,
+  },
+  contentContainer: {
+    width: '80%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   manageAccountText: {
     color: '#fff',
@@ -44,14 +41,14 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 10,
+    marginVertical: 20,
   },
   profilePicture: {
     width: 120,
     height: 120,
     borderRadius: 60,
     borderColor: '#fff',
-    borderWidth: 3,
+    borderWidth: 2,
   },
   editButton: {
     position: 'absolute',
@@ -67,7 +64,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 10,
     textAlign: 'center',
   },
   email: {
@@ -122,9 +119,6 @@ const styles = StyleSheet.create({
   },
   accountBoxesScrollView: {
     maxHeight: 180,
-    marginTop: 10,
-  },
-  nonScrollableAccountsContainer: {
     marginTop: 10,
   },
   accountProfilePicture: {

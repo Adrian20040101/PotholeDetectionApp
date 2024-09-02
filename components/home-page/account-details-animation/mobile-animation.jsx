@@ -1,20 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, Pressable, Animated, Easing, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Image, Pressable, Animated, Easing, Dimensions, ScrollView } from 'react-native';
+import { useUser } from '../../../context-components/user-context';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
-import { useUser } from '../../../context-components/user-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
-import styles from './desktop-animation.style';
+import styles from './mobile-animation.style';
 
-const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggleSidebar }) => {
-  const [shouldRender, setShouldRender] = useState(sidebarVisible);
-  const { userData, setUserData } = useUser();
+const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
+  const { userData } = useUser();
+  const screenWidth = Dimensions.get('window').width;
   const [hasPermission, setHasPermission] = useState(null);
+  const mobileSidebarAnim = useRef(new Animated.Value(screenWidth)).current;
   const [isCollapsed, setIsCollapsed] = useState(true);
   const animation = useRef(new Animated.Value(0)).current;
+
   const [linkedAccounts, setLinkedAccounts] = useState([
     {
       profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
@@ -23,44 +25,24 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
     },
     {
       profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
-      username: 'User1',
-      email: 'user1@example.com',
+      username: 'User2',
+      email: 'user2@example.com',
     },
     {
       profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
-      username: 'User1',
-      email: 'user1@example.com',
+      username: 'User3',
+      email: 'user3@example.com',
     },
-
-
   ]);
 
   useEffect(() => {
-    if (sidebarVisible) {
-      setShouldRender(true);
-    } else {
-      const timeout = setTimeout(() => setShouldRender(false), 300);
-      return () => clearTimeout(timeout);
-    }
-  }, [sidebarVisible]);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            setUserData(userDoc.data());
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    fetchUserData();
-  }, []);
+    Animated.timing(mobileSidebarAnim, {
+      toValue: sidebarVisible ? 0 : screenWidth,
+      duration: 300,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [sidebarVisible, screenWidth]);
 
   useEffect(() => {
     const requestPermissions = async () => {
@@ -135,7 +117,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
 
   const animatedHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, linkedAccounts.length > 3 ? 180 : linkedAccounts.length * 70], // 60 for account box height and 10 for the margin between eac account box
+    outputRange: [0, linkedAccounts.length > 3 ? 180 : linkedAccounts.length * 70],
   });
 
   const animatedOpacity = animation.interpolate({
@@ -143,26 +125,16 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
     outputRange: [0, 1],
   });
 
-  if (!shouldRender) {
+  if (!sidebarVisible && mobileSidebarAnim.__getValue() === screenWidth) {
     return null;
   }
 
   return (
-    <>
-      {sidebarVisible && (
-        <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
-          <TouchableWithoutFeedback onPress={toggleSidebar}>
-            <View style={{ flex: 1 }} />
-          </TouchableWithoutFeedback>
-        </Animated.View>
-      )}
-      <Animated.View style={[styles.sidebar, { right: sidebarAnim }]}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollViewContent}
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          indicatorStyle="white"
-        >
+    <Animated.View style={[styles.mobileSidebar, { left: mobileSidebarAnim }]}>
+          <Pressable onPress={toggleSidebar} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color="#fff" />
+          </Pressable>
+        <View style={styles.contentContainer}>
           <Text style={styles.manageAccountText}>Manage Account</Text>
           <View style={styles.profilePictureContainer}>
             <Image source={{ uri: userData?.profilePictureUrl }} style={styles.profilePicture} />
@@ -193,7 +165,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
                   ))}
                 </View>
               ) : (
-                <ScrollView 
+                <ScrollView
                   contentContainerStyle={styles.scrollViewContent}
                   style={styles.accountBoxesScrollView}
                   showsVerticalScrollIndicator={false}
@@ -227,15 +199,14 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
                 )}
               </View>
             )}
-              <Pressable style={styles.addAccountButton} onPress={() => toast.success('Add account button pressed')}>
+              <Pressable style={styles.addAccountButton} onPress={() => console.log('Add account button pressed')}>
                 <Icon name="add" size={20} color="#fff" />
                 <Text style={styles.addAccountText}>Add another account</Text>
               </Pressable>
           </View>
-        </ScrollView>
-      </Animated.View>
-    </>
+        </View>
+    </Animated.View>
   );
 };
 
-export default AccountDetailsSidebar;
+export default AccountDetailsSidebarMobile;
