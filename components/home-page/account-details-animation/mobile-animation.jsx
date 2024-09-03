@@ -16,32 +16,28 @@ const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
   const mobileSidebarAnim = useRef(new Animated.Value(screenWidth)).current;
   const [isCollapsed, setIsCollapsed] = useState(true);
   const animation = useRef(new Animated.Value(0)).current;
-
+  const [isRendered, setIsRendered] = useState(sidebarVisible);
   const [linkedAccounts, setLinkedAccounts] = useState([
-    {
-      profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
-      username: 'User1',
-      email: 'user1@example.com',
-    },
-    {
-      profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
-      username: 'User2',
-      email: 'user2@example.com',
-    },
-    {
-      profilePictureUrl: 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg',
-      username: 'User3',
-      email: 'user3@example.com',
-    },
+    
   ]);
 
   useEffect(() => {
-    Animated.timing(mobileSidebarAnim, {
-      toValue: sidebarVisible ? 0 : screenWidth,
-      duration: 300,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: false,
-    }).start();
+    if (sidebarVisible) {
+      setIsRendered(true);
+      Animated.timing(mobileSidebarAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start();
+    } else {
+      Animated.timing(mobileSidebarAnim, {
+        toValue: screenWidth,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start(() => setIsRendered(false));
+    }
   }, [sidebarVisible, screenWidth]);
 
   useEffect(() => {
@@ -125,7 +121,7 @@ const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
     outputRange: [0, 1],
   });
 
-  if (!sidebarVisible && mobileSidebarAnim.__getValue() === screenWidth) {
+  if (!isRendered) {
     return null;
   }
 
@@ -151,8 +147,15 @@ const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
                 <Icon name={isCollapsed ? 'expand-more' : 'expand-less'} size={24} color="#fff" />
               </Pressable>
             </View>
-            <Animated.View style={{ height: animatedHeight, opacity: animatedOpacity, overflow: 'hidden' }}>
-              {linkedAccounts.length <= 3 ? (
+            {linkedAccounts.length === 0 ? (
+              <View style={styles.noLinkedAccountsContainer}>
+                <Text style={styles.noLinkedAccountsText}>
+                  No linked accounts found. Click the button below to add one.
+                </Text>
+              </View>
+            ) : (
+              <Animated.View style={{ height: animatedHeight, opacity: animatedOpacity, overflow: 'hidden' }}>
+                {linkedAccounts.length <= 3 ? (
                 <View style={styles.nonScrollableAccountsContainer}>
                   {linkedAccounts.map((account, index) => (
                     <View key={index} style={styles.accountBox}>
@@ -165,7 +168,7 @@ const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
                   ))}
                 </View>
               ) : (
-                <ScrollView
+                <ScrollView 
                   contentContainerStyle={styles.scrollViewContent}
                   style={styles.accountBoxesScrollView}
                   showsVerticalScrollIndicator={false}
@@ -180,9 +183,10 @@ const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
                       </View>
                     </View>
                   ))}
-                </ScrollView>
-              )}
-            </Animated.View>
+                 </ScrollView>
+               )}
+             </Animated.View>
+            )}
             {isCollapsed && (
               <View style={styles.collapsedAccountsContainer}>
                 {linkedAccounts.slice(0, 3).map((account, index) => (
