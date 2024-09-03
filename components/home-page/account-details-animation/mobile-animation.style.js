@@ -92,6 +92,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+  noLinkedAccountsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noLinkedAccountsText: {
+    fontSize: 16,
+    color: '#bbb',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
   collapsedAccountsContainer: {
     flexDirection: 'row',
     alignItems: 'center',

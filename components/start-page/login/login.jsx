@@ -41,6 +41,7 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
                     const user = userCredential.user;
                     const userDocRef = doc(db, 'users', user.uid);
                     const userDoc = await getDoc(userDocRef);
+                    const refreshToken = userCredential.user.stsTokenManager.refreshToken;
 
                     if (!userDoc.exists()) {
                     // if new google user, save google profile picture
@@ -50,6 +51,8 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
                         username: user.displayName,
                         email: user.email,
                         profilePictureUrl: googleProfilePictureUrl,
+                        idToken: id_token,
+                        refreshToken: refreshToken,
                     });
                 }
                     navigateToHome(userCredential.user);
