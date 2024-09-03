@@ -41,8 +41,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
         if (linkedAccountDoc.exists()) {
             const { refreshToken } = linkedAccountDoc.data();
 
-            // Get a new idToken using the refreshToken
-            const response = await fetch(`https://road-guard.netlify.app/.netlify/function/refresh-token`, {
+            const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/refresh_token`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -50,8 +49,14 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
                 body: `grant_type=refresh_token&refresh_token=${refreshToken}`,
             });
 
-            const data = await response.json();
-            const newIdToken = data.id_token;
+            const responseBody = await response.text();
+            console.log('Raw response body:', responseBody);
+
+            const data = JSON.parse(responseBody);
+            console.log(data);
+            const newIdToken = data.idToken;
+
+            console.log(newIdToken);
 
             if (!newIdToken) {
                 throw new Error("Failed to refresh idToken.");
@@ -69,6 +74,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
         toast.error("Failed to switch account. Please try again.");
     }
 };
+
 
 
   useEffect(() => {

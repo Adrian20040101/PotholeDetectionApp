@@ -14,11 +14,14 @@ exports.handler = async (event, context) => {
             body: `grant_type=refresh_token&refresh_token=${refreshToken}`,
         });
 
+        const responseBody = await response.text();
+        console.log('Raw response body:', responseBody);
+
         if (!response.ok) {
-            throw new Error('Failed to refresh token');
+            throw new Error(`Failed to refresh token: ${responseBody}`);
         }
 
-        const data = await response.json();
+        const data = JSON.parse(responseBody);
 
         return {
             statusCode: 200,
@@ -29,6 +32,7 @@ exports.handler = async (event, context) => {
             body: JSON.stringify({ idToken: data.id_token }),
         };
     } catch (error) {
+        console.error('Error in refresh_token function:', error);
         return {
             statusCode: 400,
             headers: {
