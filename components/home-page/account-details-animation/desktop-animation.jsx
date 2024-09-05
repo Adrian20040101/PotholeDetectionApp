@@ -5,6 +5,7 @@ import { getAuth, GoogleAuthProvider, linkWithCredential, signInWithCredential, 
 import { getDoc, doc, setDoc, getDocs, collection } from 'firebase/firestore';
 import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
+import Cookies from 'js-cookie';
 import { useUser } from '../../../context-components/user-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
@@ -19,8 +20,8 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
   const animation = useRef(new Animated.Value(0)).current;
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const auth = getAuth();
-  const provider = new GoogleAuthProvider();
 
+  // Google Auth setup for linking a new account
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
     redirectUri: AuthSession.makeRedirectUri({
@@ -29,175 +30,195 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
     scopes: ['profile', 'email'],
   });
 
+  // Helper function to fetch user data from Firestore
+  const fetchUserData = async (uid) => {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    return userDoc.exists() ? userDoc.data() : null;
+  };
+
+  const refreshAuthToken = async (refreshToken) => {
+    try {
+      const response = await fetch('https://road-guard.netlify.app/.netlify/functions/refresh_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: refreshToken })
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok || !data.idToken) {
+        throw new Error(`Failed to refresh token: ${data.error || 'Unknown error'}`);
+      }
+  
+      // Returns the new idToken and also the new refreshToken if needed
+      return { idToken: data.idToken, refreshToken };
+    } catch (error) {
+      console.error('Error refreshing auth token:', error);
+      throw error;
+    }
+  };
+  
+  const isIdTokenExpired = (idToken) => {
+    try {
+      const base64Url = idToken.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const decodedPayload = JSON.parse(atob(base64));
+  
+      const currentTime = Math.floor(Date.now() / 1000);
+      return decodedPayload.exp < currentTime;
+    } catch (error) {
+      console.error('Error decoding idToken:', error);
+      return true;
+    }
+  };
+  
+
+  const handleSwitchAccount = async (accountUid) => {
+    try {
+      // Fetch tokens from cookies
+      let idToken = Cookies.get(`${accountUid}_idToken`);
+      let refreshToken = Cookies.get(`${accountUid}_refreshToken`);
+  
+      if (!idToken || !refreshToken) {
+        throw new Error('No session data found for the linked account.');
+      }
+  
+      // Check if the idToken is expired
+      const isTokenExpired = isIdTokenExpired(idToken);
+      if (isTokenExpired) {
+        console.log('ID Token expired, refreshing...');
+        const tokenData = await refreshAuthToken(refreshToken);
+  
+        // Update idToken with the new value
+        idToken = tokenData.idToken;
+  
+        // Store the new tokens in the cookies
+        Cookies.set(`${accountUid}_idToken`, idToken, { expires: 7 });
+      }
+  
+      // Use valid idToken to sign in
+      const credential = GoogleAuthProvider.credential(idToken);
+      await signInWithCredential(auth, credential);
+  
+      // Fetch the new user data from Firestore
+      const userDoc = await getDoc(doc(db, 'users', accountUid));
+      setUserData(userDoc.data());
+  
+      toast.success(`Switched to account ${userDoc.data().email}`);
+    } catch (error) {
+      console.error('Error switching account:', error);
+      toast.error('Failed to switch account. Please try again.');
+    }
+  };
+  
+
+  // Fetch linked accounts from Firestore and cookies
+  const fetchLinkedAccounts = async () => {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      console.error('No current user is logged in.');
+      return;
+    }
+
+    // Retrieve all cookies and filter for accounts other than the current user
+    const allCookies = Cookies.get();
+    const filteredAccounts = Object.keys(allCookies)
+      .filter((key) => key.endsWith('_idToken') && !key.startsWith(currentUser.uid))
+      .map((key) => key.split('_')[0]); // Extract UID from cookie key
+
+    // Fetch linked accounts data from Firestore using the filtered UIDs
+    const accountsData = await Promise.all(filteredAccounts.map(async (uid) => {
+      const userData = await fetchUserData(uid);
+      return { uid, ...userData };
+    }));
+
+    setLinkedAccounts(accountsData);
+  };
+
+  // Link the newly added account
   const handleAddAccount = () => {
     promptAsync();
   };
 
-  const handleSwitchAccount = async (account) => {
-    try {
-        const userDocRef = doc(db, `users/${auth.currentUser.uid}/linkedAccounts/${account.id}`);
-        const linkedAccountDoc = await getDoc(userDocRef);
+  // Save the original account's idToken and refreshToken in cookies
+  const saveOriginalAccountTokens = async (currentUser) => {
+    const currentIdToken = await currentUser.getIdToken(true);
+    const currentRefreshToken = currentUser.stsTokenManager.refreshToken;
+    Cookies.set(`${currentUser.uid}_idToken`, currentIdToken, { expires: 7 });
+    Cookies.set(`${currentUser.uid}_refreshToken`, currentRefreshToken, { expires: 7 });
 
-        if (linkedAccountDoc.exists()) {
-            const { refreshToken } = linkedAccountDoc.data();
+    console.log(`Saved idToken and refreshToken for ${currentUser.uid} in cookies`);
+  };
 
-            const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/refresh_token`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `grant_type=refresh_token&refresh_token=${refreshToken}`,
-            });
-
-            const responseBody = await response.text();
-            console.log('Raw response body:', responseBody);
-
-            const data = JSON.parse(responseBody);
-            console.log(data);
-            const newIdToken = data.idToken;
-
-            console.log(newIdToken);
-
-            if (!newIdToken) {
-                throw new Error("Failed to refresh idToken.");
-            }
-
-            const credential = GoogleAuthProvider.credential(newIdToken);
-            await signInWithCredential(auth, credential);
-
-            toast.success(`Switched to account ${account.email}`);
-        } else {
-            throw new Error("No linked account data found.");
+  // After linking an account, save both the current and linked account's tokens
+  const linkAccount = async () => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+  
+      try {
+        const currentUser = auth.currentUser;
+        if (!currentUser) throw new Error('No current user is logged in.');
+  
+        // Sign in with the new linked account
+        const signInResult = await signInWithCredential(auth, credential);
+        const linkedUser = signInResult.user;
+  
+        // Save the current user's tokens in cookies (original account)
+        const originalIdToken = currentUser.stsTokenManager.accessToken;
+        const originalRefreshToken = currentUser.stsTokenManager.refreshToken;
+        Cookies.set(`${currentUser.uid}_idToken`, originalIdToken, { expires: 7 });
+        Cookies.set(`${currentUser.uid}_refreshToken`, originalRefreshToken, { expires: 7 });
+  
+        // Check if the linked user already exists in Firestore
+        const linkedUserDocRef = doc(db, 'users', linkedUser.uid);
+        const linkedUserDoc = await getDoc(linkedUserDocRef);
+  
+        if (!linkedUserDoc.exists()) {
+          await setDoc(linkedUserDocRef, {
+            username: linkedUser.displayName,
+            email: linkedUser.email,
+            profilePictureUrl: linkedUser.photoURL,
+          });
         }
-    } catch (error) {
-        console.error("Error switching account: ", error);
-        toast.error("Failed to switch account. Please try again.");
+  
+        // Store the linked user's tokens in cookies
+        Cookies.set(`${linkedUser.uid}_idToken`, id_token, { expires: 7 });
+        Cookies.set(`${linkedUser.uid}_refreshToken`, linkedUser.stsTokenManager.refreshToken, { expires: 7 });
+  
+        fetchLinkedAccounts(); // Refresh the linked accounts list
+  
+        toast.success('Account linked successfully!');
+      } catch (error) {
+        console.error('Error linking account:', error);
+        toast.error('Failed to link account. Please try again.');
+      }
     }
-};
-
-
-
+  };
+  
+  // Check for response when linking an account
   useEffect(() => {
-    const linkAccount = async () => {
-      if (response?.type === 'success') {
-          const { id_token } = response.params;
-          const credential = GoogleAuthProvider.credential(id_token);
-  
-          try {
-              const currentUser = auth.currentUser;
-  
-              if (!currentUser) {
-                  throw new Error('No current user is logged in.');
-              }
-  
-              // Sign in with the selected account using a separate instance of auth
-              const secondaryAuth = getAuth(); // Create a secondary auth instance
-              secondaryAuth.languageCode = 'en';
-              const signInResult = await signInWithCredential(secondaryAuth, credential);
-              const linkedUserInfo = signInResult.user;
-              const linkedUserRefreshToken = linkedUserInfo.stsTokenManager.refreshToken;
-  
-              // References for Firestore documents
-              const linkedUserDocRef = doc(db, `users/${linkedUserInfo.uid}`);
-              const currentUserDocRef = doc(db, `users/${currentUser.uid}`);
-  
-              // Fetch or create the linked user's document
-              let linkedUserDoc = await getDoc(linkedUserDocRef);
-              if (!linkedUserDoc.exists()) {
-                  // Create the linked user's document if it doesn't exist
-                  await setDoc(linkedUserDocRef, {
-                      username: linkedUserInfo.displayName,
-                      email: linkedUserInfo.email,
-                      profilePictureUrl: linkedUserInfo.photoURL,
-                      idToken: id_token,
-                      refreshToken: linkedUserRefreshToken,
-                      favoriteCity: "", // Placeholder, can be updated later
-                  });
-                  linkedUserDoc = await getDoc(linkedUserDocRef); // Re-fetch the newly created document
-              }
-  
-              // Fetch the current user's document
-              const currentUserDoc = await getDoc(currentUserDocRef);
-              if (!currentUserDoc.exists()) {
-                  throw new Error('Current user does not have a document in Firestore.');
-              }
-  
-              // Retain existing data and add the idToken
-              const originalUserIdToken = currentUser.stsTokenManager.accessToken;
-              const currentUserData = {
-                  ...currentUserDoc.data(), // Retain existing data
-                  idToken: originalUserIdToken // Add the idToken
-              };
-  
-              // Use the existing data from Firestore for linking
-              const linkedAccountData = linkedUserDoc.data();
-  
-              // Add linked account info to the authenticated user's linkedAccounts collection
-              const currentUserLinkedAccountRef = doc(db, `users/${currentUser.uid}/linkedAccounts/${linkedUserInfo.uid}`);
-              await setDoc(currentUserLinkedAccountRef, linkedAccountData);
-  
-              // Add the updated original user's info to the newly linked user's linkedAccounts collection
-              const linkedUserLinkedAccountRef = doc(db, `users/${linkedUserInfo.uid}/linkedAccounts/${currentUser.uid}`);
-              await setDoc(linkedUserLinkedAccountRef, currentUserData);
-  
-              // Update the state to reflect the newly linked account
-              setLinkedAccounts((prev) => [...prev, linkedAccountData]);
-  
-              toast.success('Account linked successfully!');
-          } catch (error) {
-              console.error('Error linking account: ', error);
-              toast.error('Failed to link account. Please try again.');
-          }
-      }
-  };
-  
-  
-  
-    linkAccount();
-  }, [response]);
-  
-  
-  const fetchLinkedAccounts = async () => {
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        console.error('No current user is logged in.');
-        return;
-      }
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
 
-      const linkedAccountsCollectionRef = collection(db, `users/${currentUser.uid}/linkedAccounts`);
-      const linkedAccountsSnapshot = await getDocs(linkedAccountsCollectionRef);
-
-      const accounts = linkedAccountsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setLinkedAccounts(accounts);
-    } catch (error) {
-      console.error('Error fetching linked accounts: ', error);
+      signInWithCredential(auth, credential)
+        .then(async (signInResult) => {
+          const linkedUser = signInResult.user;
+          await linkAccount(linkedUser);
+        })
+        .catch((error) => {
+          console.error('Error linking account:', error);
+          toast.error('Failed to link account. Please try again.');
+        });
     }
-  };
+  }, [response]);
 
+  // Initial fetch of linked accounts
   useEffect(() => {
     fetchLinkedAccounts();
   }, []);
-
-  const signInWithLinkedAccount = async (account) => {
-    try {
-      const signInMethods = await fetchSignInMethodsForEmail(auth, account.email);
-      if (signInMethods.includes('google.com')) {
-        const credential = GoogleAuthProvider.credential(null, account.email);
-        await signInWithCredential(auth, credential);
-        toast.success(`Signed in as ${account.username}`);
-      } else {
-        toast.error('Cannot sign in with this account.');
-      }
-    } catch (error) {
-      console.error('Error signing in with linked account: ', error);
-      toast.error('Failed to sign in with linked account.');
-    }
-  };
 
   useEffect(() => {
     if (sidebarVisible) {
@@ -207,24 +228,6 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
       return () => clearTimeout(timeout);
     }
   }, [sidebarVisible]);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            setUserData(userDoc.data());
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    fetchUserData();
-  }, []);
 
   useEffect(() => {
     const requestPermissions = async () => {
@@ -354,7 +357,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
                 {linkedAccounts.length <= 3 ? (
                   <View style={styles.nonScrollableAccountsContainer}>
                     {linkedAccounts.map((account, index) => (
-                      <Pressable key={index} onPress={() => handleSwitchAccount(account)} style={styles.accountBox}>
+                      <Pressable key={index} onPress={() => handleSwitchAccount(account.uid)} style={styles.accountBox}>
                         <Image source={{ uri: account.profilePictureUrl }} style={styles.accountProfilePicture} />
                         <View style={styles.accountInfo}>
                           <Text style={styles.accountUsername}>{account.username}</Text>
@@ -371,7 +374,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
                     indicatorStyle="white"
                   >
                     {linkedAccounts.map((account, index) => (
-                      <Pressable key={index} onPress={() => handleSwitchAccount(account)} style={styles.accountBox}>
+                      <Pressable key={index} onPress={() => handleSwitchAccount(account.uid)} style={styles.accountBox}>
                         <Image source={{ uri: account.profilePictureUrl }} style={styles.accountProfilePicture} />
                         <View style={styles.accountInfo}>
                           <Text style={styles.accountUsername}>{account.username}</Text>
@@ -388,7 +391,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
                 {linkedAccounts.slice(0, 3).map((account, index) => (
                   <Pressable
                     key={index}
-                    onPress={() => handleSwitchAccount(account)}
+                    onPress={() => () => handleSwitchAccount(account.uid)}
                   >
                   <Image
                     source={{ uri: account.profilePictureUrl }}
