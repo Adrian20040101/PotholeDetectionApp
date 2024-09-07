@@ -250,7 +250,7 @@ const HomePage = () => {
   const handleLogout = () => {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      Cookies.remove(`linkedAccount_${currentUser.uid}_uid`);
+      Cookies.remove(`linkedAccount_${currentUser.uid}_refreshToken`);
       Cookies.remove(`linkedAccount_${currentUser.uid}_idToken`);
       auth.signOut();
     }

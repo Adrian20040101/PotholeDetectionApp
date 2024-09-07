@@ -42,12 +42,10 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
                     
                     const userCredential = await signInWithCredential(auth, credential);
                     const user = userCredential.user;
-                    const idToken = await user.getIdToken(true);
-                    const refreshToken = user.stsTokenManager.refreshToken;
-
-                    // Save ID token and refresh token in cookies
-                    Cookies.set(`linkedAccount_${user.uid}_idToken`, idToken, { expires: 7, secure: true });
-                    Cookies.set(`linkedAccount_${user.uid}_refreshToken`, refreshToken, { expires: 7, secure: true });
+    
+                    Cookies.set(`linkedAccount_${user.uid}_idToken`, id_token, { expires: 7, secure: true });
+                    Cookies.set(`linkedAccount_${user.uid}_refreshToken`, user.stsTokenManager.refreshToken, { expires: 7, secure: true });
+                    
                     await fetchOrCreateUserData(user);
                     navigateToHome(user);
                 } catch (error) {

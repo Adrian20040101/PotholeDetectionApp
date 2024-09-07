@@ -72,50 +72,51 @@ const fetchLinkedAccounts = async () => {
 
 
 
-  // Switch account
-  const handleSwitchAccount = async (accountUid) => {
-    try {
-      const idToken = Cookies.get(`linkedAccount_${accountUid}_idToken`);
-      const refreshToken = Cookies.get(`linkedAccount_${accountUid}_refreshToken`);
+const handleSwitchAccount = async (accountUid) => {
+  try {
+    // Retrieve the OAuth id_token from cookies (Google OAuth token)
+    const idToken = Cookies.get(`linkedAccount_${accountUid}_idToken`);
+    
+    if (!idToken) {
+      throw new Error('No valid ID token found. You may need to log in again.');
+    }
 
-      if (!idToken || !refreshToken) {
-        throw new Error('No valid ID token or refresh token found. You may need to log in again.');
-      }
+    // Re-authenticate using the Google OAuth id_token (not the Firebase ID token)
+    const credential = GoogleAuthProvider.credential(idToken);
+    await signInWithCredential(auth, credential);
 
-      const credential = GoogleAuthProvider.credential(idToken);
-      await signInWithCredential(auth, credential);
+    toast.success('Switched account successfully!');
+  } catch (error) {
+    console.error('Error switching account:', error.message);
+    toast.error('Failed to switch account.');
+  }
+};
+
+
+
+const handleAddAccount = async () => {
+  try {
+    const result = await promptAsync();
+    if (result?.type === 'success') {
+      const { id_token } = result.params;
+      const credential = GoogleAuthProvider.credential(id_token); // Use this id_token directly from Google
       
-      toast.success('Switched account successfully!');
-    } catch (error) {
-      console.error('Error switching account:', error.message);
-      toast.error('Failed to switch account.');
+      // Save the id_token (OAuth token) and refresh token
+      const userCredential = await signInWithCredential(auth, credential);
+      const linkedUser = userCredential.user;
+
+      Cookies.set(`linkedAccount_${linkedUser.uid}_idToken`, id_token, { expires: 7 });
+      Cookies.set(`linkedAccount_${linkedUser.uid}_refreshToken`, linkedUser.stsTokenManager.refreshToken, { expires: 7 });
+
+      toast.success('Account added successfully!');
+      await fetchLinkedAccounts();
     }
-  };
+  } catch (error) {
+    console.error('Error adding account:', error);
+    toast.error('Failed to add account.');
+  }
+};
 
-  // Handle adding a new account
-  const handleAddAccount = async () => {
-    try {
-      const result = await promptAsync();
-      if (result?.type === 'success') {
-        const { id_token } = result.params;
-        const credential = GoogleAuthProvider.credential(id_token);
-        const userCredential = await signInWithCredential(auth, credential);
-        const linkedUser = userCredential.user;
-
-        // Save the ID token and refresh token in cookies
-        const idToken = await linkedUser.getIdToken(true);
-        const refreshToken = linkedUser.stsTokenManager.refreshToken;
-        Cookies.set(`linkedAccount_${linkedUser.uid}_idToken`, idToken, { expires: 7, secure: true });
-        Cookies.set(`linkedAccount_${linkedUser.uid}_refreshToken`, refreshToken, { expires: 7, secure: true });
-
-        await fetchLinkedAccounts();
-        toast.success('Account added successfully!');
-      }
-    } catch (error) {
-      console.error('Error adding account:', error);
-      toast.error('Failed to add account.');
-    }
-  };
 
   // Initial fetch of linked accounts
   useEffect(() => {
