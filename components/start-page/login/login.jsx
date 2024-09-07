@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Image, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, sendPasswordResetEmail, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { getDoc, getDocs, doc, collection, query, where, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import { toast } from 'react-toastify';
@@ -9,6 +9,7 @@ import styles from './login.style';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import Cookies from 'js-cookie';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -33,33 +34,46 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
     });
 
     useEffect(() => {
-        if (response?.type === 'success') {
-            const { id_token } = response.params;
-            const credential = GoogleAuthProvider.credential(id_token);
-            signInWithCredential(auth, credential)
-                .then(async (userCredential) => {
+        const handleGoogleSignIn = async () => {
+            if (response?.type === 'success') {
+                try {
+                    const { id_token } = response.params;
+                    const credential = GoogleAuthProvider.credential(id_token);
+                    
+                    const userCredential = await signInWithCredential(auth, credential);
                     const user = userCredential.user;
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const userDoc = await getDoc(userDocRef);
+                    const idToken = await user.getIdToken(true);
+                    const refreshToken = user.stsTokenManager.refreshToken;
 
-                    if (!userDoc.exists()) {
-                    // if new google user, save google profile picture
-                    const googleProfilePictureUrl = user.photoURL;
-
-                    await setDoc(userDocRef, {
-                        username: user.displayName,
-                        email: user.email,
-                        profilePictureUrl: googleProfilePictureUrl,
-                    });
-                }
-                    navigateToHome(userCredential.user);
-                })
-                .catch((error) => {
+                    // Save ID token and refresh token in cookies
+                    Cookies.set(`linkedAccount_${user.uid}_idToken`, idToken, { expires: 7, secure: true });
+                    Cookies.set(`linkedAccount_${user.uid}_refreshToken`, refreshToken, { expires: 7, secure: true });
+                    await fetchOrCreateUserData(user);
+                    navigateToHome(user);
+                } catch (error) {
                     console.error('Error signing in with Google:', error);
                     Alert.alert('Error', 'Error signing in with Google. Please try again.');
+                }
+            }
+        };
+    
+        const fetchOrCreateUserData = async (user) => {
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+    
+            if (!userDoc.exists()) {
+                const googleProfilePictureUrl = user.photoURL;
+                await setDoc(userDocRef, {
+                    username: user.displayName,
+                    email: user.email,
+                    profilePictureUrl: googleProfilePictureUrl,
                 });
-        }
+            }
+        };
+    
+        handleGoogleSignIn();
     }, [response]);
+    
 
     const navigateToHome = async (user) => {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -67,6 +81,7 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
         navigation.navigate('HomePage', { user: { ...user, ...userData } });
     };
 
+   
     const handleLogin = async () => {
         setError('');
         if (emailOrUsername === '' || password === '') {
@@ -96,11 +111,16 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            const idToken = await user.getIdToken(true);
+            const refreshToken = user.stsTokenManager.refreshToken;
+            Cookies.set(`linkedAccount_${user.uid}_idToken`, idToken, { expires: 7, secure: true });
+            Cookies.set(`linkedAccount_${user.uid}_refreshToken`, refreshToken, { expires: 7, secure: true });
             if (user) {
               const userDoc = await getDoc(doc(db, 'users', user.uid));
               const userData = userDoc.data();
               navigation.navigate('HomePage', { user: { ...userData, email: user.email } });
             }
+
             console.log(`Login successful. Welcome ${emailOrUsername}`);
         } catch (error) {
             console.error('Error signing you in:', error.message);
