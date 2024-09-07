@@ -6,6 +6,7 @@ import { auth, db } from '../../../config/firebase/firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
 import Map from '../map/map';
 import DesktopSidebar from '../sidebar-animation/desktop-animation';
 import MobileSidebar from '../sidebar-animation/mobile-animation';
@@ -246,14 +247,15 @@ const HomePage = () => {
   };
   
 
-  // handle user logout
-  const handleLogout = async () => {
-    await auth.signOut();
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Welcome' }],
-    });
+  const handleLogout = () => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      Cookies.remove(`linkedAccount_${currentUser.uid}_uid`);
+      Cookies.remove(`linkedAccount_${currentUser.uid}_idToken`);
+      auth.signOut();
+    }
   };
+  
 
   // handle menu item selection based on authenticated user or guest
   const getMenuItems = () => {
