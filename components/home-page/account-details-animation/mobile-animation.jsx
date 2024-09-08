@@ -317,6 +317,18 @@ const handleAddAccount = async () => {
     });
   };
 
+  const handleLogout = async (accountUid) => {
+    try {
+      Cookies.remove(`linkedAccount_${accountUid}_idToken`);
+      Cookies.remove(`linkedAccount_${accountUid}_refreshToken`);
+      toast.success('Account unlinked successfully.');
+      await fetchLinkedAccounts();
+    } catch (error) {
+      console.error('Error', 'An error occured during unlink process');
+      toast.error('Account could not be unlinked. Please try again.');
+    }
+  }
+
   const filteredLinkedAccounts = linkedAccounts.filter(account => account.uid !== currentDisplayedAccountUid);
 
   const animatedHeight = animation.interpolate({
