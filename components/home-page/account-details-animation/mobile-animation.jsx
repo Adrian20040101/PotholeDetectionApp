@@ -420,7 +420,7 @@ const handleAddAccount = async () => {
                 )}
               </View>
             )}
-              <Pressable style={styles.addAccountButton} onPress={() => console.log('Add account button pressed')}>
+              <Pressable style={styles.addAccountButton} onPress={handleAddAccount}>
                 <Icon name="add" size={20} color="#fff" />
                 <Text style={styles.addAccountText}>Add another account</Text>
               </Pressable>
