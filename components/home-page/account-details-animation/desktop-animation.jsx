@@ -32,6 +32,7 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
       scheme: 'potholedetection',
     }),
     scopes: ['profile', 'email'],
+    prompt: 'select_account',
   });
 
   

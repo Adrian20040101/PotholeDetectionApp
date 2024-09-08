@@ -15,7 +15,7 @@ import { toast } from 'react-toastify';
 import styles from './mobile-animation.style';
 
 const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
-  const { userData } = useUser();
+  const { userData, setUserData } = useUser();
   const screenWidth = Dimensions.get('window').width;
   const [hasPermission, setHasPermission] = useState(null);
   const mobileSidebarAnim = useRef(new Animated.Value(screenWidth)).current;
