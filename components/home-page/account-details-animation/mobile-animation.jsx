@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, Pressable, Animated, Easing, Dimensions, ScrollView } from 'react-native';
 import { useUser } from '../../../context-components/user-context';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, fetchSignInMethodsForEmail, reauthenticateWithCredential, linkWithCredential } from "firebase/auth";
 import { auth, db } from '../../../config/firebase/firebase-config';
+import * as Google from 'expo-auth-session/providers/google';
 import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
+import { onAuthStateChanged } from 'firebase/auth';
+import Cookies from 'js-ccokie';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import * as AuthSession from 'expo-auth-session';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
 import styles from './mobile-animation.style';
