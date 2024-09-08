@@ -33,6 +33,7 @@ const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
       scheme: 'potholedetection',
     }),
     scopes: ['profile', 'email'],
+    prompt: 'select_account',
   });
 
   
