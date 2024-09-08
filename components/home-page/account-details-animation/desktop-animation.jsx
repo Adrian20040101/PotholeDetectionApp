@@ -5,12 +5,14 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, fet
 import { getDoc, doc, setDoc, getDocs, collection, updateDoc } from 'firebase/firestore';
 import * as Google from 'expo-auth-session/providers/google';
 import { getStorage, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { onIdTokenChanged, onAuthStateChanged } from 'firebase/auth';
 import * as AuthSession from 'expo-auth-session';
 import Cookies from 'js-cookie';
 import { useUser } from '../../../context-components/user-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
+import jwtDecode from 'jwt-decode';
 import styles from './desktop-animation.style';
 
 const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggleSidebar }) => {
@@ -22,8 +24,8 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const auth = getAuth();
   const [currentDisplayedAccountUid, setCurrentDisplayedAccountUid] = useState(auth.currentUser.uid);
+  const firebaseApiKey = process.env.EXPO_PUBLIC_FIREBASE_API_KEY;
 
-  // Google Auth setup for linking a new account
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
     redirectUri: AuthSession.makeRedirectUri({
@@ -33,7 +35,6 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
   });
 
   
-  // Helper function to fetch user data from Firestore
   const fetchUserData = async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
     return userDoc.exists() ? userDoc.data() : null;
@@ -71,53 +72,154 @@ const fetchLinkedAccounts = async () => {
 };
 
 
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log('auth.currentUser updated:', user);
+      fetchUserData(user.uid).then((data) => {
+        setUserData(data);
+        setCurrentDisplayedAccountUid(user.uid);
+      });
+    } else {
+      console.log('No user is signed in');
+    }
+  });
 
-  // Switch account
-  const handleSwitchAccount = async (accountUid) => {
+  return () => unsubscribe();
+}, []);
+
+const handleSwitchAccount = async (accountUid) => {
+  try {
+    let idToken = Cookies.get(`linkedAccount_${accountUid}_idToken`);
+    const refreshToken = Cookies.get(`linkedAccount_${accountUid}_refreshToken`);
+
+    if (!idToken || !refreshToken) {
+      return await reauthenticateUser(accountUid);
+    }
+
     try {
-      const idToken = Cookies.get(`linkedAccount_${accountUid}_idToken`);
-      const refreshToken = Cookies.get(`linkedAccount_${accountUid}_refreshToken`);
-
-      if (!idToken || !refreshToken) {
-        throw new Error('No valid ID token or refresh token found. You may need to log in again.');
-      }
-
       const credential = GoogleAuthProvider.credential(idToken);
       await signInWithCredential(auth, credential);
-      
+
+      const newUserData = await fetchUserData(accountUid);
+      setUserData(newUserData);
+      setCurrentDisplayedAccountUid(accountUid);
+
+      await fetchLinkedAccounts();
+
       toast.success('Switched account successfully!');
     } catch (error) {
-      console.error('Error switching account:', error.message);
-      toast.error('Failed to switch account.');
-    }
-  };
-
-  // Handle adding a new account
-  const handleAddAccount = async () => {
-    try {
-      const result = await promptAsync();
-      if (result?.type === 'success') {
-        const { id_token } = result.params;
-        const credential = GoogleAuthProvider.credential(id_token);
-        const userCredential = await signInWithCredential(auth, credential);
-        const linkedUser = userCredential.user;
-
-        // Save the ID token and refresh token in cookies
-        const idToken = await linkedUser.getIdToken(true);
-        const refreshToken = linkedUser.stsTokenManager.refreshToken;
-        Cookies.set(`linkedAccount_${linkedUser.uid}_idToken`, idToken, { expires: 7, secure: true });
-        Cookies.set(`linkedAccount_${linkedUser.uid}_refreshToken`, refreshToken, { expires: 7, secure: true });
-
-        await fetchLinkedAccounts();
-        toast.success('Account added successfully!');
+      if (error.code === 'auth/invalid-credential' || error.message.includes('Invalid id_token')) {
+        console.log('ID token is invalid or expired, refreshing token...');
+        await refreshAuthToken(accountUid);
+      } else {
+        throw error;
       }
+    }
+  } catch (error) {
+    console.error('Error switching account:', error.message);
+    toast.error('Failed to switch account.');
+  }
+};
+
+const refreshAuthToken = async (accountUid) => {
+  const refreshToken = Cookies.get(`linkedAccount_${accountUid}_refreshToken`);
+  if (!refreshToken) {
+    console.error('No refresh token available, reauthentication needed.');
+    return await reauthenticateUser(accountUid);
+  }
+
+  try {
+    const response = await fetch(`https://securetoken.googleapis.com/v1/token?key=${firebaseApiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }),
+    });
+
+    const data = await response.json();
+    if (!data.id_token) {
+      throw new Error('Failed to refresh token');
+    }
+
+    Cookies.set(`linkedAccount_${accountUid}_idToken`, data.id_token, { expires: 7, secure: true });
+    Cookies.set(`linkedAccount_${accountUid}_refreshToken`, data.refresh_token, { expires: 7, secure: true });
+
+    const credential = GoogleAuthProvider.credential(data.id_token);
+    await signInWithCredential(auth, credential);
+
+    console.log('Token refreshed and account switch successful.');
+    toast.success('Switched account after token refresh!');
+  } catch (error) {
+    console.error('Error refreshing auth token:', error);
+    return await reauthenticateUser(accountUid);
+  }
+};
+
+// reauthenticate user (only if refresh fails)
+const reauthenticateUser = async (accountUid) => {
+  console.log('Reauthenticating user...');
+  const result = await promptAsync();
+  if (result?.type === 'success') {
+    const { id_token } = result.params;
+    const credential = GoogleAuthProvider.credential(id_token);
+
+    await signInWithCredential(auth, credential);
+
+    const refreshedIdToken = id_token;
+    const refreshToken = auth.currentUser.stsTokenManager.refreshToken;
+
+    Cookies.set(`linkedAccount_${accountUid}_idToken`, refreshedIdToken, { expires: 7, secure: true });
+    Cookies.set(`linkedAccount_${accountUid}_refreshToken`, refreshToken, { expires: 7, secure: true });
+
+    console.log('Reauthentication successful');
+  } else {
+    throw new Error('Reauthentication failed');
+  }
+};
+
+
+useEffect(() => {
+  const updateLinkedAccounts = async () => {
+    try {
+      await fetchLinkedAccounts();
     } catch (error) {
-      console.error('Error adding account:', error);
-      toast.error('Failed to add account.');
+      console.error('Error fetching linked accounts:', error);
     }
   };
 
-  // Initial fetch of linked accounts
+  if (auth.currentUser) {
+    updateLinkedAccounts();
+  }
+
+  updateLinkedAccounts();
+}, [auth.currentUser]);
+
+const handleAddAccount = async () => {
+  try {
+    const result = await promptAsync();
+    if (result?.type === 'success') {
+      const { id_token } = result.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      
+      const userCredential = await signInWithCredential(auth, credential);
+      const linkedUser = userCredential.user;
+
+      Cookies.set(`linkedAccount_${linkedUser.uid}_idToken`, id_token, { expires: 7, secure: true });
+      Cookies.set(`linkedAccount_${linkedUser.uid}_refreshToken`, linkedUser.stsTokenManager.refreshToken, { expires: 7, secure: true });
+
+      toast.success('Account added successfully!');
+      await fetchLinkedAccounts();
+    }
+  } catch (error) {
+    console.error('Error adding account:', error);
+    toast.error('Failed to add account.');
+  }
+};
+
+
   useEffect(() => {
     fetchLinkedAccounts();
   }, []);
@@ -202,6 +304,18 @@ const fetchLinkedAccounts = async () => {
     });
   };
 
+  const handleLogout = async (accountUid) => {
+    try {
+      Cookies.remove(`linkedAccount_${accountUid}_idToken`);
+      Cookies.remove(`linkedAccount_${accountUid}_refreshToken`);
+      toast.success('Account unlinked successfully.');
+      await fetchLinkedAccounts();
+    } catch (error) {
+      console.error('Error', 'An error occured during unlink process');
+      toast.error('Account could not be unlinked. Please try again.');
+    }
+  }
+
   // dont display the currently displayed account to avoid redundancy
   const filteredLinkedAccounts = linkedAccounts.filter(account => account.uid !== currentDisplayedAccountUid);
 
@@ -268,6 +382,9 @@ const fetchLinkedAccounts = async () => {
                           <Text style={styles.accountUsername}>{account.username}</Text>
                           <Text style={styles.accountEmail}>{account.email}</Text>
                         </View>
+                        <Pressable onPress={() => handleLogout(account.uid)}>
+                          <Icon name='logout' size={24} color="#eee" />
+                        </Pressable>
                       </Pressable>
                     ))}
                   </View>
@@ -285,6 +402,9 @@ const fetchLinkedAccounts = async () => {
                           <Text style={styles.accountUsername}>{account.username}</Text>
                           <Text style={styles.accountEmail}>{account.email}</Text>
                         </View>
+                        <Pressable onPress={() => handleLogout(account.uid)}>
+                          <Icon name='logout' size={24} color="#eee" />
+                        </Pressable>
                       </Pressable>
                     ))}
                   </ScrollView>
@@ -295,14 +415,14 @@ const fetchLinkedAccounts = async () => {
               <View style={styles.collapsedAccountsContainer}>
                 {filteredLinkedAccounts.slice(0, 3).map((account, index) => (
                   <Pressable
-                    key={index}
-                    onPress={() => handleSwitchAccount(account.uid)}
-                  >
-                  <Image
-                    source={{ uri: account.profilePictureUrl }}
-                    style={styles.collapsedAccountProfilePicture}
-                  />
-                </Pressable>
+                      key={index}
+                      onPress={() => handleSwitchAccount(account.uid)}
+                    >
+                    <Image
+                      source={{ uri: account.profilePictureUrl }}
+                      style={styles.collapsedAccountProfilePicture}
+                    />
+                  </Pressable>
                 ))}
                 {linkedAccounts.length > 3 && (
                   <Text style={styles.collapsedAccountText}>
