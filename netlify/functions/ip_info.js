@@ -3,7 +3,8 @@ const axios = require('axios');
 exports.handler = async function (event, context) {
   try {
     const key = process.env.EXPO_PUBLIC_IP_API_KEY;
-    const response = await axios.get('https://ipinfo.io/json', {
+    const userIP = event.headers['x-forwarded-for'] || event.headers['client-ip'] || '127.0.0.1'; // default to localhost for testing
+    const response = await axios.get(`https://ipinfo.io/${userIP}/json`, {
       params: {
         token: key,
       },
