@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, InfoWindow, InfoBox } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
 import { collection, getDocs, getDoc, doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../../../config/firebase/firebase-config";
+import { FontAwesome } from '@expo/vector-icons';
 import styles from './map.style';
 import { useUser } from '../../../context-components/user-context';
+import Voting from './voting/votes';
 
 const containerStyle = {
   width: '100%',
@@ -26,6 +28,20 @@ const Map = ({ city }) => {
   const { userData } = useUser();
   const anonymousUserProfilePicture = '../../../assets/images/default-profile-picture.webp';
   const anonymousUsername = 'Anonymous User';
+
+
+  const getMarkerIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+      case 'validated':
+        return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+      case 'rejected':
+        return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+      default:
+        return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+    }
+  };
 
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
@@ -101,26 +117,11 @@ const Map = ({ city }) => {
   }, []);
   
 
-  const handleVote = async (markerId, type) => {
-    const markerRef = doc(db, 'markers', markerId);
-    const markerDoc = await getDoc(markerRef);
-
-    if (markerDoc.exists()) {
-      const markerData = markerDoc.data();
-      const updatedVotes = {
-        upvotes: type === 'upvote' ? markerData.upvotes + 1 : markerData.upvotes,
-        downvotes: type === 'downvote' ? markerData.downvotes + 1 : markerData.downvotes,
-      };
-      await updateDoc(markerRef, updatedVotes);
-      setMarkers(markers.map(marker => marker.id === markerId ? { ...marker, ...updatedVotes } : marker));
-    }
-  };
-
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
   };
 
-  const handleInfoWindowClose = () => {
+  const handleInfoBoxClose = () => {
     setSelectedMarker(null);
   };
 
@@ -128,8 +129,7 @@ const Map = ({ city }) => {
     <View style={styles.container}>
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text>Loading map...</Text>
+          <Text style={styles.loadingText}>Loading map...</Text>
         </View>
       ) : (
         <LoadScript googleMapsApiKey={GOOGLE_API_KEY}>
@@ -147,37 +147,46 @@ const Map = ({ city }) => {
             ))}
 
             {selectedMarker && (
-              <InfoWindow
-                position={{ lat: selectedMarker.lat, lng: selectedMarker.lon }}
-                onCloseClick={handleInfoWindowClose}
-                headerContent={ // Adding the header content here
-                  <View style={styles.infoHeader}>
-                    <Text style={styles.headerTitle}>{selectedMarker.title || "Marker Title"}</Text>
-                  </View>
-                }
-              >
-                <View style={styles.infoWindow}>
-                  <View style={styles.infoHeader}>
-                    <Image 
-                      source={{ uri: selectedMarker.userProfilePicture || anonymousUserProfilePicture }}
-                      style={styles.profilePicture} 
-                    />
-                    <View style={styles.userInfo}>
-                      <Text style={styles.userName}>{selectedMarker.username || anonymousUsername}</Text>
-                      <Text style={styles.timestamp}>{new Date(selectedMarker.timestamp.seconds * 1000).toLocaleString()}</Text>
-                    </View>
-                  </View>
-                  <Image source={{ uri: selectedMarker.imageUrl }} style={styles.uploadedImage} />
-                  <View style={styles.votingContainer}>
-                    <TouchableOpacity onPress={() => handleVote(selectedMarker.id, 'upvote')}>
-                      <Text style={styles.upvoteButton}>👍 {selectedMarker.upvotes}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleVote(selectedMarker.id, 'downvote')}>
-                      <Text style={styles.downvoteButton}>👎 {selectedMarker.downvotes}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </InfoWindow>
+              <InfoBox
+              position={{ lat: selectedMarker.lat, lng: selectedMarker.lon }}
+              options={{
+                closeBoxURL: '',
+                pixelOffset: new window.google.maps.Size(-140, -275),
+              }}
+            >
+              <div style={{
+                width: '250px',
+                padding: '10px',
+                backgroundColor: 'white',
+                boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                borderRadius: '8px',
+                fontSize: '14px',
+                position: 'relative',
+              }}>
+                <div onClick={handleInfoBoxClose} style={{
+                  position: 'absolute',
+                  top: '5px',
+                  right: '10px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: '#888'
+                }}>
+                  X
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                  <img src={selectedMarker.userProfilePicture} style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }} alt="profile" />
+                  <div>
+                    <strong>{selectedMarker.username}</strong>
+                    <div style={{ color: '#888', fontSize: '12px' }}>{new Date(selectedMarker.timestamp.seconds * 1000).toLocaleString()}</div>
+                  </div>
+                </div>
+                <img src={selectedMarker.imageUrl} style={{ width: '100%', height: '100px', borderRadius: '5px', objectFit: 'cover', marginBottom: '10px' }} alt="pothole" />
+                <div>Status: <strong>{selectedMarker.status}</strong></div>
+
+                <Voting markerId={selectedMarker.id} />
+              </div>
+            </InfoBox>
             )}
           </GoogleMap>
         </LoadScript>

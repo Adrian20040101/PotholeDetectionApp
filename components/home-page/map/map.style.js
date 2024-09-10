@@ -13,8 +13,8 @@ const styles = StyleSheet.create({
     height: '400px',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.5)',
     borderRadius: 8,
+    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.5)',
   },
   loadingContainer: {
     flex: 1,
@@ -22,26 +22,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'absolute',
     width: '100%',
-    height: isMobile ? '35%' : '100%',
-    marginTop: 80,
-  },
-  activityIndicator: {
-    marginBottom: 10,
+    height: '100%',
   },
   loadingText: {
     fontSize: 18,
-    color: '#FFF',
+    color: '#333',
   },
   infoWindow: {
-    width: 200,
-    padding: 5,
+    width: 220,
+    padding: 10,
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'flex-start',
   },
   infoHeader: {
     flexDirection: 'row',
-    marginBottom: 5,
+    marginBottom: 8,
     alignItems: 'center',
   },
   profilePicture: {
@@ -51,32 +49,40 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     marginLeft: 10,
-    flex: 1,
   },
   userName: {
     fontWeight: 'bold',
+    fontSize: 14,
+    color: '#333',
   },
   timestamp: {
-    fontSize: 10,
-    color: 'gray',
+    fontSize: 11,
+    color: '#888',
   },
   uploadedImage: {
     width: '100%',
-    height: 80,
-    marginTop: 5,
+    height: 100,
+    borderRadius: 5,
     marginBottom: 10,
+  },
+  statusText: {
+    fontSize: 13,
+    color: '#333',
+    marginBottom: 5,
   },
   votingContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 5,
   },
-  upvoteButton: {
-    fontSize: 14,
-    color: 'green',
+  voteItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  downvoteButton: {
+  voteText: {
+    marginLeft: 5,
     fontSize: 14,
-    color: 'red',
+    color: '#333',
   },
 });
 

@@ -58,7 +58,8 @@ const ImageUpload = () => {
         userProfilePicture: user.isAnonymous ? 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg' : user.photoURL,
         imageUrl: imageUrl,
         upvotes: 0,
-        downvotes: 0
+        downvotes: 0,
+        status: 'pending',
       });
   
       console.log('Marker saved to Firestore:', { lat, lng, imageUrl });
