@@ -1,16 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { FontAwesome } from '@expo/vector-icons';
 import { getUserLocation } from '../location-handling/location';
+import { toast } from 'react-toastify';
 import { auth, db } from '../../../../config/firebase/firebase-config';
 
 const Voting = ({ markerId }) => {
   const [userVote, setUserVote] = useState(null);
   const [upvotes, setUpvotes] = useState(0);
   const [downvotes, setDownvotes] = useState(0);
+  const [markerLocation, setMarkerLocation] = useState(null);
 
   const user = auth.currentUser;
+
+  // formula that calculates the distance between two points on the globe
+  function haversineDistance(coords1, coords2) {
+    const toRad = (x) => (x * Math.PI) / 180;
+  
+    const lat1 = coords1.lat;
+    const lon1 = coords1.lng;
+  
+    const lat2 = coords2.lat;
+    const lon2 = coords2.lng;
+  
+    const R = 6371; // radius of the Earth in kilometers
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+    return R * c; // distance in kilometers
+  }
+
+  useEffect(() => {
+    const fetchMarkerData = async () => {
+      try {
+        const markerRef = doc(db, 'markers', markerId);
+        const markerDoc = await getDoc(markerRef);
+
+        if (markerDoc.exists()) {
+          const markerData = markerDoc.data();
+          setMarkerLocation({
+            lat: markerData.lat,
+            lng: markerData.lon,
+          });
+        } else {
+          console.error('Marker not found');
+        }
+      } catch (error) {
+        console.error('Error fetching marker data:', error);
+      }
+    };
+
+    fetchMarkerData();
+  }, [markerId]);
 
   useEffect(() => {
     const fetchVotes = async () => {
@@ -48,18 +95,59 @@ const Voting = ({ markerId }) => {
     const userLocation = await getUserLocation();
     if (!userLocation) {
       console.log('Unable to retrieve location');
-      alert('Unable to retrieve location.');
+      toast.error('Unable to retrieve location.');
       return;
     }
 
+    if (!markerLocation) {
+      console.log('Marker location not available');
+      return;
+    }
+  
+    const potholeLocation = { lat: markerLocation.lat, lng: markerLocation.lng };
+  
+    const fetchRegion = async (lat, lng) => {
+      try {
+        const response = await fetch(`https://road-guard.netlify.app/.netlify/functions/reverse_geocoding?lat=${lat}&lng=${lng}`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch region data');
+        }
+  
+        const data = await response.json();
+        return data.region || null;
+      } catch (error) {
+        console.error('Error fetching region:', error);
+        return null;
+      }
+    };
+
+    const userRegion = await fetchRegion(userLocation.lat, userLocation.lng);
+    const potholeRegion = await fetchRegion(potholeLocation.lat, potholeLocation.lng);
+  
+    console.log(userRegion);
+    console.log(potholeLocation);
+
+    const distance = haversineDistance(userLocation, potholeLocation);
+    const isAllowedToVote = userRegion === potholeRegion || distance <= 50;
+  
+    if (!isAllowedToVote) {
+      toast.error('You are not allowed to vote on this pothole as it is not in your area.');
+      return;
+    }
+  
     const votesRef = collection(db, 'votes');
     const userVoteQuery = query(votesRef, where('userId', '==', user.uid), where('markerId', '==', markerId));
     const existingVotes = await getDocs(userVoteQuery);
-
+  
     if (!existingVotes.empty) {
       const userVoteDoc = existingVotes.docs[0];
       const existingVoteType = userVoteDoc.data().type;
-
+  
       if (existingVoteType === type) {
         await deleteDoc(doc(db, 'votes', userVoteDoc.id));
         setUserVote(null);
@@ -101,6 +189,7 @@ const Voting = ({ markerId }) => {
       setUserVote(type);
     }
   };
+  
 
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
