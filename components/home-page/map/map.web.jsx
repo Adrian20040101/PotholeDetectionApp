@@ -7,6 +7,7 @@ import { db } from "../../../config/firebase/firebase-config";
 import { FontAwesome } from '@expo/vector-icons';
 import BottomSheet from './bottom-sheet/bottom-sheet';
 import styles from './map.style';
+import SearchBar from './search-bar/search-bar';
 
 const containerStyle = {
   width: '100%',
@@ -107,6 +108,10 @@ const Map = ({ city, toggleSidebar, sidebarAnim, overlayAnim }) => {
     setBottomSheetVisible(true);
   };
 
+  const handleCtiySelection = (coordinates) => {
+    setCenter(coordinates);
+  }
+
   return (
     <View style={styles.container}>
       <LoadScript googleMapsApiKey={GOOGLE_API_KEY} libraries={["places"]}>
@@ -116,24 +121,7 @@ const Map = ({ city, toggleSidebar, sidebarAnim, overlayAnim }) => {
           </View>
         ) : (
           <>
-            {/* plain html text box (should be avoided but for now it'll do) */}
-            <input
-              type="text"
-              ref={searchBoxRef}
-              placeholder="Search for places"
-              onKeyPress={(e) => e.key === 'Enter' && handlePlaceSelect()}
-              style={{
-                position: 'absolute',
-                top: 10,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 3,
-                padding: 8,
-                borderRadius: 5,
-                width: '60%',
-                height: 20
-              }}
-            />
+            <SearchBar onCityFocus={handleCtiySelection} />
             <GoogleMap
               ref={mapRef}
               mapContainerStyle={containerStyle}

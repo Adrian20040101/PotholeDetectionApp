@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, TextInput, Text, FlatList, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import styles from './city.style';
-import { GOOGLE_API_KEY } from '@env';
 
 const CitySelection = ({ onCitySelect }) => {
   const [query, setQuery] = useState('');

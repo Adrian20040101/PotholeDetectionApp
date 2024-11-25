@@ -18,15 +18,26 @@ exports.handler = async (event, context) => {
     console.log('Geocoding API response:', response.data);
 
     if (response.data.status === 'OK' && response.data.results.length > 0) {
-      const location = response.data.results[0].geometry.location;
+      const result = response.data.results[0];
+      const location = result.geometry.location;
+      const bounds = result.geometry.viewport;
+      
       console.log('Location found:', location);
+      console.log('Bounds found:', bounds);
       return {
         statusCode: 200,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ lat: location.lat, lng: location.lng }),
+        body: JSON.stringify({
+          lat: location.lat,
+          lng: location.lng,
+          bounds: bounds ? {
+            northeast: bounds.northeast,
+            southwest: bounds.southwest,
+          } : null,
+        }),
       };
     } else {
       console.error('Error: No results found or other issue:', response.data.status);
