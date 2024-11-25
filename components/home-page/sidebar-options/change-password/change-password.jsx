@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TextInput, Pressable, Animated, Easing, Dimensions } from 'react-native';
 import { auth } from '../../../../config/firebase/firebase-config';
 import { toast } from 'react-toastify';
 import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "firebase/auth";
@@ -10,8 +10,11 @@ const ChangePasswordModal = ({ isVisible, onClose }) => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isGoogleUser, setIsGoogleUser] = useState(false);
+    const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '35%');
 
-    // if signed in via google, doesn't make sense to change password
+    const overlayAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
     useEffect(() => {
         const user = auth.currentUser;
         if (user && user.providerData.some(provider => provider.providerId === 'google.com')) {
@@ -19,12 +22,56 @@ const ChangePasswordModal = ({ isVisible, onClose }) => {
         }
     }, []);
 
+    useEffect(() => {
+        const updateModalWidth = () => {
+            const screenWidth = Dimensions.get('window').width;
+            setModalWidth(screenWidth < 800 ? '85%' : '35%');
+        };
+
+        Dimensions.addEventListener('change', updateModalWidth);
+        return () => {
+            Dimensions.removeEventListener('change', updateModalWidth);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (isVisible) {
+          Animated.parallel([
+            Animated.timing(overlayAnim, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+              toValue: 1,
+              friction: 5,
+              useNativeDriver: true,
+            }),
+          ]).start();
+        } else {
+          Animated.parallel([
+            Animated.timing(overlayAnim, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+              toValue: 0.8,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            overlayAnim.setValue(0);
+            scaleAnim.setValue(0.8);
+          });
+        }
+      }, [isVisible]);
+
     const handleChangePassword = async () => {
         if (newPassword !== confirmPassword) {
             toast.error('New passwords do not match');
             return;
         }
-
         try {
             const user = auth.currentUser;
             const credential = EmailAuthProvider.credential(user.email, currentPassword);
@@ -32,21 +79,33 @@ const ChangePasswordModal = ({ isVisible, onClose }) => {
             await reauthenticateWithCredential(user, credential);
             await updatePassword(user, newPassword);
             toast.success('Password updated successfully.');
+            onClose();
         } catch (error) {
             toast.error(error.message);
         }
     };
 
     return (
-        <Modal
-            visible={isVisible}
-            animationType="slide"
-            onRequestClose={onClose}
-            transparent={true}
-        >
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <Pressable style={styles.closeButton} onPress={onClose}>
+        isVisible && (
+            <Animated.View style={[styles.modalOverlay, { opacity: overlayAnim }]}>
+                <Animated.View style={[styles.modalContent, { width: modalWidth, transform: [{ scale: scaleAnim }] }]}>
+                    <Pressable style={styles.closeButton}
+                        onPress={() => {
+                        Animated.parallel([
+                            Animated.timing(overlayAnim, {
+                            toValue: 0,
+                            duration: 200,
+                            useNativeDriver: true,
+                            }),
+                            Animated.timing(scaleAnim, {
+                            toValue: 0.8,
+                            duration: 200,
+                            useNativeDriver: true,
+                            }),
+                        ]).start(() => {
+                            onClose();
+                        });
+                        }}>
                         <Text style={styles.closeButtonText}>✕</Text>
                     </Pressable>
                     <Text style={styles.modalTitle}>Change Password</Text>
@@ -82,9 +141,9 @@ const ChangePasswordModal = ({ isVisible, onClose }) => {
                             </Pressable>
                         </>
                     )}
-                </View>
-            </View>
-        </Modal>
+                </Animated.View>
+            </Animated.View>
+        )
     );
 };
 

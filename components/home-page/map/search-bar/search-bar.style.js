@@ -1,0 +1,50 @@
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: '100%',
+    position: 'absolute',
+    top: 10,
+    zIndex: 3,
+  },
+  textInput: {
+    width: screenWidth * 0.5,
+    maxWidth: 500,
+    minWidth: 100,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    fontSize: 16,
+    elevation: 3,
+  },
+  suggestionsContainer: {
+    width: screenWidth * 0.5,
+    maxWidth: 500,
+    minWidth: 200,
+    marginTop: 5,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    maxHeight: 250,
+    elevation: 3,
+  },
+  suggestionItemContainer: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  suggestionItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+});
+
+export default styles;

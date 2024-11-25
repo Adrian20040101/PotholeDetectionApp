@@ -1,19 +1,26 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 
-const styles = StyleSheet.create({
+export default StyleSheet.create({
     modalOverlay: {
         flex: 1,
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 10,
     },
     modalContent: {
-        width: '80%',
-        maxWidth: 400,
-        backgroundColor: '#fff',
-        padding: 20,
-        borderRadius: 10,
+        width: Dimensions.get('window').width < 800 ? '85%' : '35%',
+        padding: 25,
+        backgroundColor: '#FFF',
+        borderRadius: 15,
         alignItems: 'center',
-        position: 'relative',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 10,
     },
     closeButton: {
         position: 'absolute',
@@ -26,9 +33,10 @@ const styles = StyleSheet.create({
         fontSize: 24,
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: 22,
+        marginBottom: 15,
         fontWeight: 'bold',
-        marginBottom: 20,
+        color: '#d9534f',
         textAlign: 'center',
     },
     warningText: {
@@ -42,6 +50,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 20,
+        width: '90%',
     },
     checkboxLabel: {
         marginLeft: 10,
@@ -49,17 +58,16 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     deleteButton: {
-        paddingVertical: 12,
-        paddingHorizontal: 25,
-        borderRadius: 5,
-        alignItems: 'center',
-        width: '100%',
+        marginTop: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 30,
+        backgroundColor: '#007AFF',
+        borderRadius: 25,
+        elevation: 6,
     },
     deleteButtonText: {
-        color: '#fff',
+        color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
     },
 });
-
-export default styles;

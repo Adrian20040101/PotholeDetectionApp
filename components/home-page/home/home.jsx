@@ -8,6 +8,7 @@ import { setDoc, doc, getDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import Map from '../map/map';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import DesktopSidebar from '../sidebar-animation/desktop-animation';
 import MobileSidebar from '../sidebar-animation/mobile-animation';
 import ImageUpload from '../upload-photo/upload-photo';
@@ -23,6 +24,7 @@ import ChangeUsernameModal from '../sidebar-options/change-username/change-usern
 import DeleteAccountModal from '../sidebar-options/delete-account/delete-account';
 import AccountDetailsSidebarMobile from '../account-details-animation/mobile-animation';
 import AccountDetailsSidebarPC from '../account-details-animation/desktop-animation';
+import BottomNavbar from '../bottom-navbar/bottom-navbar';
 
 const HomePage = () => {
   const navigation = useNavigation();
@@ -42,26 +44,43 @@ const HomePage = () => {
   const sidebarAnim = useRef(new Animated.Value(-250)).current;
   const accountSidebarAnim = useRef(new Animated.Value(-350)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const menuAnim = useRef(new Animated.Value(0)).current;
   const { userData } = useUser();
 
   const toggleSettingsModal = () => {
-    console.log('Toggling settings modal:', !settingsModalVisible);
+    if (!settingsModalVisible) {
+      animateModalOpen();
+    } else {
+      animateModalClose(() => setSettingsModalVisible(false));
+    }
     setSettingsModalVisible(!settingsModalVisible);
   };
 
   const toggleChangePasswordModalVisible = () => {
-    console.log('Toggling change password modal:', !changePasswordModalVisible);
+    if (!changePasswordModalVisible) {
+      animateModalOpen();
+    } else {
+      animateModalClose(() => setChangePasswordModalVisible(false));
+    }
     setChangePasswordModalVisible(!changePasswordModalVisible);
   };
 
   const toggleChangeUsernameModalVisible = () => {
-    console.log('Toggling change username modal:', !changeUsernameModalVisible);
+    if (!changeUsernameModalVisible) {
+      animateModalOpen();
+    } else {
+      animateModalClose(() => setChangeUsernameModalVisible(false));
+    }
     setChangeUsernameModalVisible(!changeUsernameModalVisible);
   };
 
   const toggleDeleteAccountModalVisible = () => {
-    console.log('Toggling delete account modal:', !deleteAccountModalVisible);
+    if (!deleteAccountModalVisible) {
+      animateModalOpen();
+    } else {
+      animateModalClose(() => setDeleteAcconuntModalVisible(false));
+    }
     setDeleteAcconuntModalVisible(!deleteAccountModalVisible);
   };
 
@@ -79,42 +98,42 @@ const HomePage = () => {
   }, []);
 
   // set up navigation options and side menu toggle
-  useEffect(() => {
-    navigation.setOptions({
-      headerLeft: () => (
-        <Pressable onPress={toggleSidebar} style={{ paddingLeft: 20 }}>
-          <Icon name="menu" size={24} color="#fff" />
-        </Pressable>
-      ),
-      headerTitle: () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 20, marginLeft: 20 }}>RoadGuard</Text>
-        </View>
-      ),
-      headerRight: () => (
-        userData.profilePictureUrl && (
-          <Pressable onPress={toggleAccountDetails} style={{ paddingRight: 20 }}>
-            <Image
-              source={{ uri: userData.profilePictureUrl }}
-              style={styles.userProfilePicture}
-            />
-          </Pressable>
-        )
-      ),
-      headerStyle: {
-        backgroundColor: 'blue',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
-    });
-  }, [navigation, sidebarVisible, userData.profilePictureUrl]);
+  // useEffect(() => {
+  //   navigation.setOptions({
+  //     headerLeft: () => (
+  //       <Pressable onPress={toggleSidebar} style={{ paddingLeft: 20 }}>
+  //         <Icon name="menu" size={24} color="#fff" />
+  //       </Pressable>
+  //     ),
+  //     headerTitle: () => (
+  //       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+  //         <Text style={{ color: '#fff', fontSize: 20, marginLeft: 20 }}>RoadGuard</Text>
+  //       </View>
+  //     ),
+  //     headerRight: () => (
+  //       userData.profilePictureUrl && (
+  //         <Pressable onPress={toggleAccountDetails} style={{ paddingRight: 20 }}>
+  //           <Image
+  //             source={{ uri: userData.profilePictureUrl }}
+  //             style={styles.userProfilePicture}
+  //           />
+  //         </Pressable>
+  //       )
+  //     ),
+  //     headerStyle: {
+  //       backgroundColor: 'blue',
+  //       position: 'absolute',
+  //       top: 0,
+  //       left: 0,
+  //       right: 0,
+  //       zIndex: 1000,
+  //     },
+  //     headerTintColor: '#fff',
+  //     headerTitleStyle: {
+  //       fontWeight: 'bold',
+  //     },
+  //   });
+  // }, [navigation, sidebarVisible, userData.profilePictureUrl]);
 
   // monitor authentication state and fetch user data
   useEffect(() => {
@@ -245,7 +264,36 @@ const HomePage = () => {
   
     setAccountDetailsVisible(isOpening);
   };
+
+  // animation for menu options modals
+
+  const animateModalOpen = () => {
+    Animated.parallel([
+      Animated.timing(overlayAnim, {
+        toValue: 1,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 5,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
   
+  const animateModalClose = (onClose) => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
 
   const handleLogout = () => {
     const currentUser = auth.currentUser;
@@ -306,6 +354,7 @@ const HomePage = () => {
           menuItems={getMenuItems}
         />
       )}
+      
       {isMobile ? (
         <AccountDetailsSidebarMobile
           sidebarVisible={accountDetailsVisible}
@@ -319,7 +368,12 @@ const HomePage = () => {
           toggleSidebar={toggleAccountDetails}
         />
       )}
-      <View style={[styles.content, sidebarVisible && !isMobile && styles.rightContentShift, accountDetailsVisible && !isMobile && styles.leftContentShift]}>
+
+      {!isMobile && sidebarVisible && (
+        <Animated.View style={[styles.overlay, { opacity: overlayAnim }]} />
+      )}
+
+      {/* <View style={[styles.content, sidebarVisible && !isMobile && styles.rightContentShift, accountDetailsVisible && !isMobile && styles.leftContentShift]}>
         {user.isAnonymous ? (
           <>
             <Text style={styles.welcomeText}>Welcome!</Text>
@@ -330,10 +384,13 @@ const HomePage = () => {
           <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
           <Text style={styles.cityText}>Your favorite city is set to: {userData.favoriteCity}</Text>
           </>
-        )}
-        <Map city={userData.favoriteCity} />
-        <ImageUpload />
-      </View>
+        )} */}
+        <View style={styles.mapContainer}>
+          <Map city={userData.favoriteCity} toggleSidebar={toggleSidebar} />
+        </View>
+
+        <BottomNavbar onAccountPress={toggleAccountDetails}/>
+      
       <SettingsModal
         isVisible={settingsModalVisible}
         onClose={toggleSettingsModal}

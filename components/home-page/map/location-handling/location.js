@@ -26,7 +26,6 @@ const getLocationByIP = async () => {
   try {
     const response = await fetch('https://road-guard.netlify.app/.netlify/functions/ip_info');
     const data = await response.json();
-    console.log('Full IP Geolocation Response:', data);
     const [lat, lng] = data.loc.split(','); // loc contains "lat,lng"
     console.log('Extracted location information from IP address: ', lat + ' ' + lng);
     return {

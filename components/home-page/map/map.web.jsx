@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
-import { GoogleMap, LoadScript, Marker, InfoWindow, InfoBox } from '@react-google-maps/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
-import { collection, getDocs, getDoc, doc, updateDoc } from "firebase/firestore";
-import { auth, db } from "../../../config/firebase/firebase-config";
+import { collection, getDocs, getDoc, doc } from "firebase/firestore";
+import { db } from "../../../config/firebase/firebase-config";
 import { FontAwesome } from '@expo/vector-icons';
+import BottomSheet from './bottom-sheet/bottom-sheet';
 import styles from './map.style';
-import { useUser } from '../../../context-components/user-context';
-import Voting from './voting/votes';
+import SearchBar from './search-bar/search-bar';
 
 const containerStyle = {
   width: '100%',
-  height: '400px',
+  height: '100%',
 };
 
 const initialCenter = {
@@ -19,29 +19,15 @@ const initialCenter = {
   lng: -73.935242,
 };
 
-const Map = ({ city }) => {
+const Map = ({ city, toggleSidebar, sidebarAnim, overlayAnim }) => {
   const [center, setCenter] = useState(initialCenter);
   const [zoom, setZoom] = useState(12);
   const [loading, setLoading] = useState(true);
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
-  const { userData } = useUser();
-  const anonymousUserProfilePicture = '../../../assets/images/default-profile-picture.webp';
-  const anonymousUsername = 'Anonymous User';
-
-
-  const getMarkerIcon = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
-      case 'validated':
-        return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
-      case 'rejected':
-        return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
-      default:
-        return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
-    }
-  };
+  const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
+  const mapRef = useRef(null);
+  const searchBoxRef = useRef(null);
 
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
@@ -119,78 +105,52 @@ const Map = ({ city }) => {
 
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
+    setBottomSheetVisible(true);
   };
 
-  const handleInfoBoxClose = () => {
-    setSelectedMarker(null);
-  };
+  const handleCtiySelection = (coordinates) => {
+    setCenter(coordinates);
+  }
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading map...</Text>
-        </View>
-      ) : (
-        <LoadScript googleMapsApiKey={GOOGLE_API_KEY}>
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={center}
-            zoom={zoom}
-          >
-            {markers.map((marker) => (
-              <Marker
-                key={marker.id}
-                position={{ lat: marker.lat, lng: marker.lon }}
-                onClick={() => handleMarkerClick(marker)}
-              />
-            ))}
-
-            {selectedMarker && (
-              <InfoBox
-              position={{ lat: selectedMarker.lat, lng: selectedMarker.lon }}
-              options={{
-                closeBoxURL: '',
-                pixelOffset: new window.google.maps.Size(-140, -275),
-              }}
+      <LoadScript googleMapsApiKey={GOOGLE_API_KEY} libraries={["places"]}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading map...</Text>
+          </View>
+        ) : (
+          <>
+            <SearchBar onCityFocus={handleCtiySelection} />
+            <GoogleMap
+              ref={mapRef}
+              mapContainerStyle={containerStyle}
+              options={{ mapTypeControl: false }}
+              center={center}
+              zoom={zoom}
             >
-              <div style={{
-                width: '250px',
-                padding: '10px',
-                backgroundColor: 'white',
-                boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                borderRadius: '8px',
-                fontSize: '14px',
-                position: 'relative',
-              }}>
-                <div onClick={handleInfoBoxClose} style={{
-                  position: 'absolute',
-                  top: '5px',
-                  right: '10px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  color: '#888'
-                }}>
-                  X
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                  <img src={selectedMarker.userProfilePicture} style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }} alt="profile" />
-                  <div>
-                    <strong>{selectedMarker.username}</strong>
-                    <div style={{ color: '#888', fontSize: '12px' }}>{new Date(selectedMarker.timestamp.seconds * 1000).toLocaleString()}</div>
-                  </div>
-                </div>
-                <img src={selectedMarker.imageUrl} style={{ width: '100%', height: '100px', borderRadius: '5px', objectFit: 'cover', marginBottom: '10px' }} alt="pothole" />
-                <div>Status: <strong>{selectedMarker.status}</strong></div>
-
-                <Voting markerId={selectedMarker.id} />
-              </div>
-            </InfoBox>
-            )}
-          </GoogleMap>
-        </LoadScript>
-      )}
+              {markers.map((marker) => (
+                <Marker
+                  key={marker.id}
+                  position={{ lat: marker.lat, lng: marker.lon }}
+                  onClick={() => handleMarkerClick(marker)}
+                />
+              ))}
+            </GoogleMap>
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={toggleSidebar}
+            >
+              <FontAwesome name="bars" size={24} color="#000" />
+            </TouchableOpacity>
+          </>
+        )}
+      </LoadScript>
+      <BottomSheet
+        visible={isBottomSheetVisible}
+        onClose={() => setBottomSheetVisible(false)}
+        marker={selectedMarker}
+      />
     </View>
   );
 };

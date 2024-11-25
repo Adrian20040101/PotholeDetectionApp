@@ -45,14 +45,14 @@ const App = () => {
         <NavigationContainer>
           <Stack.Navigator initialRouteName={user ? 'HomePage' : 'Welcome'}>
             {user && !isAnonymous ? (
-              <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
+              <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ headerShown: false }} />
             ) : (
               <>
                 <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
                 <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
                 <Stack.Screen name="Signup" component={Signup} options={{ headerShown: false }} />
                 {user && isAnonymous && (
-                  <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ title: "RoadGuard" }} />
+                  <Stack.Screen name="HomePage" component={HomePage} initialParams={{ user }} options={{ headerShown: false }} />
                 )}
               </>
             )}
