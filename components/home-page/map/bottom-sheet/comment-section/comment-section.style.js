@@ -119,10 +119,32 @@ const styles = StyleSheet.create({
   emojiButton: {
     marginRight: 10,
   },
-  emojiPickerContainer: {
+  emojiPickerWrapper: {
+    position: 'absolute',
+    bottom: 225,
+    left: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  emojiModalContent: {
     width: '100%',
-    height: emojiPickerHeight,
-    marginBottom: 275
+    maxWidth: 300,
+  },
+  emojiModalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+    cursor: 'default'
   },
 });
 
