@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
   userDetails: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 10
   },
   userProfilePicture: {
     width: 50,
