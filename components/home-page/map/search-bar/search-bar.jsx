@@ -22,28 +22,27 @@ const SearchBar = ({ onCityFocus }) => {
 
   const fetchCoordinates = async (cityName) => {
     try {
-      const response = await fetch(
-        `https://road-guard.netlify.app/.netlify/functions/city_coordinates?city=${encodeURIComponent(cityName)}`
-      );
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await fetch(
+            `https://road-guard.netlify.app/.netlify/functions/city_coordinates?city=${encodeURIComponent(cityName)}`
+        );
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-      const data = await response.json();
-        if (data.result.geometry) {
-            const { location, viewport } = data.result.geometry;
+        const data = await response.json();
+
+        if (data.lat && data.lng) {
             return {
-                center: { lat: location.lat, lng: location.lng },
-                bounds: viewport ? {
-                northeast: viewport.northeast,
-                southwest: viewport.southwest,
-                } : null,
+                center: { lat: data.lat, lng: data.lng },
+                bounds: data.bounds || null,
             };
         } else {
             throw new Error('Location data is incomplete.');
         }
     } catch (error) {
-      console.error('Error fetching location:', error);
+        console.error('Error fetching location:', error);
+        return null;
     }
-  };
+};
+
 
   const handleInputChange = (text) => {
     setQuery(text);
@@ -56,26 +55,44 @@ const SearchBar = ({ onCityFocus }) => {
 
   const handleSuggestionPress = async (suggestion) => {
     const cityName = suggestion.structured_formatting.main_text;
-    setQuery(cityName);
+    setQuery('');
     setSuggestions([]);
-
-    await fetchCoordinates(cityName);
-  };
-
-  const calculateZoomLevel = (bounds) => {
-    if (!bounds) return 10;
   
-    const latDiff = Math.abs(bounds.northeast.lat - bounds.southwest.lat);
-    const lngDiff = Math.abs(bounds.northeast.lng - bounds.southwest.lng);
+    const locationData = await fetchCoordinates(cityName);
   
-    if (latDiff > 1 || lngDiff > 1) {
-      return 8;
-    } else if (latDiff > 0.5 || lngDiff > 0.5) {
-      return 10;
+    if (locationData) {
+      const { center, bounds } = locationData;
+      const zoomLevel = calculateZoomLevel(bounds);
+  
+      onCityFocus(center, zoomLevel, bounds);
     } else {
-      return 12;
+      console.error('Could not fetch location data.');
     }
   };
+  
+
+
+const calculateZoomLevel = (bounds) => {
+    if (!bounds || !bounds.northeast || !bounds.southwest) return 10;
+
+    const latDiff = Math.abs(bounds.northeast.lat - bounds.southwest.lat);
+    const lngDiff = Math.abs(bounds.northeast.lng - bounds.southwest.lng);
+
+    const maxDiff = Math.max(latDiff, lngDiff);
+
+    if (maxDiff > 2.0) {
+        return 5;
+    } else if (maxDiff > 1.0) {
+        return 7;
+    } else if (maxDiff > 0.5) {
+        return 9;
+    } else if (maxDiff > 0.1) {
+        return 12;
+    } else {
+        return 15;
+    }
+};
+
   
 
   return (

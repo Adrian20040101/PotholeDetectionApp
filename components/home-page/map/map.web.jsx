@@ -27,7 +27,10 @@ const Map = ({ city, toggleSidebar, sidebarAnim, overlayAnim }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const mapRef = useRef(null);
-  const searchBoxRef = useRef(null);
+
+  const onMapLoad = (mapInstance) => {
+    mapRef.current = mapInstance;
+  };
 
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
@@ -107,10 +110,43 @@ const Map = ({ city, toggleSidebar, sidebarAnim, overlayAnim }) => {
     setSelectedMarker(marker);
     setBottomSheetVisible(true);
   };
+  
 
-  const handleCtiySelection = (coordinates) => {
-    setCenter(coordinates);
-  }
+  const handleCityFocus = (center, zoomLevel, bounds) => {
+    const googleMaps = window.google.maps;
+  
+    if (mapRef.current) {
+      if (bounds) {
+        const mapBounds = new googleMaps.LatLngBounds(
+          bounds.southwest,
+          bounds.northeast
+        );
+  
+        mapRef.current.fitBounds(mapBounds, {
+          padding: 50,
+        });
+      } else {
+        mapRef.current.panTo(center);
+        setTimeout(() => {
+          mapRef.current.setZoom(zoomLevel);
+        }, 500);
+      }
+    }
+  
+    setCenter(center);
+    setZoom(zoomLevel);
+  };
+  
+  
+  
+
+  useEffect(() => {
+    if (!city) {
+      setCenter(initialCenter);
+      setZoom(12);
+    }
+  }, [city]);  
+  
 
   return (
     <View style={styles.container}>
@@ -121,13 +157,21 @@ const Map = ({ city, toggleSidebar, sidebarAnim, overlayAnim }) => {
           </View>
         ) : (
           <>
-            <SearchBar onCityFocus={handleCtiySelection} />
+            <SearchBar onCityFocus={handleCityFocus} />
             <GoogleMap
               ref={mapRef}
               mapContainerStyle={containerStyle}
-              options={{ mapTypeControl: false }}
+              options={{
+                mapTypeControl: false,
+                zoomControl: true,
+                scrollwheel: true,
+                disableDoubleClickZoom: false,
+                gestureHandling: 'cooperative',
+                animation: google.maps.Animation.DROP,
+              }}
               center={center}
               zoom={zoom}
+              onLoad={onMapLoad}
             >
               {markers.map((marker) => (
                 <Marker
