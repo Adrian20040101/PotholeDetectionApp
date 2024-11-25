@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontStyle: 'italic',
     color: '#888',
+    marginTop: -100
   },
   commentsText: {
     fontWeight: 'bold',
