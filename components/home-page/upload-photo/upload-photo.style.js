@@ -1,95 +1,73 @@
 import { StyleSheet } from 'react-native';
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-  },
-  button: {
-    backgroundColor: '#2563EB',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  text: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  buttonHover: {
-    backgroundColor: '#1D4ED8',
-  },
-  icon: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
-  },
+export default StyleSheet.create({
   overlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    width: '90%',
+    maxWidth: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  modalInput: {
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  uploadButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  uploadButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  overlayContent: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  analyzingText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 10,
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginVertical: 15,
+  },
+  addressInputContainer: {
+    width: '100%',
+    marginVertical: 10,
+  },
+  input: {
     borderWidth: 1,
     borderColor: '#ddd',
+    padding: 8,
     borderRadius: 5,
-    padding: 10,
-    marginVertical: 10,
-    fontSize: 16,
+    marginBottom: 5,
     width: '100%',
   },
   suggestionItem: {
-    padding: 10,
+    padding: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    fontSize: 16,
-  },
-  cameraContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  cameraControls: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
-  },
-  cameraButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-  },
-  cameraButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
+    borderColor: '#ddd',
   },
 });
-
-export default styles;

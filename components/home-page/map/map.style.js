@@ -6,15 +6,7 @@ const isMobile = screenWidth < 800;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    minWidth: 300,
-    height: '400px',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.5)',
+    zIndex: 1
   },
   loadingContainer: {
     flex: 1,
@@ -84,6 +76,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  menuButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 5,
+  }
 });
 
 export default styles;

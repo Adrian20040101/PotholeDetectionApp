@@ -32,7 +32,7 @@ const Welcome = () => {
 
     useEffect(() => {
         if (view === 'welcome' && !isTyped) {
-            const slogan = "Making roads safer, one pothole at a time.";
+            const slogan = "Making roads safer, one pothole at a time.\nLet's get started.";
             let index = 0;
             const typeCharacter = () => {
                 if (index < slogan.length) {

@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, ActivityIndicator, TextInput, Button, FlatList } from 'react-native';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { View, Text, TouchableOpacity, Image, Modal, ActivityIndicator, TextInput, Button, FlatList, Animated, Easing } from 'react-native';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
@@ -9,7 +9,7 @@ import { db } from '../../../config/firebase/firebase-config';
 import { collection, addDoc } from 'firebase/firestore';
 import styles from './upload-photo.style';
 
-const ImageUpload = () => {
+const ImageUpload = ({ isVisible, onClose }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -22,6 +22,8 @@ const ImageUpload = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const overlayAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const user = auth.currentUser;
   const anonymousUsername = 'Anonymous User';
 
@@ -34,6 +36,56 @@ const ImageUpload = () => {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (isVisible) {
+      Animated.parallel([
+        Animated.timing(overlayAnim, {
+          toValue: 1,
+          duration: 300,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(overlayAnim, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.8,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [isVisible, overlayAnim, scaleAnim]);
+
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(overlayAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
 
   useEffect(() => {
     (async () => {
@@ -256,61 +308,57 @@ const handleAddressSubmit = async () => {
     }
   };
 
-
   return (
-    <View style={styles.container}>
-      <TouchableOpacity 
-        onPress={selectFromGallery} 
-        style={[styles.button, isHovered && styles.buttonHover]}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <Image
-          source={{ uri: 'https://img.icons8.com/material-outlined/24/000000/upload--v1.png' }}
-          style={styles.icon}
-        />
-        <Text style={styles.text}>CLICK HERE TO SELECT A FILE</Text>
-      </TouchableOpacity>
+    <Modal transparent={true} visible={isVisible} onRequestClose={onClose}>
+      <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
+        <Animated.View style={[styles.modalContainer, { transform: [{ scale: scaleAnim }] }]}>
+          <Text style={styles.modalTitle}>Upload an Image</Text>
 
-      {uploading && <ActivityIndicator size="large" color="#0000ff" />}
-      {analyzing && (
-        <View style={styles.overlay}>
-          <ActivityIndicator size="large" color="#ff0000" /> 
-          <Text style={{ color: '#fff', marginTop: 10 }}>Analyzing Image...</Text>
-        </View>
-      )}
+          <TouchableOpacity style={styles.uploadButton} onPress={selectFromGallery}>
+            <Text style={styles.uploadButtonText}>Select Image from Gallery</Text>
+          </TouchableOpacity>
 
-      <Modal
-        transparent={true}
-        visible={showAddressModal}
-        onRequestClose={() => setShowAddressModal(false)}
-        animationType="fade"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text>Please enter the location address:</Text>
-            <TextInput 
-              style={styles.modalInput} 
-              placeholder="Address" 
-              value={address}
-              onChangeText={handleAddressChange}
-            />
-            {suggestions.length > 0 && (
-              <FlatList
-                data={suggestions}
-                keyExtractor={(item) => item.place_id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity onPress={() => handleSuggestionSelect(item)}>
-                    <Text style={styles.suggestionItem}>{item.description}</Text>
-                  </TouchableOpacity>
-                )}
+          {uploading && <ActivityIndicator size="large" color="#0000ff" />}
+          {analyzing && (
+            <View style={styles.overlayContent}>
+              <ActivityIndicator size="large" color="#ff0000" />
+              <Text style={styles.analyzingText}>Analyzing Image...</Text>
+            </View>
+          )}
+
+          {selectedImage && <Image source={{ uri: selectedImage }} style={styles.previewImage} />}
+
+          {showAddressModal && (
+            <View style={styles.addressInputContainer}>
+              <Text>Enter location address:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Address"
+                value={address}
+                onChangeText={(text) => {
+                  setAddress(text);
+                  if (text.length > 2) fetchSuggestions(text);
+                }}
               />
-            )}
-            <Button title="Submit" onPress={handleAddressSubmit} />
-          </View>
-        </View>
-      </Modal>
-    </View>
+              {suggestions.length > 0 && (
+                <FlatList
+                  data={suggestions}
+                  keyExtractor={(item) => item.place_id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity onPress={() => setAddress(item.description)}>
+                      <Text style={styles.suggestionItem}>{item.description}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              )}
+              <Button title="Submit" onPress={handleAddressSubmit} />
+            </View>
+          )}
+
+          <Button title="Close" onPress={handleClose} />
+        </Animated.View>
+      </Animated.View>
+    </Modal>
   );
 };
 

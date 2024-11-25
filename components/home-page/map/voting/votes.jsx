@@ -130,7 +130,7 @@ const Voting = ({ markerId }) => {
     const potholeRegion = await fetchRegion(potholeLocation.lat, potholeLocation.lng);
   
     console.log(userRegion);
-    console.log(potholeLocation);
+    console.log(potholeRegion);
 
     const distance = haversineDistance(userLocation, potholeLocation);
     const isAllowedToVote = userRegion === potholeRegion || distance <= 50;
