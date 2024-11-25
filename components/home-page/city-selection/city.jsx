@@ -35,7 +35,7 @@ const CitySelection = ({ onCitySelect }) => {
 
   const handleSuggestionPress = (suggestion) => {
     const cityName = suggestion.structured_formatting.main_text;
-    setQuery(cityName);
+    setQuery('');
     setSuggestions([]);
     onCitySelect(cityName);
   };
