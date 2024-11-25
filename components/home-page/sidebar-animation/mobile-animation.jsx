@@ -17,7 +17,7 @@ const MobileSidebar = ({ menuAnim, sidebarVisible, toggleSidebar, menuItems }) =
       setContainerZIndex(3);
     } else {
       const timeout = setTimeout(() => {
-        setContainerZIndex(1);
+        setContainerZIndex(0);
       }, 300);
       return () => clearTimeout(timeout);
     }

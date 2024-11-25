@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, Pressable, Modal, CheckBox, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Animated, CheckBox, Dimensions } from 'react-native';
 import { auth, db } from '../../../../config/firebase/firebase-config';
 import { deleteUser } from "firebase/auth";
 import { deleteDoc, doc } from "firebase/firestore";
@@ -11,6 +11,57 @@ const DeleteAccountModal = ({ isVisible, onClose }) => {
     const [isAcknowledged, setIsAcknowledged] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigation = useNavigation();
+
+    const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '35%');
+
+    const overlayAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+    useEffect(() => {
+        const updateModalWidth = () => {
+          const screenWidth = Dimensions.get('window').width;
+          setModalWidth(screenWidth < 800 ? '85%' : '35%');
+        };
+    
+        Dimensions.addEventListener('change', updateModalWidth);
+    
+        return () => {
+          Dimensions.removeEventListener('change', updateModalWidth);
+        };
+      }, []);
+
+    useEffect(() => {
+        if (isVisible) {
+            Animated.parallel([
+                Animated.timing(overlayAnim, {
+                    toValue: 1,
+                    duration: 300,
+                    useNativeDriver: true,
+                }),
+                Animated.spring(scaleAnim, {
+                    toValue: 1,
+                    friction: 5,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        } else {
+            Animated.parallel([
+                Animated.timing(overlayAnim, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scaleAnim, {
+                    toValue: 0.8,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]).start(() => {
+                overlayAnim.setValue(0);
+                scaleAnim.setValue(0.8);
+            });
+        }
+    }, [isVisible]);
 
     const handleDeleteAccount = async () => {
         try {
@@ -32,15 +83,26 @@ const DeleteAccountModal = ({ isVisible, onClose }) => {
     };
 
     return (
-        <Modal
-            visible={isVisible}
-            animationType="slide"
-            onRequestClose={onClose}
-            transparent={true}
-        >
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <Pressable style={styles.closeButton} onPress={onClose}>
+        isVisible && (
+            <Animated.View style={[styles.modalOverlay, { opacity: overlayAnim }]}>
+                <Animated.View style={[styles.modalContent, { width: modalWidth, transform: [{ scale: scaleAnim }] }]}>
+                <Pressable style={styles.closeButton}
+                        onPress={() => {
+                        Animated.parallel([
+                            Animated.timing(overlayAnim, {
+                            toValue: 0,
+                            duration: 200,
+                            useNativeDriver: true,
+                            }),
+                            Animated.timing(scaleAnim, {
+                            toValue: 0.8,
+                            duration: 200,
+                            useNativeDriver: true,
+                            }),
+                        ]).start(() => {
+                            onClose();
+                        });
+                        }}>
                         <Text style={styles.closeButtonText}>✕</Text>
                     </Pressable>
                     <Text style={styles.modalTitle}>Warning</Text>
@@ -68,9 +130,9 @@ const DeleteAccountModal = ({ isVisible, onClose }) => {
                             {isLoading ? 'Deleting...' : 'Delete Account'}
                         </Text>
                     </Pressable>
-                </View>
-            </View>
-        </Modal>
+                </Animated.View>
+            </Animated.View>
+        )
     );
 };
 
