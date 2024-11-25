@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, Pressable, FlatList, Image, Keyboard } from 'react-native';
+import { View, Text, TextInput, Pressable, FlatList, Image, Keyboard, Modal } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import 'emoji-mart/css/emoji-mart.css';
-import { Picker } from 'emoji-mart';
+import EmojiModal from 'react-native-emoji-modal';
 import { db } from '../../../../../config/firebase/firebase-config';
 import { collection, addDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { doc, getDoc } from 'firebase/firestore';
@@ -136,7 +135,7 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
   };
 
   const handleEmojiSelect = (emoji) => {
-    setNewComment((prev) => prev + emoji.native);
+    setNewComment((prev) => prev + emoji);
   };
 
   const toggleEmojiPicker = () => {
@@ -208,16 +207,18 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
       </View>
   
       {showEmojiPicker && (
-        <View style={styles.emojiPickerContainer}>
-          <Picker
-            onSelect={handleEmojiSelect}
-            showPreview={false}
-            showSkinTones={false}
-            set="apple"
-            style={{ width: '100%' }}
-            theme="light"
-          />
-        </View>
+        <Pressable
+          style={[styles.emojiModalBackdrop]}
+          onPress={() => setShowEmojiPicker(false)}
+        >
+          <View style={[styles.emojiPickerWrapper, styles.emojiPickerPosition]}>
+            <EmojiModal
+              onEmojiSelected={(emoji) => handleEmojiSelect(emoji)}
+              onPressOutside={() => setShowEmojiPicker(false)}
+              containerStyle={styles.emojiModalContent}
+            />
+          </View>
+        </Pressable>
       )}
 
       {showContextMenu && (
