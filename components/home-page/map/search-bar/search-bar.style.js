@@ -45,6 +45,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  filterButton: {
+    position: 'absolute',
+    right: 15,
+    top: '50%',
+    transform: [{ translateY: -15 }],
+    padding: 5,
+  },
 });
 
 export default styles;

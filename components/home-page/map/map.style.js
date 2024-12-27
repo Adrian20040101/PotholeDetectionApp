@@ -94,21 +94,36 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
-  filtersContainer: {
+  closeButton: {
     position: 'absolute',
-    width: isMobile ? '60%' : '30%',
+    top: 10,
+    right: 10,
+  },
+  searchContainer: {
+    width: '100%',
+    alignItems: 'center',
+    zIndex: 3,
+  },
+  overlayContainer: {
+    position: 'absolute',
+    width: '100%',
+    alignItems: 'center',
+    zIndex: 3, 
+  },
+  filtersOverlay: {
+    width: '90%',
+    maxWidth: 500,
     top: 50,
-    left: 100,
-    right: 16,
     backgroundColor: '#fff',
     padding: 16,
     borderRadius: 8,
-    zIndex: 15,
+    marginTop: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
+    position: 'relative',
   },
 });
 
