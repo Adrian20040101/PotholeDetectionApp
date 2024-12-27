@@ -20,17 +20,33 @@ exports.handler = async (event, context) => {
     console.log('Geocoding API response:', response.data);
 
     if (response.data.status === 'OK' && response.data.results.length > 0) {
-      const location = response.data.results[0].geometry.location;
-      const placeId = response.data.results[0].place_id;
-      console.log('Location found:', location, 'Place ID:', placeId);
-      return {
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        body: JSON.stringify({ lat: location.lat, lng: location.lng, placeId: placeId }),
-      };
+      let location = null;
+      let cityPlaceId = null;
+
+      for (const result of response.data.results) {
+        const addressComponents = result.address_components;
+
+        for (const component of addressComponents) {
+          if (component.types.includes('locality') || component.types.includes('administrative_area_level_2')) {
+            location = result.geometry.location;
+            cityPlaceId = result.place_id;
+            break;
+          }
+        }
+
+        if (cityPlaceId) break;
+      }
+      if (location && cityPlaceId) {
+        console.log('City-level location found:', location, 'Place ID:', cityPlaceId);
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+          body: JSON.stringify({ lat: location.lat, lng: location.lng, placeId: cityPlaceId }),
+        };
+      }
     } else {
       console.error('Error: No results found or other issue:', response.data.status);
       return {

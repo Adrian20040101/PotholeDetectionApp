@@ -3,9 +3,9 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 const db = admin.firestore();
 
-exports.evaluatePotholes = functions.pubsub.schedule('every 48 hours').onRun(async (context) => {
+exports.evaluatePotholes = functions.pubsub.schedule('every 2 minutes').onRun(async (context) => {
   const now = admin.firestore.Timestamp.now();
-  const thresholdTime = admin.firestore.Timestamp.fromMillis(now.toMillis() - 2 * 24 * 60 * 60 * 1000); // each report is open 2 days for voting
+  const thresholdTime = admin.firestore.Timestamp.fromMillis(now.toMillis() - 120 * 1000); // each report is open 2 days for voting
 
   const markerQuerySnapshot = await db.collection('markers').where('status', '==', 'pending').get();
 
