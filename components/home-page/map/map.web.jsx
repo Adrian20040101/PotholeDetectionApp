@@ -35,25 +35,6 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
     mapRef.current = mapInstance;
   };
 
-  const fetchLocation = async (latitude, longitude) => {
-    try {
-      const response = await fetch(
-        `https://road-guard.netlify.app/.netlify/functions/reverse_geocoding?lat=${latitude}&lng=${longitude}`
-      );
-      const data = await response.json();
-  
-      if (response.ok) {
-        return `${data.county || 'Unknown County'}, ${data.region || 'Unknown Region'}`;
-      } else {
-        console.error('Error fetching location:', data.message);
-        return 'Unknown Location';
-      }
-    } catch (error) {
-      console.error('Error fetching location:', error);
-      return 'Unknown Location';
-    }
-  };
-
   useEffect(() => {
     const fetchCoordinates = async (cityName) => {
       try {
@@ -89,25 +70,15 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
       const markersCollection = collection(db, 'markers');
       const markerSnapshot = await getDocs(markersCollection);
   
-      let markersList = await Promise.all(
-        markerSnapshot.docs.map(async (doc) => {
-          const markerData = doc.data();
-  
-          if (filters?.city) {
-            const city = await fetchLocation(markerData.lat, markerData.lon);
-            markerData.city = city;
-            console.log('City from autocomplete: ', city);
-            console.log('City from reverse geocoding: ', filters.city);
-          }
-  
-          return { id: doc.id, ...markerData };
-        })
-      );
+      let markersList = markerSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
   
       if (filters) {
-        if (filters.city) {
+        if (filters.placeId) {
           markersList = markersList.filter(
-            (marker) => marker.city === filters.city
+            (marker) => marker.placeId === filters.placeId
           );
         }
         if (filters.status) {
@@ -127,6 +98,7 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
       }
   
       setMarkers(markersList);
+      console.log(filters.placeId);
     } catch (error) {
       console.error('Error fetching markers:', error);
     }
