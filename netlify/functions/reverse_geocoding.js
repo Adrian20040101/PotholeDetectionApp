@@ -33,18 +33,25 @@ exports.handler = async function (event, context) {
       };
     }
 
-    const addressComponents = data.results[0].address_components;
-    const placeId = data.results[0].place_id;
+    let cityPlaceId = null;
     let county = null;
     let region = null;
-    addressComponents.forEach((component) => {
-      if (component.types.includes('administrative_area_level_2')) {
-        county = component.long_name;
-      }
-      if (component.types.includes('administrative_area_level_1')) {
-        region = component.long_name;
-      }
-    });
+
+    for (const result of data.results) {
+      const addressComponents = result.address_components;
+
+      addressComponents.forEach((component) => {
+        if (component.types.includes('locality') || component.types.includes('administrative_area_level_2')) {
+          cityPlaceId = result.place_id;
+          county = component.long_name;
+        }
+        if (component.types.includes('administrative_area_level_1')) {
+          region = component.long_name;
+        }
+      });
+
+      if (cityPlaceId) break;
+    }
 
     return {
       statusCode: 200,
@@ -52,7 +59,7 @@ exports.handler = async function (event, context) {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
-      body: JSON.stringify({ region, county, placeId }),
+      body: JSON.stringify({ region, county, placeId: cityPlaceId }),
     };
   } catch (error) {
     return {

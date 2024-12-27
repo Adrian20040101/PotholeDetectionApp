@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Picker, Button, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, FlatList, TouchableOpacity, Button, Picker } from 'react-native';
 import axios from 'axios';
 import styles from './filters.style';
 
 const Filters = ({ onApplyFilters }) => {
   const [city, setCity] = useState('');
+  const [placeId, setPlaceId] = useState('');
   const [status, setStatus] = useState('');
   const [timeframe, setTimeframe] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -23,6 +24,7 @@ const Filters = ({ onApplyFilters }) => {
 
   const handleCityInput = (text) => {
     setCity(text);
+    setPlaceId('');
     if (text.length > 2) {
       fetchSuggestions(text);
     } else {
@@ -31,12 +33,13 @@ const Filters = ({ onApplyFilters }) => {
   };
 
   const handleCitySelect = (selectedCity) => {
-    setCity(selectedCity);
+    setCity(selectedCity.description);
+    setPlaceId(selectedCity.place_id);
     setSuggestions([]);
   };
 
   const handleApplyFilters = () => {
-    onApplyFilters({ city, status, timeframe });
+    onApplyFilters({ placeId, status, timeframe });
   };
 
   return (
@@ -54,7 +57,7 @@ const Filters = ({ onApplyFilters }) => {
           data={suggestions}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleCitySelect(item.description)}>
+            <TouchableOpacity onPress={() => handleCitySelect(item)}>
               <Text style={styles.suggestion}>{item.description}</Text>
             </TouchableOpacity>
           )}

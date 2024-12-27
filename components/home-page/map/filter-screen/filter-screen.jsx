@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import Filters from '../filters/filters';
 import Map from '../map.web';
@@ -7,7 +7,7 @@ import styles from './filter-screen.style';
 
 const FilteredMapScreen = () => {
   const [filtersVisible, setFiltersVisible] = useState(false);
-  const [filters, setFilters] = useState({ city: '', status: '', timeframe: '' });
+  const [filters, setFilters] = useState({ placeId: '', status: '', timeframe: '' });
 
   const toggleFilters = () => {
     setFiltersVisible(!filtersVisible);
@@ -20,7 +20,11 @@ const FilteredMapScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <Map city={filters.city} status={filters.status} timeframe={filters.timeframe} />
+      <Map
+        placeId={filters.placeId}
+        status={filters.status}
+        timeframe={filters.timeframe}
+      />
 
       <TouchableOpacity style={styles.filterButton} onPress={toggleFilters}>
         <FontAwesome name="filter" size={20} color="#fff" />
