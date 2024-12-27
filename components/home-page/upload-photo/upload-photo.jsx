@@ -101,6 +101,7 @@ const ImageUpload = ({ isVisible, onClose }) => {
     try {
       const markersCollectionRef = collection(db, 'markers');
       const user = auth.currentUser;
+      
       await addDoc(markersCollectionRef, {
         lat: lat,
         lon: lng,
@@ -113,7 +114,7 @@ const ImageUpload = ({ isVisible, onClose }) => {
         placeId: placeId || null,
       });
   
-      console.log('Marker saved to Firestore:', { lat, lng, imageUrl });
+      console.log('Marker saved to Firestore:', { lat, lng, imageUrl, placeId });
     } catch (error) {
       console.error("Error saving marker to Firestore:", error);
     }
@@ -154,19 +155,21 @@ const ImageUpload = ({ isVisible, onClose }) => {
       const response = await fetch(
         `https://road-guard.netlify.app/.netlify/functions/reverse_geocoding?lat=${latitude}&lng=${longitude}`
       );
-      const data = await response.json();
   
-      if (response.ok) {
-        return data.placeId;
-      } else {
+      if (!response.ok) {
         console.error('Error fetching location:', data.message);
         return null;
       }
+
+      const data = await response.json();
+      return data.placeId;
+      
     } catch (error) {
       console.error('Error fetching location:', error);
-      return null;;
+      return null;
     }
   };
+  
 
   const triggerServerlessFunction = async (imageUrl) => {
     setAnalyzing(true);
