@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
 import { collection, getDocs, getDoc, doc, query, where, Timestamp } from "firebase/firestore";
@@ -25,6 +25,7 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
   const [center, setCenter] = useState(initialCenter);
   const [zoom, setZoom] = useState(12);
   const [loading, setLoading] = useState(true);
+  const [loadingMarkers, setLoadingMarkers] = useState(false);
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -67,6 +68,7 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
 
   const fetchMarkers = async (filters = null) => {
     try {
+      setLoadingMarkers(true);
       const markersCollection = collection(db, 'markers');
       const markerSnapshot = await getDocs(markersCollection);
   
@@ -81,9 +83,9 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
             (marker) => marker.placeId === filters.placeId
           );
         }
-        if (filters.status) {
-          markersList = markersList.filter(
-            (marker) => marker.status === filters.status
+        if (Array.isArray(filters.status) && filters.status.length > 0) {
+          markersList = markersList.filter((marker) =>
+            filters.status.includes(marker.status)
           );
         }
         if (filters.timeframe) {
@@ -101,6 +103,8 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
       console.log(filters.placeId);
     } catch (error) {
       console.error('Error fetching markers:', error);
+    } finally {
+      setLoadingMarkers(false);
     }
   };
   
@@ -140,9 +144,6 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
     setCenter(center);
     setZoom(zoomLevel);
   };
-  
-  
-  
 
   useEffect(() => {
     if (!city) {
@@ -154,60 +155,82 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
 
   return (
     <View style={styles.container}>
-      <SearchBar />
-
-      <TouchableOpacity
-        style={styles.filterButton}
-        onPress={() => setFiltersVisible(!filtersVisible)}
-      >
-        <FontAwesome name="filter" size={20} color="#000" />
-      </TouchableOpacity>
-  
-      {filtersVisible && (
-        <View style={styles.filtersContainer}>
-          <Filters
-            onApplyFilters={(filters) => {
-              setFiltersVisible(false);
-              fetchMarkers(filters);
+      {loading ? (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>Loading favorite city...</Text>
+      </View>
+    ) : (
+      <>
+        <LoadScript googleMapsApiKey={GOOGLE_API_KEY} libraries={["places"]}>
+          <GoogleMap
+            ref={mapRef}
+            mapContainerStyle={containerStyle}
+            options={{
+              mapTypeControl: false,
+              zoomControl: true,
+              scrollwheel: true,
+              disableDoubleClickZoom: false,
+              gestureHandling: 'cooperative',
             }}
-          />
+            center={center}
+            zoom={zoom}
+            onLoad={onMapLoad}
+          >
+            {markers.map((marker) => (
+              <Marker
+                key={marker.id}
+                position={{ lat: marker.lat, lng: marker.lon }}
+                onClick={() => handleMarkerClick(marker)}
+              />
+            ))}
+          </GoogleMap>
+        </LoadScript>
+
+        <View style={styles.overlayContainer}>
+          <SearchBar onCityFocus={handleCityFocus} onFilterPress={() => setFiltersVisible(!filtersVisible)} />
+          {filtersVisible && (
+            <View style={styles.filtersOverlay}>
+              <Filters
+                onApplyFilters={(filters) => {
+                  setFiltersVisible(false);
+                  fetchMarkers(filters);
+                }}
+                onRemoveFilters={() => {
+                  setFiltersVisible(false);
+                  fetchMarkers();
+                }}
+              />
+              <TouchableOpacity
+                onPress={() => setFiltersVisible(false)}
+                style={styles.closeButton}
+                accessibilityLabel="Close Filters"
+                accessibilityHint="Closes the filter options"
+              >
+                <FontAwesome name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-      )}
-  
-      <LoadScript googleMapsApiKey={GOOGLE_API_KEY} libraries={["places"]}>
-        <GoogleMap
-          ref={mapRef}
-          mapContainerStyle={containerStyle}
-          options={{
-            mapTypeControl: false,
-            zoomControl: true,
-            scrollwheel: true,
-            disableDoubleClickZoom: false,
-            gestureHandling: 'cooperative',
-          }}
-          center={center}
-          zoom={zoom}
-          onLoad={onMapLoad}
-        >
-          {markers.map((marker) => (
-            <Marker
-              key={marker.id}
-              position={{ lat: marker.lat, lng: marker.lon }}
-              onClick={() => handleMarkerClick(marker)}
-            />
-          ))}
-        </GoogleMap>
-      </LoadScript>
-  
-      <TouchableOpacity style={styles.menuButton} onPress={toggleSidebar}>
-        <FontAwesome name="bars" size={24} color="#000" />
-      </TouchableOpacity>
-  
-      <BottomSheet
-        visible={isBottomSheetVisible}
-        onClose={() => setBottomSheetVisible(false)}
-        marker={selectedMarker}
-      />
+
+        {loadingMarkers && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" />
+            <Text style={styles.loadingText}>Loading markers...</Text>
+          </View>
+        )}
+
+        <TouchableOpacity style={styles.menuButton} onPress={toggleSidebar} accessibilityLabel="Open Menu" accessibilityHint="Opens the sidebar">
+          <FontAwesome name="bars" size={24} color="#000" />
+        </TouchableOpacity>
+
+        <BottomSheet
+          visible={isBottomSheetVisible}
+          onClose={() => setBottomSheetVisible(false)}
+          marker={selectedMarker}
+        />
+      </>
+    )}
     </View>
   );  
 };

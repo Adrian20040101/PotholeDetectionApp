@@ -7,7 +7,7 @@ import styles from './filter-screen.style';
 
 const FilteredMapScreen = () => {
   const [filtersVisible, setFiltersVisible] = useState(false);
-  const [filters, setFilters] = useState({ placeId: '', status: '', timeframe: '' });
+  const [filters, setFilters] = useState({ placeId: '', status: [], timeframe: '' });
 
   const toggleFilters = () => {
     setFiltersVisible(!filtersVisible);

@@ -16,6 +16,17 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
   },
+  statusContainer: {
+    marginTop: 5,
+  },
+  statusOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  statusLabel: {
+    marginLeft: 8,
+  },
   suggestion: {
     padding: 10,
     borderBottomWidth: 1,

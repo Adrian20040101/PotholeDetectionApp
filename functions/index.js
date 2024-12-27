@@ -3,9 +3,9 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 const db = admin.firestore();
 
-exports.evaluatePotholes = functions.pubsub.schedule('every 2 minutes').onRun(async (context) => {
+exports.evaluatePotholes = functions.pubsub.schedule('every 48 hours').onRun(async (context) => {
   const now = admin.firestore.Timestamp.now();
-  const thresholdTime = admin.firestore.Timestamp.fromMillis(now.toMillis() - 120 * 1000); // each report is open 2 days for voting
+  const thresholdTime = admin.firestore.Timestamp.fromMillis(now.toMillis() - 2 * 24 * 60 * 60 * 1000); // each report is open 2 days for voting
 
   const markerQuerySnapshot = await db.collection('markers').where('status', '==', 'pending').get();
 
@@ -32,13 +32,12 @@ exports.evaluatePotholes = functions.pubsub.schedule('every 2 minutes').onRun(as
       const userId = markerData.userId;
       const userRef = db.collection('users').doc(userId);
 
-      await userRef.update({
-        contributions: admin.firestore.FieldValue.increment(1),
-      });
-
       // if there is at least an upvote or at least a downvote, classify them accordingly. If there is no info, update accordingly (beta)
       if (upvoteCount >= 1 && upvoteCount > downvoteCount) {
         await markerDoc.ref.update({ status: 'likely a pothole' });
+        await userRef.update({
+          contributions: admin.firestore.FieldValue.increment(1),
+        });
       } else if (upvoteCount + downvoteCount < 1) {
         await markerDoc.ref.update({ status: 'too low info' });
       } else if (downvoteCount >= 1 && downvoteCount >= upvoteCount) {
