@@ -65,6 +65,8 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
                     username: user.displayName,
                     email: user.email,
                     profilePictureUrl: googleProfilePictureUrl,
+                    contributions: 0,
+                    joinDate: new Date()
                 });
             }
         };

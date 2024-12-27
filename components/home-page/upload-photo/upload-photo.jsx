@@ -97,7 +97,7 @@ const ImageUpload = ({ isVisible, onClose }) => {
     })();
   }, []);
 
-  const saveMarkerToFirestore = async (lat, lng, imageUrl) => {
+  const saveMarkerToFirestore = async (lat, lng, imageUrl, placeId) => {
     try {
       const markersCollectionRef = collection(db, 'markers');
       const user = auth.currentUser;
@@ -106,12 +106,11 @@ const ImageUpload = ({ isVisible, onClose }) => {
         lon: lng,
         timestamp: new Date(),
         userId: user.uid,
-        username: user.isAnonymous ? anonymousUsername : user.displayName,
-        userProfilePicture: user.isAnonymous ? 'https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg' : user.photoURL,
         imageUrl: imageUrl,
         upvotes: 0,
         downvotes: 0,
         status: 'pending',
+        placeId: placeId || null,
       });
   
       console.log('Marker saved to Firestore:', { lat, lng, imageUrl });
@@ -150,6 +149,25 @@ const ImageUpload = ({ isVisible, onClose }) => {
     }
   };
 
+  const reverseGeocode = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://road-guard.netlify.app/.netlify/functions/reverse_geocoding?lat=${latitude}&lng=${longitude}`
+      );
+      const data = await response.json();
+  
+      if (response.ok) {
+        return data.placeId;
+      } else {
+        console.error('Error fetching location:', data.message);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching location:', error);
+      return null;;
+    }
+  };
+
   const triggerServerlessFunction = async (imageUrl) => {
     setAnalyzing(true);
 
@@ -180,10 +198,11 @@ const ImageUpload = ({ isVisible, onClose }) => {
 
             if (result.coordinates) {
                 const [lat, lng] = result.coordinates;
+                const placeId = await reverseGeocode(lat, lng);
 
                 if (isValidCoordinates(lat, lng)) {
                     console.log('Valid coordinates received:', result.coordinates);
-                    saveMarkerToFirestore(lat, lng, imageUrl);
+                    saveMarkerToFirestore(lat, lng, imageUrl, placeId);
                     setLatitude(lat);
                     setLongitude(lng);
                     return { lat, lng };
@@ -233,7 +252,7 @@ const handleAddressSubmit = async () => {
           if (selectedImage) {
               const downloadURL = await uploadImageToFirebase(selectedImage);
               if (downloadURL) {
-                  saveMarkerToFirestore(location.lat, location.lng, downloadURL);
+                  saveMarkerToFirestore(location.lat, location.lng, downloadURL, location.placeId);
                   setShowAddressModal(false);
               } else {
                   toast.error('Failed to upload image.');

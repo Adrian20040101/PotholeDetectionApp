@@ -68,7 +68,7 @@ const Signup = ({ onBackPress, onLoginPress }) => {
             const defaultProfilePictureUrl = 'https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg';
 
             // save the username in Firestore
-            await setDoc(doc(db, 'users', user.uid), { username, email, profilePictureUrl: defaultProfilePictureUrl });
+            await setDoc(doc(db, 'users', user.uid), { username, email, profilePictureUrl: defaultProfilePictureUrl, contributions: 0, joinDate: new Date() });
         } catch (error) {
             console.error('Error signing up:', error.message);
             if (error.code === 'auth/email-already-in-use') {

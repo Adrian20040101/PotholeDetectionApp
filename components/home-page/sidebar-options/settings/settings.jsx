@@ -11,7 +11,7 @@ const SettingsModal = ({ isVisible, onClose, onCitySelect }) => {
   const { theme, toggleTheme, isDarkTheme } = useTheme();
   const user = auth.currentUser;
 
-  const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '35%');
+  const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '50%');
 
   const overlayAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -19,7 +19,7 @@ const SettingsModal = ({ isVisible, onClose, onCitySelect }) => {
   useEffect(() => {
     const updateModalWidth = () => {
       const screenWidth = Dimensions.get('window').width;
-      setModalWidth(screenWidth < 800 ? '85%' : '35%');
+      setModalWidth(screenWidth < 800 ? '85%' : '50%');
     };
 
     Dimensions.addEventListener('change', updateModalWidth);

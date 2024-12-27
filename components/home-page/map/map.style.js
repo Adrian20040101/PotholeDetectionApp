@@ -84,7 +84,32 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 10,
     borderRadius: 5,
-  }
+  },
+  filterButton: {
+    position: 'absolute',
+    top: 10,
+    left: 100,
+    zIndex: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 5,
+  },
+  filtersContainer: {
+    position: 'absolute',
+    width: isMobile ? '60%' : '30%',
+    top: 50,
+    left: 100,
+    right: 16,
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 8,
+    zIndex: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
 });
 
 export default styles;
