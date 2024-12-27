@@ -38,19 +38,19 @@ exports.handler = async function (event, context) {
     let region = null;
 
     for (const result of data.results) {
-      const addressComponents = result.address_components;
+      if (result.types.includes('locality')) {
+        cityPlaceId = result.place_id;
 
-      addressComponents.forEach((component) => {
-        if (component.types.includes('locality') || component.types.includes('administrative_area_level_2')) {
-          cityPlaceId = result.place_id;
-          county = component.long_name;
+        for (const component of result.address_components) {
+          if (component.types.includes('administrative_area_level_2')) {
+            county = component.long_name;
+          }
+          if (component.types.includes('administrative_area_level_1')) {
+            region = component.long_name;
+          }
         }
-        if (component.types.includes('administrative_area_level_1')) {
-          region = component.long_name;
-        }
-      });
-
-      if (cityPlaceId) break;
+        break;
+      }
     }
 
     return {

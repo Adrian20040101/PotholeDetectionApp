@@ -7,48 +7,18 @@ exports.handler = async (event, context) => {
 
     console.log(`Fetching geocode for address: ${address}`);
 
-    const response = await axios.get(
+    const firstResponse = await axios.get(
       `https://maps.googleapis.com/maps/api/geocode/json`,
       {
-        params: {
-          address,
-          key,
-        },
+        params: { address, key },
       }
     );
+    const firstData = firstResponse.data;
 
-    console.log('Geocoding API response:', response.data);
+    console.log('First geocoding API response:', firstData);
 
-    if (response.data.status === 'OK' && response.data.results.length > 0) {
-      let location = null;
-      let cityPlaceId = null;
-
-      for (const result of response.data.results) {
-        const addressComponents = result.address_components;
-
-        for (const component of addressComponents) {
-          if (component.types.includes('locality') || component.types.includes('administrative_area_level_2')) {
-            location = result.geometry.location;
-            cityPlaceId = result.place_id;
-            break;
-          }
-        }
-
-        if (cityPlaceId) break;
-      }
-      if (location && cityPlaceId) {
-        console.log('City-level location found:', location, 'Place ID:', cityPlaceId);
-        return {
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-          body: JSON.stringify({ lat: location.lat, lng: location.lng, placeId: cityPlaceId }),
-        };
-      }
-    } else {
-      console.error('Error: No results found or other issue:', response.data.status);
+    if (firstData.status !== 'OK' || firstData.results.length === 0) {
+      console.error('No results or error status from first geocode:', firstData.status);
       return {
         statusCode: 404,
         headers: {
@@ -58,6 +28,119 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ message: 'No results found for the provided address.' }),
       };
     }
+
+    const primaryResult = firstData.results[0];
+    const exactLocation = primaryResult.geometry.location; 
+
+    let cityResult = null;
+    for (const result of firstData.results) {
+      if (result.types.includes('locality')) {
+        cityResult = result;
+        break;
+      }
+    }
+
+    if (cityResult) {
+      const cityPlaceId = cityResult.place_id;
+      console.log('Found city-level placeId in the FIRST response:', cityPlaceId);
+
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          lat: exactLocation.lat,
+          lng: exactLocation.lng,
+          placeId: cityPlaceId,
+        }),
+      };
+    }
+
+    let cityName = null;
+    let countryName = null;
+
+    for (const comp of primaryResult.address_components) {
+      if (comp.types.includes('locality')) {
+        cityName = comp.long_name;
+      }
+      if (comp.types.includes('country')) {
+        countryName = comp.long_name;
+      }
+    }
+
+    if (!cityName) {
+      console.warn('No "locality" found in the address components. Returning just lat/lng.');
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          lat: exactLocation.lat,
+          lng: exactLocation.lng,
+          placeId: null,
+        }),
+      };
+    }
+
+    if (!countryName) {
+      console.warn('No "country" found in address_components. Using only city name for second call.');
+    }
+
+    const cityQuery = countryName ? `${cityName}, ${countryName}` : cityName;
+    console.log('Second geocoding call with cityQuery =', cityQuery);
+
+    const secondResponse = await axios.get(
+      `https://maps.googleapis.com/maps/api/geocode/json`,
+      {
+        params: { address: cityQuery, key },
+      }
+    );
+    const secondData = secondResponse.data;
+
+    console.log('Second geocoding API response:', secondData);
+
+    if (secondData.status !== 'OK' || secondData.results.length === 0) {
+      console.warn('No results for the city-only fallback call. Returning lat/lng without city placeId.');
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          lat: exactLocation.lat,
+          lng: exactLocation.lng,
+          placeId: null,
+        }),
+      };
+    }
+
+    let cityPlaceId = null;
+    for (const result of secondData.results) {
+      if (result.types.includes('locality')) {
+        cityPlaceId = result.place_id;
+        break;
+      }
+    }
+
+    console.log('City-level placeId from SECOND call:', cityPlaceId);
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify({
+        lat: exactLocation.lat,
+        lng: exactLocation.lng,
+        placeId: cityPlaceId ?? null,
+      }),
+    };
   } catch (error) {
     console.error(`Error in geocoding function: ${error.message}`);
     return {
