@@ -3,15 +3,21 @@ import { View, TouchableOpacity, Text, Image } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ImageUpload from '../upload-photo/upload-photo';
+import AchievementsModal from '../achievements/achievements';
 import styles from './bottom-navbar.style';
 import { useUser } from '../../../context-components/user-context';
 
 const BottomNavbar = ({ onAccountPress }) => {
   const { userData } = useUser();
   const [isImageUploadVisible, setImageUploadVisible] = useState(false);
+  const [isAchievementsVisible, setAchievementsVisible] = useState(false);
 
   const handleImportPress = () => {
     setImageUploadVisible(true);
+  };
+
+  const handleAchievementsPress = () => {
+    setAchievementsVisible(true);
   };
 
   return (
@@ -26,7 +32,7 @@ const BottomNavbar = ({ onAccountPress }) => {
         <Text style={styles.navButtonText}>Import</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.navButton} onPress={() => console.log('Achievements button pressed')}>
+      <TouchableOpacity style={styles.navButton} onPress={handleAchievementsPress}>
         <FontAwesome name="trophy" size={30} color="#fff" />
         <Text style={styles.navButtonText}>Achievements</Text>
       </TouchableOpacity>
@@ -39,6 +45,11 @@ const BottomNavbar = ({ onAccountPress }) => {
       <ImageUpload
         isVisible={isImageUploadVisible}
         onClose={() => setImageUploadVisible(false)}
+      />
+
+      <AchievementsModal
+        isVisible={isAchievementsVisible}
+        onClose={() => setAchievementsVisible(false)}
       />
     </View>
   );
