@@ -21,14 +21,15 @@ exports.handler = async (event, context) => {
 
     if (response.data.status === 'OK' && response.data.results.length > 0) {
       const location = response.data.results[0].geometry.location;
-      console.log('Location found:', location);
+      const placeId = response.data.results[0].place_id;
+      console.log('Location found:', location, 'Place ID:', placeId);
       return {
         statusCode: 200,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ lat: location.lat, lng: location.lng }),
+        body: JSON.stringify({ lat: location.lat, lng: location.lng, placeId: placeId }),
       };
     } else {
       console.error('Error: No results found or other issue:', response.data.status);

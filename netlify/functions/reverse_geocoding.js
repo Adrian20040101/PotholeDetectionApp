@@ -34,6 +34,7 @@ exports.handler = async function (event, context) {
     }
 
     const addressComponents = data.results[0].address_components;
+    const placeId = data.results[0].place_id;
     let county = null;
     let region = null;
     addressComponents.forEach((component) => {
@@ -51,7 +52,7 @@ exports.handler = async function (event, context) {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
-      body: JSON.stringify({ region, county }),
+      body: JSON.stringify({ region, county, placeId }),
     };
   } catch (error) {
     return {

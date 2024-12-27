@@ -55,6 +55,25 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
   }, [marker]);
 
   useEffect(() => {
+    if (marker?.userId) {
+      const fetchUserData = async () => {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', marker.userId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            marker.username = userData.username || 'Unknown User';
+            marker.userProfilePicture = userData.profilePictureUrl || null;
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      };
+  
+      fetchUserData();
+    }
+  }, [marker]);  
+
+  useEffect(() => {
     Animated.timing(animatedHeight, {
       toValue: expanded ? expandedHeight : sheetHeight,
       duration: 300,

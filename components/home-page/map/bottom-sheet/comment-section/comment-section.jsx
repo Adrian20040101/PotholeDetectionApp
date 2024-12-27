@@ -7,6 +7,7 @@ import { collection, addDoc, query, orderBy, onSnapshot } from 'firebase/firesto
 import { doc, getDoc } from 'firebase/firestore';
 import styles from './comment-section.style';
 import { auth } from '../../../../../config/firebase/firebase-config';
+import ProfileModal from '../../../profile-modal/profile-modal';
 
 const emojiPickerHeight = 150;
 
@@ -22,6 +23,18 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   const [selectedComment, setSelectedComment] = useState(null);
+  const [isProfileModalVisible, setProfileModalVisible] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+
+  const handleUserPress = (userId) => {
+    setSelectedUserId(userId);
+    setProfileModalVisible(true);
+  };
+
+  const closeProfileModal = () => {
+    setProfileModalVisible(false);
+    setSelectedUserId(null);
+  };
 
   const scrollToBottom = () => {
     if (flatListRef.current) {
@@ -156,7 +169,14 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
     }) + ', ' + timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return (
       <View style={[styles.commentContainer, isCurrentUser && styles.currentUserCommentContainer]}>
-        {!isCurrentUser && <Image source={{ uri: profilePictureUrl }} style={styles.profilePicture} />}
+        {!isCurrentUser && 
+        <Pressable onPress={() => handleUserPress(item.userId)}>
+          <Image 
+            source={{ uri: profilePictureUrl }} 
+            style={styles.profilePicture} 
+          />
+        </Pressable>
+        }
         <View style={[styles.bubble, isCurrentUser && styles.currentUserBubble]}>
           {!isCurrentUser && <Text style={styles.username}>{username}</Text>}
           <Text style={styles.commentText}>{item.content}</Text>
@@ -245,6 +265,12 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
           <FontAwesome name="send" size={20} color="#007AFF" />
         </Pressable>
       </View>
+
+      <ProfileModal
+        isVisible={isProfileModalVisible}
+        onClose={closeProfileModal}
+        userId={selectedUserId}
+      />
     </View>
   );
   

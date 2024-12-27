@@ -29,18 +29,20 @@ exports.evaluatePotholes = functions.pubsub.schedule('every 48 hours').onRun(asy
         }
       });
 
-      console.log(`Evaluating pothole ${markerId} with upvotes=${upvoteCount}, downvotes=${downvoteCount}`);
+      const userId = markerData.userId;
+      const userRef = db.collection('users').doc(userId);
+
+      await userRef.update({
+        contributions: admin.firestore.FieldValue.increment(1),
+      });
 
       // if there is at least an upvote or at least a downvote, classify them accordingly. If there is no info, update accordingly (beta)
       if (upvoteCount >= 1 && upvoteCount > downvoteCount) {
         await markerDoc.ref.update({ status: 'likely a pothole' });
-        console.log(`Pothole ${markerId} is likely a pothole`);
       } else if (upvoteCount + downvoteCount < 1) {
         await markerDoc.ref.update({ status: 'too low info' });
-        console.log(`Pothole ${markerId} has too low info`);
       } else if (downvoteCount >= 1 && downvoteCount >= upvoteCount) {
         await markerDoc.ref.update({ status: 'unlikely a pothole' });
-        console.log(`Pothole ${markerId} is unlikely a pothole`);
       }
     } else {
       console.log(`Pothole ${markerDoc.id} can't be evaluated already!`);
