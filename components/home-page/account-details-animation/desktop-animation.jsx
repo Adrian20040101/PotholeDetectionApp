@@ -1,23 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, Pressable, Animated, Easing, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { View, Text, Image, Pressable, Animated, Easing, TouchableWithoutFeedback, ScrollView, ActivityIndicator } from 'react-native';
 import { auth, db } from '../../../config/firebase/firebase-config';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, fetchSignInMethodsForEmail, reauthenticateWithCredential, linkWithCredential } from "firebase/auth";
-import { getDoc, doc, setDoc, getDocs, collection, updateDoc } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import { getDoc, doc, setDoc, getDocs, collection, updateDoc, query, where, limit, orderBy, onSnapshot } from 'firebase/firestore';
 import * as Google from 'expo-auth-session/providers/google';
 import { getStorage, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { onIdTokenChanged, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import * as AuthSession from 'expo-auth-session';
 import Cookies from 'js-cookie';
 import { useUser } from '../../../context-components/user-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
-import jwtDecode from 'jwt-decode';
 import styles from './desktop-animation.style';
 
 const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggleSidebar }) => {
   const [shouldRender, setShouldRender] = useState(sidebarVisible);
   const { userData, setUserData } = useUser();
+  const [latestPotholes, setLatestPotholes] = useState([]);
+  const [loadingPotholes, setLoadingPotholes] = useState(false); 
   const [hasPermission, setHasPermission] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const animation = useRef(new Animated.Value(0)).current;
@@ -25,6 +26,55 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
   const auth = getAuth();
   const [currentDisplayedAccountUid, setCurrentDisplayedAccountUid] = useState(auth.currentUser.uid);
   const firebaseApiKey = process.env.EXPO_PUBLIC_FIREBASE_API_KEY;
+
+  const badgeImages = {
+    bronze: require('../../../assets/images/bronze.png'),
+    silver: require('../../../assets/images/silver.png'),
+    gold: require('../../../assets/images/gold.png'),
+    diamond: require('../../../assets/images/diamond.png'),
+    emerald: require('../../../assets/images/emerald.png'),
+    platinum: require('../../../assets/images/platinum.png'),
+  };
+
+  const calculateBadge = (contributions) => {
+    const thresholds = {
+      Bronze: 5,
+      Silver: 10,
+      Gold: 20,
+      Diamond: 50,
+      Emerald: 100,
+      Platinum: 250,
+    };
+
+    let badge = null;
+    for (const [key, threshold] of Object.entries(thresholds)) {
+      if (contributions >= threshold) {
+        badge = key.toLowerCase();
+      }
+    }
+    return badge;
+  };
+
+  const badgeImage = userData ? badgeImages[calculateBadge(userData.contributions)] : null;
+
+  const fetchLocation = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://road-guard.netlify.app/.netlify/functions/reverse_geocoding?lat=${latitude}&lng=${longitude}`
+      );
+      const data = await response.json();
+  
+      if (response.ok) {
+        return `${data.county || 'Unknown County'}, ${data.region || 'Unknown Region'}`;
+      } else {
+        console.error('Error fetching location:', data.message);
+        return 'Unknown Location';
+      }
+    } catch (error) {
+      console.error('Error fetching location:', error);
+      return 'Unknown Location';
+    }
+  };
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
@@ -35,7 +85,43 @@ const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggl
     prompt: 'select_account',
   });
 
-  
+  useEffect(() => {
+    if (!currentDisplayedAccountUid) return;
+
+    setLoadingPotholes(true);
+
+    const potholesRef = collection(db, 'markers');
+    const potholesQuery = query(
+      potholesRef,
+      where('userId', '==', currentDisplayedAccountUid),
+      orderBy('timestamp', 'desc'),
+      limit(5)
+    );
+
+    const unsubscribe = onSnapshot(
+      potholesQuery,
+      async (snapshot) => {
+        const potholesData = await Promise.all(snapshot.docs.map(async (doc) => {
+          const data = doc.data();
+          const location = await fetchLocation(data.lat, data.lon);
+          return {
+            id: doc.id,
+            ...data,
+            location,
+          };
+        }));
+        setLatestPotholes(potholesData);
+        setLoadingPotholes(false);
+      },
+      (error) => {
+        console.error('Error fetching potholes:', error);
+        setLoadingPotholes(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentDisplayedAccountUid]);
+
   const fetchUserData = async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
     return userDoc.exists() ? userDoc.data() : null;
@@ -357,7 +443,13 @@ const handleAddAccount = async () => {
               <Icon name="edit" size={20} color="#fff" />
             </Pressable>
           </View>
-          <Text style={styles.username}>{userData?.username}</Text>
+          <View style={styles.nameAndBadgeContainer}>
+              <Text style={styles.username}>{userData.username}</Text>
+              <Image
+                  source={badgeImage}
+                  style={styles.badge}
+              />
+          </View>
           <Text style={styles.email}>{userData?.email}</Text>
           <View style={styles.linkedAccountsContainer}>
             <View style={styles.linkedAccountsHeader}>
@@ -436,6 +528,46 @@ const handleAddAccount = async () => {
               <Icon name="add" size={20} color="#fff" />
               <Text style={styles.addAccountText}>Add another account</Text>
             </Pressable>
+          </View>
+          <View style={styles.statsContainer}>
+            <Text style={styles.statsTitle}>Statistics</Text>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Joined:</Text>
+              <Text style={styles.statValue}>
+                {userData?.joinDate?.toDate().toLocaleDateString() || 'N/A'}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Contributions:</Text>
+              <Text style={styles.statValue}>{userData?.contributions || 0}</Text>
+            </View>
+          </View>
+
+          <View style={styles.reportedPotholesContainer}>
+            <Text style={styles.reportedPotholesTitle}>Latest Reported Potholes</Text>
+            {loadingPotholes ? ( 
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator />
+                    <Text style={styles.loadingText}>Loading...</Text>
+                </View>
+            ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.potholeScroll}>
+                {latestPotholes.length > 0 ? (
+                    latestPotholes.map((pothole) => (
+                    <View key={pothole.id} style={styles.potholeCard}>
+                        <Image source={{ uri: pothole.imageUrl }} style={styles.potholeImage} />
+                        <Text style={styles.potholeStatus}>Status: {pothole.status}</Text>
+                        <Text style={styles.potholeTimestamp}>
+                        Reported on: {new Date(pothole.timestamp.toDate()).toLocaleDateString()}
+                        </Text>
+                        <Text style={styles.potholeLocation}>Located in: {pothole.location}</Text>
+                    </View>
+                    ))
+                ) : (
+                    <Text style={styles.noPotholesText}>You have not reported any potholes yet.</Text>
+                )}
+                </ScrollView>
+            )}
           </View>
         </ScrollView>
       </Animated.View>

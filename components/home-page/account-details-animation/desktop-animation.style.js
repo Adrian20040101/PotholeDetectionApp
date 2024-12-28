@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 20, // Padding to accommodate the Add Account button
+    paddingBottom: 20,
   },
   scrollView: {
     width: '100%',
@@ -63,12 +63,22 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 5,
   },
+  nameAndBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
   username: {
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 5,
     textAlign: 'center',
+  },
+  badge: {
+    width: 25,
+    height: 25,
+    marginLeft: 5,
   },
   email: {
     color: '#bbb',
@@ -80,8 +90,13 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 20,
     paddingTop: 10,
+    paddingBottom: 20,
     borderTopWidth: 1,
-    borderTopColor: '#444',
+    borderBottomWidth: 1,
+    backgroundColor: '#444',
+    borderColor: '#444',
+    padding: 15,
+    borderRadius: 10,
   },
   linkedAccountsHeader: {
     flexDirection: 'row',
@@ -173,6 +188,100 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     marginLeft: 5,
+  },
+  statsContainer: {
+    width: '100%',
+    backgroundColor: '#444',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  statsTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'left',
+  },
+  statItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+  statLabel: {
+    color: '#ddd',
+    fontSize: 16,
+  },
+  statValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  reportedPotholesContainer: {
+    width: '100%',
+    backgroundColor: '#444',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  reportedPotholesTitle : {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'left',
+  },
+  potholeScroll: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  potholeCard: {
+    width: 200,
+    backgroundColor: '#555',
+    borderRadius: 10,
+    padding: 10,
+    marginRight: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  potholeImage: {
+    width: '100%',
+    height: 80,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  potholeTimestamp: {
+    fontSize: 12,
+    color: '#eee',
+  },
+  potholeStatus: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  potholeLocation: {
+    fontSize: 12,
+    color: '#eee',
+  },  
+  noPotholesText: {
+    fontSize: 14,
+    color: '#ccc',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    flexDirection: 'row'
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+    marginLeft: 10
   },
 });
 
