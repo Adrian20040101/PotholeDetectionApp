@@ -5,6 +5,7 @@ import { collection, query, onSnapshot, orderBy, doc, getDoc } from 'firebase/fi
 import { db } from '../../../../config/firebase/firebase-config.js';
 import Voting from '../voting/votes.jsx';
 import CommentSection from './comment-section/comment-section.jsx';
+import ProfileModal from '../../profile-modal/profile-modal.jsx';
 import styles from './bottom-sheet.style';
 
 const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
@@ -16,6 +17,8 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
   const [expanded, setExpanded] = useState(false);
   const animatedHeight = useRef(new Animated.Value(sheetHeight)).current;
   const [comments, setComments] = useState([]);
+  const [isProfileModalVisible, setProfileModalVisible] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const handleExpand = () => setExpanded(true);
   const handleCollapse = () => setExpanded(false);
@@ -24,6 +27,44 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
     if (marker.status === 'likely a pothole') return 'green';
     if (marker.status === 'unlikely a pothole') return 'red';
     return 'black';
+  };
+
+  const badgeImages = {
+    bronze: require('../../../../assets/images/bronze.png'),
+    silver: require('../../../../assets/images/silver.png'),
+    gold: require('../../../../assets/images/gold.png'),
+    diamond: require('../../../../assets/images/diamond.png'),
+    emerald: require('../../../../assets/images/emerald.png'),
+    platinum: require('../../../../assets/images/platinum.png'),
+  };
+
+  const calculateBadge = (contributions) => {
+    const thresholds = {
+      Bronze: 5,
+      Silver: 10,
+      Gold: 20,
+      Diamond: 50,
+      Emerald: 100,
+      Platinum: 250,
+    };
+
+    let badge = null;
+    for (const [key, threshold] of Object.entries(thresholds)) {
+      if (contributions >= threshold) {
+        badge = key.toLowerCase();
+      }
+    }
+    return badge;
+  };
+
+  const handleUserPress = (userId) => {
+    setSelectedUserId(userId);
+    setProfileModalVisible(true);
+  };
+
+  const closeProfileModal = () => {
+    setProfileModalVisible(false);
+    setSelectedUserId(null);
   };
 
   // fetch comments in real time
@@ -44,7 +85,8 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
             id: doc.id,
             ...commentData,
             username: userDoc.exists() ? userDoc.data().username : 'Unknown User',
-            userProfilePicture: userDoc.data().profilePictureUrl
+            userProfilePicture: userDoc.data().profilePictureUrl,
+            contributions: userDoc.data().contributions
           };
         })
       );
@@ -63,6 +105,7 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
             const userData = userDoc.data();
             marker.username = userData.username || 'Unknown User';
             marker.userProfilePicture = userData.profilePictureUrl || null;
+            marker.contributions = userData.contributions || 0;
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
@@ -137,6 +180,8 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
     pan
   );
 
+  const badge = marker ? calculateBadge(marker.contributions) : null;
+
   return (
     visible && (
       <Animated.View
@@ -153,12 +198,22 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
               <View style={styles.infoAndCommentsContainer}>
                 <View style={styles.infoContainer}>
                   <View style={styles.userDetails}>
-                    <Image
-                      source={{ uri: marker.userProfilePicture }}
-                      style={styles.userProfilePicture}
-                    />
+                    <Pressable onPress={() => handleUserPress(marker.userId)}>
+                      <Image
+                        source={{ uri: marker.userProfilePicture }}
+                        style={styles.userProfilePicture}
+                      />
+                    </Pressable>
                     <View style={styles.userInfo}>
-                      <Text style={styles.username}>{marker.username}</Text>
+                      <View style={styles.usernameContainer}>
+                        <Text style={styles.username}>{marker.username}</Text>
+                        {badge && (
+                          <Image
+                            source={badgeImages[badge]}
+                            style={styles.badgeImage}
+                          />
+                        )}
+                      </View>
                       <Text style={styles.timestamp}>
                         {new Date(marker.timestamp.seconds * 1000).toLocaleString()}
                       </Text>
@@ -179,13 +234,23 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
                 <View style={styles.commentsContainer}>
                   <Text style={styles.commentPreviewTitle}>Comments Preview:</Text>
                   {comments.length > 0 ? (
-                    comments.slice(-2).map((comment, index) => (
+                    comments.slice(-2).map((comment, index) => {
+                      const commentBadge = calculateBadge(comment.contributions);
+                      return (
                       <View key={index} style={styles.commentPreviewItem}>
+                        <Text style={styles.commentUsername}>{comment.username}</Text>
+                          {commentBadge && (
+                            <Image
+                              source={badgeImages[commentBadge]}
+                              style={styles.badgeImageSmall}
+                            />
+                          )}
                         <Text style={styles.commentText}>
-                          {comment.username}: {comment.content}
+                          : {comment.content}
                         </Text>
                       </View>
-                    ))
+                      ) 
+                    })
                   ) : (
                     <Text style={styles.noCommentsText}>No comments yet. Start the conversation!</Text>
                   )}
@@ -197,6 +262,11 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
             </View>
           </View>
         )}
+        <ProfileModal
+          isVisible={isProfileModalVisible}
+          onClose={closeProfileModal}
+          userId={selectedUserId}
+        />
       </Animated.View>
     )
   );

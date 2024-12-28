@@ -74,10 +74,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#D0E8FF',
     marginLeft: 10,
   },
+  usernameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   username: {
-    fontSize: 12,
     fontWeight: 'bold',
-    marginBottom: 2,
+    color: '#333',
+  },
+  badgeImage: {
+    width: 20,
+    height: 20,
   },
   timestampText: {
     fontSize: 12,
