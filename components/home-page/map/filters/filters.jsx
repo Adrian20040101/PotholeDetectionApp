@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, Button } from 'react-native';
+import { View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import Checkbox from 'expo-checkbox';
 import axios from 'axios';
 import styles from './filters.style';
@@ -11,7 +12,7 @@ const STATUS_OPTIONS = [
   { label: 'Pending', value: 'pending' },
 ];
 
-const Filters = ({ onApplyFilters }) => {
+const Filters = ({ onApplyFilters, onRemoveFilters }) => {
   const [city, setCity] = useState('');
   const [placeId, setPlaceId] = useState('');
   const [status, setStatus] = useState([]);
@@ -73,8 +74,9 @@ const Filters = ({ onApplyFilters }) => {
           data={suggestions}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleCitySelect(item)}>
-              <Text style={styles.suggestion}>{item.description}</Text>
+            <TouchableOpacity onPress={() => handleCitySelect(item)} style={styles.suggestionItemContainer}>
+              <Icon name="location-on" size={20} color="#555" />
+              <Text style={styles.suggestionItem}>{item.description}</Text>
             </TouchableOpacity>
           )}
         />
@@ -104,7 +106,14 @@ const Filters = ({ onApplyFilters }) => {
         style={styles.input}
       />
 
-      <Button title="Apply Filters" onPress={handleApplyFilters} />
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity onPress={handleApplyFilters} style={styles.button}>
+          <Text style={styles.buttonText}>Apply Filters</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onRemoveFilters} style={styles.button}>
+          <Text style={styles.buttonText}>Remove Filters</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

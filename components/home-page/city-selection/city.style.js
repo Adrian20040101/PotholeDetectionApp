@@ -20,14 +20,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   suggestionItemContainer: {
-    backgroundColor: '#fff',
-    borderBottomColor: '#ccc',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 5,
     borderBottomWidth: 1,
-    padding: 10,
+    borderColor: '#eee',
   },
-  suggestionItemText: {
+  suggestionItem: {
     fontSize: 16,
-    color: '#333',
+    color: '#555',
   },
 });
 
