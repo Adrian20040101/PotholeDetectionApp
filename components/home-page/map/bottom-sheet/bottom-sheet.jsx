@@ -215,7 +215,7 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
 
   const translateY = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [sheetHeight + 80, 80],
+    outputRange: [sheetHeight + 80, 160],
   });
 
   const badge = marker ? calculateBadge(marker.contributions) : null;

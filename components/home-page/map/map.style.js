@@ -99,14 +99,13 @@ const styles = StyleSheet.create({
     right: 10,
   },
   searchContainer: {
-    width: '100%',
+    width: '50%',
     alignItems: 'center',
   },
   overlayContainer: {
     position: 'absolute',
-    width: '90%',
+    width: '100%',
     alignItems: 'center',
-    marginLeft: 75
   },
   filtersOverlay: {
     width: '90%',
