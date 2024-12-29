@@ -7,7 +7,7 @@ import styles from './filter-screen.style';
 
 const FilteredMapScreen = () => {
   const [filtersVisible, setFiltersVisible] = useState(false);
-  const [filters, setFilters] = useState({ placeId: '', status: '', timeframe: '' });
+  const [filters, setFilters] = useState({ placeId: '', status: [], timeframe: '' });
 
   const toggleFilters = () => {
     setFiltersVisible(!filtersVisible);
@@ -17,6 +17,11 @@ const FilteredMapScreen = () => {
     setFilters(newFilters);
     setFiltersVisible(false);
   };
+
+  const handleRemoveFilters = () => {
+    setFilters({ placeId: '', status: [], timeframe: '' });
+    setFiltersVisible(false);
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -33,7 +38,7 @@ const FilteredMapScreen = () => {
 
       {filtersVisible && (
         <View style={styles.filtersContainer}>
-          <Filters onApplyFilters={handleApplyFilters} />
+          <Filters onApplyFilters={handleApplyFilters} onRemoveFilters={handleRemoveFilters} />
         </View>
       )}
     </View>

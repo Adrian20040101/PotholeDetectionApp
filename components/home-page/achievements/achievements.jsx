@@ -109,7 +109,10 @@ const AchievementsModal = ({ isVisible, onClose }) => {
               return (
                 <View key={badge} style={styles.badgeItem}>
                   <View style={styles.badgeWrapper}>
-                    <Image source={badgeImages[badge]} style={styles.badgeImage} />
+                  <Image
+                    source={badgeImages[badge] || require('../../../assets/images/achievement-placeholder.png')}
+                    style={styles.badgeImage}
+                  />
                     {isClaimed && (
                       <Image source={checkmarkImage} style={styles.checkmarkImage} />
                     )}

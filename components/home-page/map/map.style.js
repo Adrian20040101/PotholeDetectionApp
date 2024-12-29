@@ -6,7 +6,8 @@ const isMobile = screenWidth < 800;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    zIndex: 1
+    zIndex: 1,
+    marginBottom: 80
   },
   loadingContainer: {
     flex: 1,
@@ -80,7 +81,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     left: 10,
-    zIndex: 3,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 10,
     borderRadius: 5,
@@ -89,26 +89,39 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     left: 100,
-    zIndex: 3,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 10,
     borderRadius: 5,
   },
-  filtersContainer: {
+  closeButton: {
     position: 'absolute',
-    width: isMobile ? '60%' : '30%',
+    top: 10,
+    right: 10,
+  },
+  searchContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  overlayContainer: {
+    position: 'absolute',
+    width: '90%',
+    alignItems: 'center',
+    marginLeft: 75
+  },
+  filtersOverlay: {
+    width: '90%',
+    maxWidth: 500,
     top: 50,
-    left: 100,
-    right: 16,
     backgroundColor: '#fff',
     padding: 16,
     borderRadius: 8,
-    zIndex: 15,
+    marginTop: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
+    position: 'relative',
   },
 });
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, FlatList, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import styles from './city.style';
 
@@ -54,8 +55,9 @@ const CitySelection = ({ onCitySelect }) => {
           data={suggestions}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.suggestionItemContainer} onPress={() => handleSuggestionPress(item)}>
-              <Text style={styles.suggestionItemText}>{item.description}</Text>
+            <TouchableOpacity onPress={() => handleCitySelect(item)} style={styles.suggestionItemContainer}>
+              <Icon name="location-on" size={20} color="#555" />
+              <Text style={styles.suggestionItem}>{item.description}</Text>
             </TouchableOpacity>
           )}
           keyboardShouldPersistTaps="handled" // ensures the keyboard hides on item press

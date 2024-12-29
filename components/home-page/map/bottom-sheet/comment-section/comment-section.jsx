@@ -26,6 +26,34 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
   const [isProfileModalVisible, setProfileModalVisible] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
 
+  const badgeImages = {
+    bronze: require('../../../../../assets/images/bronze.png'),
+    silver: require('../../../../../assets/images/silver.png'),
+    gold: require('../../../../../assets/images/gold.png'),
+    diamond: require('../../../../../assets/images/diamond.png'),
+    emerald: require('../../../../../assets/images/emerald.png'),
+    platinum: require('../../../../../assets/images/platinum.png'),
+  };
+
+  const calculateBadge = (contributions) => {
+    const thresholds = {
+      Bronze: 5,
+      Silver: 10,
+      Gold: 20,
+      Diamond: 50,
+      Emerald: 100,
+      Platinum: 250,
+    };
+
+    let badge = null;
+    for (const [key, threshold] of Object.entries(thresholds)) {
+      if (contributions >= threshold) {
+        badge = key.toLowerCase();
+      }
+    }
+    return badge;
+  };
+
   const handleUserPress = (userId) => {
     setSelectedUserId(userId);
     setProfileModalVisible(true);
@@ -161,6 +189,8 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
     const userProfile = userProfiles[item.userId];
     const username = userProfile?.username || 'User';
     const profilePictureUrl = userProfile?.profilePictureUrl;
+    const contributions = userProfile?.contributions || 0;
+    const badge = calculateBadge(contributions);
     const timestamp = item.timestamp.toDate();
     const formattedTimestamp = timestamp.toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -178,7 +208,18 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
         </Pressable>
         }
         <View style={[styles.bubble, isCurrentUser && styles.currentUserBubble]}>
-          {!isCurrentUser && <Text style={styles.username}>{username}</Text>}
+        {!isCurrentUser && (
+          <View style={styles.usernameContainer}>
+            <Text style={styles.username}>{username}</Text>
+            {badge && (
+              <Image 
+                source={badgeImages[badge]} 
+                style={styles.badgeImage} 
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        )}
           <Text style={styles.commentText}>{item.content}</Text>
           <Text style={styles.timestampText}>{formattedTimestamp}</Text>
         </View>

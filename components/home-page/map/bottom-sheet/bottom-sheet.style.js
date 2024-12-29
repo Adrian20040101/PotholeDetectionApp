@@ -59,9 +59,22 @@ const styles = StyleSheet.create({
   userInfo: {
     flex: 1,
   },
+  usernameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   username: {
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  badgeImage: {
+    width: 20,
+    height: 20,
+  },
+  badgeImageSmall: {
+    width: 13,
+    height: 13,
+    marginLeft: 3,
   },
   timestamp: {
     color: '#888',
@@ -80,6 +93,12 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: 14,
   },
+  closeButton: {
+    position: 'absolute',
+    top: -5,
+    right: -10,
+    padding: 0,
+  },
   statusContainer: {
     paddingVertical: 10,
   },
@@ -97,9 +116,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 10,
   },
+  commentPreviewItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  commentUsername: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#333333',
+  },
   commentText: {
     fontSize: 14,
-    marginBottom: 5,
+    color: '#555555',
   },
   viewCommentsButton: {
     marginTop: 10,

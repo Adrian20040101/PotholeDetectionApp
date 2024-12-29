@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, Button, Picker } from 'react-native';
+import { View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import Checkbox from 'expo-checkbox';
 import axios from 'axios';
 import styles from './filters.style';
 
-const Filters = ({ onApplyFilters }) => {
+const STATUS_OPTIONS = [
+  { label: 'Likely a Pothole', value: 'likely a pothole' },
+  { label: 'Unlikely a Pothole', value: 'unlikely a pothole' },
+  { label: 'Too Low Info', value: 'too low info' },
+  { label: 'Pending', value: 'pending' },
+];
+
+const Filters = ({ onApplyFilters, onRemoveFilters }) => {
   const [city, setCity] = useState('');
   const [placeId, setPlaceId] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState([]);
   const [timeframe, setTimeframe] = useState('');
   const [suggestions, setSuggestions] = useState([]);
 
@@ -38,6 +47,14 @@ const Filters = ({ onApplyFilters }) => {
     setSuggestions([]);
   };
 
+  const toggleStatus = (statusValue) => {
+    if (status.includes(statusValue)) {
+      setStatus(status.filter((item) => item !== statusValue));
+    } else {
+      setStatus([...status, statusValue]);
+    }
+  };
+
   const handleApplyFilters = () => {
     onApplyFilters({ placeId, status, timeframe });
   };
@@ -57,25 +74,28 @@ const Filters = ({ onApplyFilters }) => {
           data={suggestions}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleCitySelect(item)}>
-              <Text style={styles.suggestion}>{item.description}</Text>
+            <TouchableOpacity onPress={() => handleCitySelect(item)} style={styles.suggestionItemContainer}>
+              <Icon name="location-on" size={20} color="#555" />
+              <Text style={styles.suggestionItem}>{item.description}</Text>
             </TouchableOpacity>
           )}
         />
       )}
 
       <Text style={styles.label}>Filter by Status</Text>
-      <Picker
-        selectedValue={status}
-        onValueChange={(value) => setStatus(value)}
-        style={styles.input}
-      >
-        <Picker.Item label="Select Status" value="" />
-        <Picker.Item label="Likely a Pothole" value="likely a pothole" />
-        <Picker.Item label="Unlikely a Pothole" value="unlikely a pothole" />
-        <Picker.Item label="Too Low Info" value="too low info" />
-        <Picker.Item label="Pending" value="pending" />
-      </Picker>
+      <View style={styles.statusContainer}>
+        {STATUS_OPTIONS.map((option) => (
+          <View key={option.value} style={styles.statusOption}>
+            <Checkbox
+              value={status.includes(option.value)}
+              onValueChange={() => toggleStatus(option.value)}
+              tintColors={{ true: '#007AFF', false: '#ccc' }}
+              accessibilityLabel={`Filter status: ${option.label}`}
+            />
+            <Text style={styles.statusLabel}>{option.label}</Text>
+          </View>
+        ))}
+      </View>
 
       <Text style={styles.label}>Filter by Timeframe (Hours/Days)</Text>
       <TextInput
@@ -86,7 +106,14 @@ const Filters = ({ onApplyFilters }) => {
         style={styles.input}
       />
 
-      <Button title="Apply Filters" onPress={handleApplyFilters} />
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity onPress={handleApplyFilters} style={styles.button}>
+          <Text style={styles.buttonText}>Apply Filters</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onRemoveFilters} style={styles.button}>
+          <Text style={styles.buttonText}>Remove Filters</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { View, TextInput, FlatList, TouchableOpacity, Text } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import styles from './search-bar.style';
 
-const SearchBar = ({ onCityFocus }) => {
+const SearchBar = ({ onCityFocus, onFilterPress }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const searchBoxRef = useRef(null);
@@ -93,28 +95,29 @@ const calculateZoomLevel = (bounds) => {
     }
 };
 
-  
-
   return (
     <View style={styles.container}>
-      <TextInput
-        ref={searchBoxRef}
-        style={styles.textInput}
-        placeholder="Search for places"
-        value={query}
-        onChangeText={handleInputChange}
-      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          ref={searchBoxRef}
+          style={styles.textInput}
+          placeholder="Search for places"
+          value={query}
+          onChangeText={handleInputChange}
+        />
+        <TouchableOpacity style={styles.filterButton} onPress={onFilterPress}>
+          <FontAwesome name="filter" size={20} color="#000" />
+        </TouchableOpacity>
+      </View>
       {suggestions.length > 0 && (
         <FlatList
           style={styles.suggestionsContainer}
           data={suggestions}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.suggestionItemContainer}
-              onPress={() => handleSuggestionPress(item)}
-            >
-              <Text style={styles.suggestionItemText}>{item.description}</Text>
+            <TouchableOpacity onPress={() => handleSuggestionPress  (item)} style={styles.suggestionItemContainer}>
+              <Icon name="location-on" size={20} color="#555" />
+              <Text style={styles.suggestionItem}>{item.description}</Text>
             </TouchableOpacity>
           )}
           keyboardShouldPersistTaps="handled"
