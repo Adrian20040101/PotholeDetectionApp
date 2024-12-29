@@ -250,9 +250,11 @@ const Map = ({ city, toggleSidebar, placeId, status, timeframe }) => {
         </LoadScript>
 
         <View style={styles.overlayContainer}>
-          <SearchBar onCityFocus={handleCityFocus} onFilterPress={() => {
-            filtersVisible ? handleCloseFilters() : setFiltersVisible(true)
-          }} />
+          <View style={styles.searchContainer}>
+            <SearchBar onCityFocus={handleCityFocus} onFilterPress={() => {
+              filtersVisible ? handleCloseFilters() : setFiltersVisible(true)
+            }} />
+          </View>
           {filtersVisible && (
             <Animated.View
             style={[
