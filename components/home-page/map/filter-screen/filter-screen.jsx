@@ -18,6 +18,11 @@ const FilteredMapScreen = () => {
     setFiltersVisible(false);
   };
 
+  const handleRemoveFilters = () => {
+    setFilters({ placeId: '', status: [], timeframe: '' });
+    setFiltersVisible(false);
+  }
+
   return (
     <View style={{ flex: 1 }}>
       <Map
@@ -33,7 +38,7 @@ const FilteredMapScreen = () => {
 
       {filtersVisible && (
         <View style={styles.filtersContainer}>
-          <Filters onApplyFilters={handleApplyFilters} />
+          <Filters onApplyFilters={handleApplyFilters} onRemoveFilters={handleRemoveFilters} />
         </View>
       )}
     </View>

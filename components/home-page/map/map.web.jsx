@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { GOOGLE_API_KEY } from '@env';
-import { collection, getDocs, getDoc, doc, query, where, Timestamp } from "firebase/firestore";
+import { collection, getDocs, getDoc, doc, query, where, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "../../../config/firebase/firebase-config";
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
@@ -21,7 +21,9 @@ const initialCenter = {
   lng: -73.935242,
 };
 
-const Map = ({ city, toggleSidebar, status, timeframe }) => {
+const SEARCH_BAR_HEIGHT = 60;
+
+const Map = ({ city, toggleSidebar, placeId, status, timeframe }) => {
   const [center, setCenter] = useState(initialCenter);
   const [zoom, setZoom] = useState(12);
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,55 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [filtersVisible, setFiltersVisible] = useState(false);
   const mapRef = useRef(null);
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (filtersVisible) {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SEARCH_BAR_HEIGHT + 50,
+          duration: 300, 
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        })
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SEARCH_BAR_HEIGHT + 40,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0, 
+          duration: 300,
+          useNativeDriver: true,
+        })
+      ]).start();
+    }
+  }, [filtersVisible, slideAnim, fadeAnim]);
+
+  const handleCloseFilters = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+      toValue: SEARCH_BAR_HEIGHT + 40,
+      duration: 200,
+      useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+      }),
+    ]).start(() => {
+        setFiltersVisible(false);
+    });
+  }
 
   const onMapLoad = (mapInstance) => {
     mapRef.current = mapInstance;
@@ -66,53 +117,64 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
     }
   }, [city]);
 
-  const fetchMarkers = async (filters = null) => {
-    try {
-      setLoadingMarkers(true);
-      const markersCollection = collection(db, 'markers');
-      const markerSnapshot = await getDocs(markersCollection);
-  
-      let markersList = markerSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-  
-      if (filters) {
-        if (filters.placeId) {
-          markersList = markersList.filter(
-            (marker) => marker.placeId === filters.placeId
-          );
-        }
-        if (Array.isArray(filters.status) && filters.status.length > 0) {
-          markersList = markersList.filter((marker) =>
-            filters.status.includes(marker.status)
-          );
-        }
-        if (filters.timeframe) {
-          const now = Timestamp.now();
-          const timeframeInMs = parseInt(filters.timeframe, 10) * 60 * 60 * 1000;
-          const startTime = new Timestamp(now.seconds - timeframeInMs / 1000, 0);
-          markersList = markersList.filter(
-            (marker) =>
-              marker.timestamp && marker.timestamp.toMillis() >= startTime.toMillis()
-          );
-        }
+  const fetchMarkers = (filters = null) => {
+    setLoadingMarkers(true);
+    let markersQuery = collection(db, 'markers');
+
+    if (filters) {
+      const { placeId, status, timeframe } = filters;
+
+      if (placeId) {
+        markersQuery = query(markersQuery, where('placeId', '==', placeId));
       }
-  
-      setMarkers(markersList);
-      console.log(filters.placeId);
-    } catch (error) {
-      console.error('Error fetching markers:', error);
-    } finally {
-      setLoadingMarkers(false);
+
+      if (Array.isArray(status) && status.length > 0) {
+        markersQuery = query(markersQuery, where('status', 'in', status));
+      }
+
+      if (timeframe) {
+        const now = Timestamp.now();
+        const timeframeInMs = parseInt(timeframe, 10) * 60 * 60 * 1000;
+        const startTime = new Timestamp(now.seconds - Math.floor(timeframeInMs / 1000), 0);
+        markersQuery = query(markersQuery, where('timestamp', '>=', startTime));
+      }
     }
+
+    markersQuery = query(markersQuery, where('timestamp', '!=', null));
+
+    const unsubscribe = onSnapshot(
+      markersQuery,
+      (snapshot) => {
+        const markersList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setMarkers(markersList);
+        setLoadingMarkers(false);
+        console.log(filters?.placeId || 'All Places');
+      },
+      (error) => {
+        console.error('Error fetching markers:', error);
+        setLoadingMarkers(false);
+      }
+    );
+
+    return unsubscribe;
   };
-  
 
   useEffect(() => {
-    fetchMarkers();
-  }, []);
-  
+    const filters = {
+      placeId: placeId,     
+      status: status,  
+      timeframe: timeframe, 
+    };
+
+    const unsubscribe = fetchMarkers(filters);
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [city, status, timeframe]);
 
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
@@ -171,7 +233,7 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
               zoomControl: true,
               scrollwheel: true,
               disableDoubleClickZoom: false,
-              gestureHandling: 'cooperative',
+              gestureHandling: 'auto',
             }}
             center={center}
             zoom={zoom}
@@ -188,28 +250,41 @@ const Map = ({ city, toggleSidebar, status, timeframe }) => {
         </LoadScript>
 
         <View style={styles.overlayContainer}>
-          <SearchBar onCityFocus={handleCityFocus} onFilterPress={() => setFiltersVisible(!filtersVisible)} />
+          <SearchBar onCityFocus={handleCityFocus} onFilterPress={() => {
+            filtersVisible ? handleCloseFilters() : setFiltersVisible(true)
+          }} />
           {filtersVisible && (
-            <View style={styles.filtersOverlay}>
+            <Animated.View
+            style={[
+              styles.filtersOverlay,
+              {
+                transform: [{ translateY: slideAnim }],
+                opacity: fadeAnim,
+                top: -SEARCH_BAR_HEIGHT,
+                backgroundColor: '#fff', 
+                zIndex: 1000,
+              },
+            ]}
+          >
               <Filters
                 onApplyFilters={(filters) => {
-                  setFiltersVisible(false);
+                  handleCloseFilters();
                   fetchMarkers(filters);
                 }}
                 onRemoveFilters={() => {
-                  setFiltersVisible(false);
+                  handleCloseFilters();
                   fetchMarkers();
                 }}
               />
               <TouchableOpacity
-                onPress={() => setFiltersVisible(false)}
+                onPress={handleCloseFilters}
                 style={styles.closeButton}
                 accessibilityLabel="Close Filters"
                 accessibilityHint="Closes the filter options"
               >
                 <FontAwesome name="close" size={24} color="#000" />
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           )}
         </View>
 

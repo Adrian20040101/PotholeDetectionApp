@@ -37,13 +37,16 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   suggestionItemContainer: {
-    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderColor: '#eee',
   },
-  suggestionItemText: {
+  suggestionItem: {
     fontSize: 16,
-    color: '#333',
+    color: '#555',
   },
   filterButton: {
     position: 'absolute',

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, ActivityIndicator, TextInput, Button, FlatList, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Modal, ActivityIndicator, TextInput, TouchableWithoutFeedback, FlatList, Animated, Easing, Pressable } from 'react-native';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { storage } from '../../../config/firebase/firebase-config';
 import { auth } from '../../../config/firebase/firebase-config';
 import { db } from '../../../config/firebase/firebase-config';
@@ -115,6 +116,9 @@ const ImageUpload = ({ isVisible, onClose }) => {
       });
   
       console.log('Marker saved to Firestore:', { lat, lng, imageUrl, placeId });
+      toast.success('Pothole report submitted successfully!');
+      setSelectedImage(null);
+      handleClose();
     } catch (error) {
       console.error("Error saving marker to Firestore:", error);
     }
@@ -223,6 +227,8 @@ const ImageUpload = ({ isVisible, onClose }) => {
             }
         } else {
             toast.info("No pothole detected.");
+            handleClose();
+            setSelectedImage(null);
             return null;
         }
     } catch (error) {
@@ -331,53 +337,73 @@ const handleAddressSubmit = async () => {
   };
 
   return (
-    <Modal transparent={true} visible={isVisible} onRequestClose={onClose}>
+    <Modal transparent visible={isVisible}>
       <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
         <Animated.View style={[styles.modalContainer, { transform: [{ scale: scaleAnim }] }]}>
+          <Pressable style={styles.closeIcon} onPress={handleClose} accessibilityLabel="Close Modal">
+            <Icon name="close" size={24} color="#333" />
+          </Pressable>
+          
           <Text style={styles.modalTitle}>Upload an Image</Text>
-
-          <TouchableOpacity style={styles.uploadButton} onPress={selectFromGallery}>
-            <Text style={styles.uploadButtonText}>Select Image from Gallery</Text>
-          </TouchableOpacity>
-
-          {uploading && <ActivityIndicator size="large" color="#0000ff" />}
+          
+          {!analyzing && !showAddressModal && !uploading && (
+            <>
+              <Text style={styles.infoText}>
+                Share a photo of the pothole, and our system will evaluate its severity and accurately pinpoint its location. To ensure precise mapping, please enable location tags on your photos.
+              </Text>
+              
+              <TouchableOpacity style={styles.uploadButton} onPress={selectFromGallery} accessibilityLabel="Select Image from Gallery">
+                <Icon name="photo-library" size={20} color="#fff" style={styles.uploadIcon} />
+                <Text style={styles.uploadButtonText}>Select Image from Gallery</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          
+          {uploading && (
+            <View style={styles.uploadingContainer}>
+              <ActivityIndicator size="large" color="#007bff" />
+              <Text style={styles.uploadingText}>Uploading Image...</Text>
+            </View>
+          )}
+          
           {analyzing && (
-            <View style={styles.overlayContent}>
+            <View style={styles.analyzingContainer}>
               <ActivityIndicator size="large" color="#ff0000" />
               <Text style={styles.analyzingText}>Analyzing Image...</Text>
             </View>
           )}
-
-          {selectedImage && <Image source={{ uri: selectedImage }} style={styles.previewImage} />}
-
+          
+          {selectedImage && (
+            <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+          )}
+          
           {showAddressModal && (
             <View style={styles.addressInputContainer}>
-              <Text>Enter location address:</Text>
+              <Text style={styles.addressLabel}>Enter Location Address:</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Address"
                 value={address}
-                onChangeText={(text) => {
-                  setAddress(text);
-                  if (text.length > 2) fetchSuggestions(text);
-                }}
+                onChangeText={handleAddressChange}
+                accessibilityLabel="Address Input"
               />
               {suggestions.length > 0 && (
                 <FlatList
                   data={suggestions}
                   keyExtractor={(item) => item.place_id}
                   renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => setAddress(item.description)}>
+                    <TouchableOpacity onPress={() => handleSuggestionSelect(item)} style={styles.suggestionItemContainer}>
+                      <Icon name="location-on" size={20} color="#555" />
                       <Text style={styles.suggestionItem}>{item.description}</Text>
                     </TouchableOpacity>
                   )}
                 />
               )}
-              <Button title="Submit" onPress={handleAddressSubmit} />
+              <Pressable style={styles.submitButton} onPress={handleAddressSubmit} accessibilityLabel="Submit Address">
+                <Text style={styles.submitButtonText}>Submit</Text>
+              </Pressable>
             </View>
           )}
-
-          <Button title="Close" onPress={handleClose} />
         </Animated.View>
       </Animated.View>
     </Modal>

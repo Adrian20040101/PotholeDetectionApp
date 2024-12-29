@@ -80,6 +80,17 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  },
 });
 
 export default styles;

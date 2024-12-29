@@ -93,6 +93,12 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: 14,
   },
+  closeButton: {
+    position: 'absolute',
+    top: -5,
+    right: -10,
+    padding: 0,
+  },
   statusContainer: {
     paddingVertical: 10,
   },

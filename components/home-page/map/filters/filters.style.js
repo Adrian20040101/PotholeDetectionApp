@@ -27,18 +27,31 @@ const styles = StyleSheet.create({
   statusLabel: {
     marginLeft: 8,
   },
-  suggestion: {
-    padding: 10,
+  suggestionItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderColor: '#eee',
   },
-  applyButton: {
+  suggestionItem: {
+    fontSize: 16,
+    color: '#555',
+  },
+  buttonsContainer: {
+    flex: 1, 
+    flexDirection: 'row',
+    gap: 10
+  },
+  button: {
+    width: '50%',
     backgroundColor: '#007BFF',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
   },
-  applyButtonText: {
+  buttonText: {
     color: '#fff',
     fontWeight: 'bold',
   }
