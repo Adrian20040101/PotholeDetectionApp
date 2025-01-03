@@ -13,7 +13,7 @@ const Voting = ({ markerId }) => {
   const [downvotes, setDownvotes] = useState(0);
   const [markerLocation, setMarkerLocation] = useState(null);
 
-  const { userData } = useUser();
+  const { userData, isAnonymous } = useUser();
 
   // formula that calculates the distance between two points on the globe
   function haversineDistance(coords1, coords2) {
@@ -93,6 +93,11 @@ const Voting = ({ markerId }) => {
   }, [markerId, userData.uid]);
 
   const handleVote = async (type) => {
+    if (isAnonymous) {
+      toast.info('Sign in to be able to vote.');
+      return;
+    }
+
     const userLocation = await getUserLocation();
     if (!userLocation) {
       console.log('Unable to retrieve location');
