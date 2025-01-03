@@ -102,11 +102,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const response = await axios.get(`https://ipinfo.io/${userIP}/json`, {
-      params: {
-        token: key, 
-      },
-    });
+    const response = await axios.get(`https://ipinfo.io/${userIP}/json?token=${key}`)
 
     const data = response.data;
 
