@@ -6,48 +6,29 @@ export const getUserLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status === 'granted') {
       let location = await Location.getCurrentPositionAsync({});
-      console.log('Extracted location information: ', location.coords.latitude + ' ' + location.coords.longitude);
+      console.log(
+        'Extracted GPS location:',
+        location.coords.latitude,
+        location.coords.longitude
+      );
       return {
         lat: location.coords.latitude,
         lng: location.coords.longitude,
       };
     } else {
       console.log('GPS permission denied. Falling back to IP geolocation.');
-      return await getLocationByIP();
+      return await getLocationByServerless();
     }
   } catch (error) {
     console.error('Error getting location:', error);
-    return await getLocationByIP();
+    return await getLocationByServerless();
   }
 };
 
-export const fetchPublicIP = async () => {
+const getLocationByServerless = async () => {
   try {
-    const response = await fetch('https://api.ipify.org?format=json');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch IP: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.ip;
-  } catch (error) {
-    console.error('Error fetching public IP:', error);
-    return null;
-  }
-};
-
-
-const getLocationByIP = async () => {
-  try {
-    const publicIP = await fetchPublicIP();
-
-    if (!publicIP) {
-      throw new Error('Unable to retrieve public IP.');
-    }
-
-    console.log(`User's Public IP: ${publicIP}`);
-
     const response = await fetch(
-      `https://road-guard.netlify.app/.netlify/functions/ip_info?ip=${publicIP}`,
+      `https://road-guard.netlify.app/.netlify/functions/ip_info`,
       {
         method: 'GET',
         headers: {
@@ -62,21 +43,22 @@ const getLocationByIP = async () => {
 
     const data = await response.json();
 
-    if (!data.loc) {
-      throw new Error('Location data not available');
+    if (typeof data.lat !== 'number' || typeof data.lng !== 'number') {
+      throw new Error('Incomplete location data received.');
     }
 
-    const [lat, lng] = data.loc.split(','); // loc contains "lat,lng"
-    console.log('Extracted IP-based location:', lat, lng);
+    const { lat, lng, city, region, country } = data;
+
+    console.log('Extracted Serverless IP-based location:', lat, lng);
     return {
-      lat: parseFloat(lat),
-      lng: parseFloat(lng),
-      city: data.city || null,
-      region: data.region || null,
-      country: data.country || null,
+      lat,
+      lng,
+      city: city || null,
+      region: region || null,
+      country: country || null,
     };
   } catch (error) {
-    console.error('Error fetching location by IP:', error);
+    console.error('Error fetching location from serverless function:', error);
     toast.error('Unable to retrieve location. Please try again.');
     return null;
   }
