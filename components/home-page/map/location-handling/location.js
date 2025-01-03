@@ -53,9 +53,6 @@ const getLocationByServerless = async () => {
     return {
       lat,
       lng,
-      city: city || null,
-      region: region || null,
-      country: country || null,
     };
   } catch (error) {
     console.error('Error fetching location from serverless function:', error);
