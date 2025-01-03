@@ -35,9 +35,11 @@ exports.evaluatePotholes = functions.pubsub.schedule('every 48 hours').onRun(asy
       // if there is at least an upvote or at least a downvote, classify them accordingly. If there is no info, update accordingly (beta)
       if (upvoteCount >= 1 && upvoteCount > downvoteCount) {
         await markerDoc.ref.update({ status: 'likely a pothole' });
-        await userRef.update({
-          contributions: admin.firestore.FieldValue.increment(1),
-        });
+        if (userId !== 'anonymous') {
+          await userRef.update({
+            contributions: admin.firestore.FieldValue.increment(1),
+          });
+        }
       } else if (upvoteCount + downvoteCount < 1) {
         await markerDoc.ref.update({ status: 'too low info' });
       } else if (downvoteCount >= 1 && downvoteCount >= upvoteCount) {

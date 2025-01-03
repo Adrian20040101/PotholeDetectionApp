@@ -1,7 +1,5 @@
 import * as Location from 'expo-location';
 
-const apiKey = process.env.EXPO_PUBLIC_IP_API_KEY;
-
 export const getUserLocation = async () => {
   try {
     let { status } = await Location.requestForegroundPermissionsAsync();

@@ -5,7 +5,6 @@ import { GOOGLE_API_KEY } from '@env';
 import { collection, getDocs, getDoc, doc, query, where, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "../../../config/firebase/firebase-config";
 import { FontAwesome } from '@expo/vector-icons';
-import axios from 'axios';
 import BottomSheet from './bottom-sheet/bottom-sheet';
 import styles from './map.style';
 import SearchBar from './search-bar/search-bar';

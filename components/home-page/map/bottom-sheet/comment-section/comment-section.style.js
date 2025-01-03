@@ -40,6 +40,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 24,
     textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0'
   },
   commentList: {
     flexGrow: 1,
@@ -107,6 +109,22 @@ const styles = StyleSheet.create({
     borderTopColor: '#E0E0E0',
     backgroundColor: '#FFF',
     paddingBottom: 10,
+    position: 'absolute',
+    bottom: emojiPickerHeight,
+    width: '100%',
+  },
+  anonymousUserText: {
+    textAlign: 'center',
+    fontSize: 18,
+    fontStyle: 'italic',
+    color: '#888',
+  },
+  anonymousUserContainer :{
+    alignItems: 'center',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    backgroundColor: '#FFF',
     position: 'absolute',
     bottom: emojiPickerHeight,
     width: '100%',

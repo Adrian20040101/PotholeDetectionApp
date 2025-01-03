@@ -4,11 +4,12 @@ import { auth, db } from '../../../../config/firebase/firebase-config';
 import { doc, updateDoc } from "firebase/firestore";
 import { toast } from 'react-toastify';
 import styles from './change-username.style';
+import { useUser } from '../../../../context-components/user-context';
 
 const ChangeUsernameModal = ({ isVisible, onClose }) => {
     const [newUsername, setNewUsername] = useState('');
     const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '35%');
-
+    const { userData } = useUser();
     const overlayAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
@@ -59,9 +60,8 @@ const ChangeUsernameModal = ({ isVisible, onClose }) => {
 
     const handleChangeUsername = async () => {
         try {
-            const user = auth.currentUser;
-            if (user) {
-                const userDocRef = doc(db, 'users', user.uid);
+            if (userData) {
+                const userDocRef = doc(db, 'users', userData.uid);
                 await updateDoc(userDocRef, { username: newUsername });
                 toast.success('Username updated successfully.');
                 onClose();

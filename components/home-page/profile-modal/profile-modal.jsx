@@ -5,7 +5,7 @@ import { db } from '../../../config/firebase/firebase-config';
 import styles from './profile-modal.style';
 
 const ProfileModal = ({ isVisible, onClose, userId }) => {
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(null);  // need dynamic userData, can't just take it from the context component
   const [latestPotholes, setLatestPotholes] = useState([]);
   const [loadingPotholes, setLoadingPotholes] = useState(false); 
   const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '50%');

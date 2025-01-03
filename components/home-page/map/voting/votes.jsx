@@ -5,6 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { getUserLocation } from '../location-handling/location';
 import { toast } from 'react-toastify';
 import { auth, db } from '../../../../config/firebase/firebase-config';
+import { useUser } from '../../../../context-components/user-context';
 
 const Voting = ({ markerId }) => {
   const [userVote, setUserVote] = useState(null);
@@ -12,7 +13,7 @@ const Voting = ({ markerId }) => {
   const [downvotes, setDownvotes] = useState(0);
   const [markerLocation, setMarkerLocation] = useState(null);
 
-  const user = auth.currentUser;
+  const { userData } = useUser();
 
   // formula that calculates the distance between two points on the globe
   function haversineDistance(coords1, coords2) {
@@ -62,7 +63,7 @@ const Voting = ({ markerId }) => {
   useEffect(() => {
     const fetchVotes = async () => {
       const votesRef = collection(db, 'votes');
-      const userVoteQuery = query(votesRef, where('userId', '==', user.uid), where('markerId', '==', markerId));
+      const userVoteQuery = query(votesRef, where('userId', '==', userData.uid), where('markerId', '==', markerId));
       const existingVotes = await getDocs(userVoteQuery);
 
       if (!existingVotes.empty) {
@@ -89,7 +90,7 @@ const Voting = ({ markerId }) => {
     };
 
     fetchVotes();
-  }, [markerId, user.uid]);
+  }, [markerId, userData.uid]);
 
   const handleVote = async (type) => {
     const userLocation = await getUserLocation();
@@ -141,7 +142,7 @@ const Voting = ({ markerId }) => {
     }
   
     const votesRef = collection(db, 'votes');
-    const userVoteQuery = query(votesRef, where('userId', '==', user.uid), where('markerId', '==', markerId));
+    const userVoteQuery = query(votesRef, where('userId', '==', userData.uid), where('markerId', '==', markerId));
     const existingVotes = await getDocs(userVoteQuery);
   
     if (!existingVotes.empty) {
@@ -160,7 +161,7 @@ const Voting = ({ markerId }) => {
       } else {
         await deleteDoc(doc(db, 'votes', userVoteDoc.id));
         await addDoc(votesRef, {
-          userId: user.uid,
+          userId: userData.uid,
           markerId,
           type,
           timestamp: new Date(),
@@ -176,7 +177,7 @@ const Voting = ({ markerId }) => {
       }
     } else {
       await addDoc(votesRef, {
-        userId: user.uid,
+        userId: userData.uid,
         markerId,
         type,
         timestamp: new Date(),
