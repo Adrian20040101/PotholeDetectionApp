@@ -1,33 +1,26 @@
 const axios = require('axios');
 
-// helper function to validate IP addresses
-const isValidIP = (ip) => {
-  const ipv4Regex = /^(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
-  const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7}([0-9a-fA-F]{1,4}|:))$/;
-  return ipv4Regex.test(ip) || ipv6Regex.test(ip);
-};
-
-exports.handler = async (event, context) => {
+const setCorsHeaders = (origin) => {
   const allowedOrigins = [
     'http://localhost:8081',
     'https://road-guard.netlify.app',
   ];
 
-  const setCorsHeaders = (origin) => {
-    if (allowedOrigins.includes(origin)) {
-      return {
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      };
-    }
+  if (allowedOrigins.includes(origin)) {
     return {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
     };
+  }
+  return {
+    'Access-Control-Allow-Origin': 'https://road-guard.netlify.app',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
   };
+};
 
+exports.handler = async (event, context) => {
   const origin = event.headers.origin;
 
   console.log('Request Headers:', event.headers);
@@ -60,29 +53,45 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const { ip } = event.queryStringParameters || {};
+    const extractIP = () => {
+      const headers = event.headers;
 
-    if (ip && !isValidIP(ip)) {
-      console.warn('Invalid IP address provided.');
+      if (headers['x-nf-client-connection-ip']) {
+        return headers['x-nf-client-connection-ip'];
+      }
+
+      if (headers['x-forwarded-for']) {
+        const ips = headers['x-forwarded-for'].split(',').map(ip => ip.trim());
+        for (const ip of ips) {
+          if (validator.isIP(ip)) {
+            return ip;
+          }
+        }
+      }
+
+      if (headers['client-ip']) {
+        return headers['client-ip'];
+      }
+
+      if (headers['x-real-ip']) {
+        return headers['x-real-ip'];
+      }
+
+      return null;
+    };
+
+    let userIP = extractIP();
+
+    if (!userIP) {
+      console.warn('Unable to determine client IP.');
       return {
         statusCode: 400,
         headers: setCorsHeaders(origin),
-        body: JSON.stringify({ message: 'Invalid IP address provided.' }),
+        body: JSON.stringify({ message: 'Unable to determine client IP.' }),
       };
     }
 
-    let userIP = ip || (
-      event.headers['x-nf-client-connection-ip'] ||
-      event.headers['x-forwarded-for'] ||
-      event.headers['client-ip'] ||
-      '127.0.0.1'
-    );
-
-    if (userIP.includes(',')) {
-      userIP = userIP.split(',')[0].trim();
-    }
-
-    console.log(`Fetching geolocation for IP: ${userIP}`);
+    console.log(`Determined client IP: ${userIP}`);
 
     if (userIP === '127.0.0.1' || userIP === '::1') {
       console.warn('Cannot geolocate localhost IP.');
@@ -95,7 +104,7 @@ exports.handler = async (event, context) => {
 
     const response = await axios.get(`https://ipinfo.io/${userIP}/json`, {
       params: {
-        token: key,
+        token: key, 
       },
     });
 
