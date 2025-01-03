@@ -6,14 +6,14 @@ import { db } from '../../../../../config/firebase/firebase-config';
 import { collection, addDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { doc, getDoc } from 'firebase/firestore';
 import styles from './comment-section.style';
-import { auth } from '../../../../../config/firebase/firebase-config';
+import { useUser } from '../../../../../context-components/user-context';
 import ProfileModal from '../../../profile-modal/profile-modal';
 
 const emojiPickerHeight = 150;
 
 const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
   const [newComment, setNewComment] = useState('');
-  const currentUser = auth.currentUser;
+  const { userData, setUserData, isAnonymous } = useUser();
   const [comments, setComments] = useState([]);
   const [keyboardPadding, setKeyboardPadding] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -161,7 +161,7 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
     try {
       const commentsRef = collection(db, 'markers', markerId, 'comments');
       await addDoc(commentsRef, {
-        userId: currentUser.uid,
+        userId: userData.uid,
         content: newComment.trim(),
         timestamp: new Date(),
       });
@@ -185,7 +185,7 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
   };
 
   const renderComment = ({ item }) => {
-    const isCurrentUser = item.userId === currentUser.uid;
+    const isCurrentUser = item.userId === userData.uid;
     const userProfile = userProfiles[item.userId];
     const username = userProfile?.username || 'User';
     const profilePictureUrl = userProfile?.profilePictureUrl;
@@ -292,20 +292,27 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
         />
       )}
   
-      <View style={styles.inputContainer}>
-        <Pressable onPress={toggleEmojiPicker} style={styles.emojiButton}>
-          <FontAwesome name="smile-o" size={24} color="#007AFF" />
-        </Pressable>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a comment..."
-          value={newComment}
-          onChangeText={setNewComment}
-        />
-        <Pressable style={styles.sendButton} onPress={handleSendComment}>
-          <FontAwesome name="send" size={20} color="#007AFF" />
-        </Pressable>
-      </View>
+      {!isAnonymous ? (
+        <View style={styles.inputContainer}>
+          <Pressable onPress={toggleEmojiPicker} style={styles.emojiButton}>
+            <FontAwesome name="smile-o" size={24} color="#007AFF" />
+          </Pressable>
+          <TextInput
+            style={styles.input}
+            placeholder="Type a comment..."
+            value={newComment}
+            onChangeText={setNewComment}
+          />
+          <Pressable style={styles.sendButton} onPress={handleSendComment}>
+            <FontAwesome name="send" size={20} color="#007AFF" />
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.anonymousUserContainer}>
+          <Text style={styles.anonymousUserText}>You must sign in to send comments.</Text>
+        </View>
+      )}
+      
 
       <ProfileModal
         isVisible={isProfileModalVisible}

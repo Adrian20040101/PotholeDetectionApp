@@ -9,24 +9,21 @@ import { auth } from '../../../config/firebase/firebase-config';
 import { db } from '../../../config/firebase/firebase-config';
 import { collection, addDoc } from 'firebase/firestore';
 import styles from './upload-photo.style';
+import { useUser } from '../../../context-components/user-context';
 
 const ImageUpload = ({ isVisible, onClose }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadURL, setUploadURL] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [address, setAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const overlayAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const user = auth.currentUser;
-  const anonymousUsername = 'Anonymous User';
+  const { userData, setUserData, isAnonymous } = useUser();
 
   useEffect(() => {
     (async () => {
@@ -101,13 +98,12 @@ const ImageUpload = ({ isVisible, onClose }) => {
   const saveMarkerToFirestore = async (lat, lng, imageUrl, placeId) => {
     try {
       const markersCollectionRef = collection(db, 'markers');
-      const user = auth.currentUser;
       
       await addDoc(markersCollectionRef, {
         lat: lat,
         lon: lng,
         timestamp: new Date(),
-        userId: user.uid,
+        userId: isAnonymous ? 'anonymous' : userData.uid,
         imageUrl: imageUrl,
         upvotes: 0,
         downvotes: 0,
@@ -323,7 +319,7 @@ const handleAddressSubmit = async () => {
         const response = await fetch(uri);
         const blob = await response.blob();
         const fileName = uri.substring(uri.lastIndexOf('/') + 1);
-        const storageRef = ref(storage, `images/${user.uid}/${fileName}`);
+        const storageRef = ref(storage, `images/${userData.uid}/${fileName}`);
         const snapshot = await uploadBytes(storageRef, blob);
         const downloadURL = await getDownloadURL(snapshot.ref);
         console.log('File available at', downloadURL);
