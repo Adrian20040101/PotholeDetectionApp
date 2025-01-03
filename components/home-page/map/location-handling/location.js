@@ -47,7 +47,7 @@ const getLocationByServerless = async () => {
       throw new Error('Incomplete location data received.');
     }
 
-    const { lat, lng, city, region, country } = data;
+    const { lat, lng } = data;
 
     console.log('Extracted Serverless IP-based location:', lat, lng);
     return {
