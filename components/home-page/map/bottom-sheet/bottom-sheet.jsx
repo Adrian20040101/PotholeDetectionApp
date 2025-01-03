@@ -115,9 +115,9 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
           return {
             id: commentDoc.id,
             ...commentData,
-            username: userDoc.exists() ? userDoc.data().username : 'Unknown User',
-            userProfilePicture: userDoc.exists() ? userDoc.data().profilePictureUrl : null,
-            contributions: userDoc.exists() ? userDoc.data().contributions : 0,
+            username: userDoc.exists() || commentData.userId !== 'anonymous' ? userDoc.data().username : 'Anonymous User',
+            userProfilePicture: userDoc.exists() || commentData.userId !== 'anonymous' ? userDoc.data().profilePictureUrl : 'https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg',
+            contributions: userDoc.exists() || commentData.userId !== 'anonymous' ? userDoc.data().contributions : 'N/A',
           };
         })
       );
@@ -134,9 +134,9 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
           const userDoc = await getDoc(doc(db, 'users', marker.userId));
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            marker.username = userData.username || 'Unknown User';
-            marker.userProfilePicture = userData.profilePictureUrl || null;
-            marker.contributions = userData.contributions || 0;
+            marker.username = marker.userId === 'anonymous' ? 'Anonymous User' : userData.username;
+            marker.userProfilePicture = marker.userId === 'anonymous' ? 'https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg' :userData.profilePictureUrl;
+            marker.contributions = marker.userId === 'anonymous' ? 'N/A' : userData.contributions;
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
@@ -243,15 +243,22 @@ const BottomSheet = ({ visible, onClose, marker, isLoggedIn }) => {
             <View style={styles.infoAndCommentsContainer}>
               <View style={styles.infoContainer}>
                 <View style={styles.userDetails}>
-                  <Pressable onPress={() => handleUserPress(marker.userId)}>
+                  {marker.userId === 'anonymous' ? (
                     <Image
-                      source={{ uri: marker.userProfilePicture }}
+                      source={'https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg'}
                       style={styles.userProfilePicture}
                     />
-                  </Pressable>
+                  ) : (
+                    <Pressable onPress={() => handleUserPress(marker.userId)}>
+                      <Image
+                        source={{ uri: marker.userProfilePicture }}
+                        style={styles.userProfilePicture}
+                      />
+                    </Pressable>
+                  )}
                   <View style={styles.userInfo}>
                     <View style={styles.usernameContainer}>
-                      <Text style={styles.username}>{marker.username}</Text>
+                      <Text style={styles.username}>{marker.userId === 'anonymous' ? 'Anonymous User' : marker.username}</Text>
                       {badge && (
                         <Image
                           source={badgeImages[badge]}

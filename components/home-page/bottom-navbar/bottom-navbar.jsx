@@ -11,6 +11,7 @@ const BottomNavbar = ({ onAccountPress }) => {
   const { userData } = useUser();
   const [isImageUploadVisible, setImageUploadVisible] = useState(false);
   const [isAchievementsVisible, setAchievementsVisible] = useState(false);
+  const defaultProfilePictureUrl = require('../../../assets/images/default-profile-picture.webp');
 
   const handleImportPress = () => {
     setImageUploadVisible(true);
@@ -38,7 +39,14 @@ const BottomNavbar = ({ onAccountPress }) => {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.navButton} onPress={onAccountPress}>
-        <Image source={{ uri: userData.profilePictureUrl }} style={styles.userProfilePicture} />
+        <Image
+          source={
+            userData && userData.profilePictureUrl
+              ? { uri: userData.profilePictureUrl }
+              : defaultProfilePictureUrl
+          }
+          style={styles.userProfilePicture}
+        />
         <Text style={styles.navButtonText}>Account</Text>
       </TouchableOpacity>
 

@@ -47,7 +47,7 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
                     Cookies.set(`linkedAccount_${user.uid}_refreshToken`, user.stsTokenManager.refreshToken, { expires: 7, secure: true });
                     
                     await fetchOrCreateUserData(user);
-                    navigateToHome(user);
+                    navigateToHome();
                 } catch (error) {
                     console.error('Error signing in with Google:', error);
                     Alert.alert('Error', 'Error signing in with Google. Please try again.');
@@ -70,18 +70,19 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
                 });
             }
         };
+
+        const navigateToHome = () => {
+            navigation.navigate('HomePage');
+        };
     
         handleGoogleSignIn();
     }, [response]);
     
 
-    const navigateToHome = async (user) => {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const userData = userDoc.data();
-        navigation.navigate('HomePage', { user: { ...user, ...userData } });
+    const navigateToHome = () => {
+        navigation.navigate('HomePage');
     };
 
-   
     const handleLogin = async () => {
         setError('');
         if (emailOrUsername === '' || password === '') {
@@ -115,11 +116,7 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
             const refreshToken = user.stsTokenManager.refreshToken;
             Cookies.set(`linkedAccount_${user.uid}_idToken`, idToken, { expires: 7, secure: true });
             Cookies.set(`linkedAccount_${user.uid}_refreshToken`, refreshToken, { expires: 7, secure: true });
-            if (user) {
-              const userDoc = await getDoc(doc(db, 'users', user.uid));
-              const userData = userDoc.data();
-              navigation.navigate('HomePage', { user: { ...userData, email: user.email } });
-            }
+            navigation.navigate('HomePage');
 
             console.log(`Login successful. Welcome ${emailOrUsername}`);
         } catch (error) {

@@ -60,7 +60,7 @@ const Welcome = () => {
         try {
             const userCredential = await signInAnonymously(auth);
             console.log('Guest login successful:', userCredential.user);
-            navigation.navigate('HomePage', { user: userCredential.user });
+            navigation.navigate('HomePage');
         } catch (error) {
             console.error('Error with guest login:', error);
             alert('Failed to log in as guest. Please try again.');

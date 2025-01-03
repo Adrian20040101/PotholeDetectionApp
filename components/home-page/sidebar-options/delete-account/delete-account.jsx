@@ -6,12 +6,13 @@ import { deleteUser } from "firebase/auth";
 import { deleteDoc, doc } from "firebase/firestore";
 import { toast } from 'react-toastify';
 import styles from './delete-account.style';
+import { useUser } from '../../../../context-components/user-context';
 
 const DeleteAccountModal = ({ isVisible, onClose }) => {
     const [isAcknowledged, setIsAcknowledged] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigation = useNavigation();
-
+    const { setUserData } = useUser();
     const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '35%');
 
     const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -70,6 +71,7 @@ const DeleteAccountModal = ({ isVisible, onClose }) => {
             if (user) {
                 await deleteDoc(doc(db, 'users', user.uid));
                 await deleteUser(user);
+                setUserData(null);
                 toast.success('Account deleted successfully.');
                 navigation.navigate('Welcome');
             } else {
@@ -77,6 +79,7 @@ const DeleteAccountModal = ({ isVisible, onClose }) => {
             }
         } catch (error) {
             toast.error(`Failed to delete account: ${error.message}`);
+            console.error(error.message);
         } finally {
             setIsLoading(false);
         }

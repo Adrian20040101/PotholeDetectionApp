@@ -5,12 +5,12 @@ import { auth } from '../../../../config/firebase/firebase-config';
 import ThemeToggle from './theme/theme-toggle';
 import CitySelection from '../../city-selection/city';
 import styles from './settings.style';
+import { useUser } from '../../../../context-components/user-context';
 
 const SettingsModal = ({ isVisible, onClose, onCitySelect }) => {
   const [selectedCity, setSelectedCity] = useState('');
   const { theme, toggleTheme, isDarkTheme } = useTheme();
-  const user = auth.currentUser;
-
+  const { userData, setUserData, isAnonymous } = useUser();
   const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '50%');
 
   const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -98,7 +98,7 @@ const SettingsModal = ({ isVisible, onClose, onCitySelect }) => {
           <Text style={styles.modalTitle}>Settings</Text>
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.settingSection}>
-              {user.isAnonymous ? (
+              {isAnonymous ? (
                 <>
                   <Text style={styles.settingTitle}>Favorite City</Text>
                   <Text style={styles.settingValue}>Sign in to set a favorite city</Text>

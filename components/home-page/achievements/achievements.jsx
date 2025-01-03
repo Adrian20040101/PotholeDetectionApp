@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, Button, Image, Animated, Dimensions } from 'react-native';
-import { db, auth } from '../../../config/firebase/firebase-config';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { Modal, View, Text, Button, Image, Animated, Dimensions, Alert } from 'react-native';
+import { db } from '../../../config/firebase/firebase-config';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { useUser } from '../../../context-components/user-context';
 import styles from './achievements.style';
 
 const AchievementsModal = ({ isVisible, onClose }) => {
-  const userId = auth.currentUser.uid;
-  const { userData } = useUser();
+  const { userData, isAnonymous } = useUser();
+  const userId = userData?.uid || null;
   const [contributions, setContributions] = useState(0);
   const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '60%');
   const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -35,13 +35,13 @@ const AchievementsModal = ({ isVisible, onClose }) => {
 
   useEffect(() => {
     const updateModalWidth = () => {
-        const screenWidth = Dimensions.get('window').width;
-        setModalWidth(screenWidth < 800 ? '85%' : '50%');
+      const screenWidth = Dimensions.get('window').width;
+      setModalWidth(screenWidth < 800 ? '85%' : '60%');
     };
 
     Dimensions.addEventListener('change', updateModalWidth);
     return () => {
-        Dimensions.removeEventListener('change', updateModalWidth);
+      Dimensions.removeEventListener('change', updateModalWidth);
     };
   }, []);
 
@@ -49,27 +49,27 @@ const AchievementsModal = ({ isVisible, onClose }) => {
     if (isVisible) {
       Animated.parallel([
         Animated.timing(overlayAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
         }),
         Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 5,
-        useNativeDriver: true,
+          toValue: 1,
+          friction: 5,
+          useNativeDriver: true,
         }),
       ]).start();
     } else {
       Animated.parallel([
         Animated.timing(overlayAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
-        toValue: 0.8,
-        duration: 200,
-        useNativeDriver: true,
+          toValue: 0.8,
+          duration: 200,
+          useNativeDriver: true,
         }),
       ]).start(() => {
         overlayAnim.setValue(0);
@@ -79,29 +79,52 @@ const AchievementsModal = ({ isVisible, onClose }) => {
   }, [isVisible]);
 
   useEffect(() => {
-    if (isVisible) {
+    if (isVisible && userId) { 
       const userDocRef = doc(db, 'users', userId);
 
-      const unsubscribe = onSnapshot(userDocRef, (doc) => {
-        if (doc.exists()) {
-          const userData = doc.data();
-          setContributions(userData.contributions || 0);
+      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setContributions(data.contributions || 0);
+        } else {
+          console.warn('No such document!');
+          setContributions(0);
         }
+      }, (error) => {
+        console.error('Error fetching contributions:', error);
+        setContributions(0);
       });
 
       return () => unsubscribe();
+    } else {
+      setContributions(0);
     }
-  }, [isVisible, userData.id]);
+  }, [isVisible, userId]);
 
   const calculateProgress = (current, threshold) => {
     return Math.min(current / threshold, 1);
   };
+
+  if (!userId && isVisible) {
+    return (
+      <Modal transparent visible={isVisible}>
+        <Animated.View style={[styles.modalOverlay, { opacity: overlayAnim }]}>
+          <Animated.View style={[styles.modalContent, { width: modalWidth, transform: [{ scale: scaleAnim }] }]}>
+            <Text style={styles.title}>Achievements</Text>
+            <Text style={styles.noUserText}>No user is currently logged in.</Text>
+            <Button title="Close" onPress={onClose} />
+          </Animated.View>
+        </Animated.View>
+      </Modal>
+    );
+  }
 
   return (
     <Modal transparent visible={isVisible}>
       <Animated.View style={[styles.modalOverlay, { opacity: overlayAnim }]}>
         <Animated.View style={[styles.modalContent, { width: modalWidth, transform: [{ scale: scaleAnim }] }]}>
           <Text style={styles.title}>Achievements</Text>
+          <Text style={[styles.isAnonymousText, isAnonymous ? { marginBottom: 15 } : {}]}>{isAnonymous ? 'Sign in to track progress towards badges.' : ''}</Text>
           <View style={styles.badgeGrid}>
             {Object.keys(thresholds).map((badge) => {
               const isClaimed = contributions >= thresholds[badge];
@@ -109,10 +132,10 @@ const AchievementsModal = ({ isVisible, onClose }) => {
               return (
                 <View key={badge} style={styles.badgeItem}>
                   <View style={styles.badgeWrapper}>
-                  <Image
-                    source={badgeImages[badge] || require('../../../assets/images/achievement-placeholder.png')}
-                    style={styles.badgeImage}
-                  />
+                    <Image
+                      source={badgeImages[badge] || require('../../../assets/images/achievement-placeholder.png')}
+                      style={styles.badgeImage}
+                    />
                     {isClaimed && (
                       <Image source={checkmarkImage} style={styles.checkmarkImage} />
                     )}
@@ -133,24 +156,7 @@ const AchievementsModal = ({ isVisible, onClose }) => {
               );
             })}
           </View>
-          <Button title="Close"
-            onPress={() => {
-                Animated.parallel([
-                  Animated.timing(overlayAnim, {
-                  toValue: 0,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(scaleAnim, {
-                  toValue: 0.8,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-                ]).start(() => {
-                   onClose();
-                });
-            }} 
-          />
+          <Button title="Close" onPress={onClose} />
         </Animated.View>
       </Animated.View>
     </Modal>

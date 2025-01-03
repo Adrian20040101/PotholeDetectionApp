@@ -3,7 +3,6 @@ import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback, Dime
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../../config/firebase/firebase-config';
-import { onAuthStateChanged } from 'firebase/auth';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
@@ -33,20 +32,16 @@ const HomePage = () => {
   const [accountDetailsVisible, setAccountDetailsVisible] = useState(false);
   const [favoriteCity, setFavoriteCity] = useState('');
   const [favoriteCityLocation, setFavoriteCityLocation] = useState({ lat: 40.7128, lng: -74.0060 }); // default to New York City coordinates
-  const [user, setUser] = useState(null);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
   const [changeUsernameModalVisible, setChangeUsernameModalVisible] = useState(false);
   const [deleteAccountModalVisible, setDeleteAcconuntModalVisible] = useState(false);
-  const { theme } = useTheme();
-  const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
-  const currentStyles = themeStyle(currentTheme);
   const sidebarAnim = useRef(new Animated.Value(-250)).current;
   const accountSidebarAnim = useRef(new Animated.Value(-350)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const menuAnim = useRef(new Animated.Value(0)).current;
-  const { userData } = useUser();
+  const { userData, setUserData } = useUser();
 
   const toggleSettingsModal = () => {
     if (!settingsModalVisible) {
@@ -97,81 +92,6 @@ const HomePage = () => {
     };
   }, []);
 
-  // set up navigation options and side menu toggle
-  // useEffect(() => {
-  //   navigation.setOptions({
-  //     headerLeft: () => (
-  //       <Pressable onPress={toggleSidebar} style={{ paddingLeft: 20 }}>
-  //         <Icon name="menu" size={24} color="#fff" />
-  //       </Pressable>
-  //     ),
-  //     headerTitle: () => (
-  //       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-  //         <Text style={{ color: '#fff', fontSize: 20, marginLeft: 20 }}>RoadGuard</Text>
-  //       </View>
-  //     ),
-  //     headerRight: () => (
-  //       userData.profilePictureUrl && (
-  //         <Pressable onPress={toggleAccountDetails} style={{ paddingRight: 20 }}>
-  //           <Image
-  //             source={{ uri: userData.profilePictureUrl }}
-  //             style={styles.userProfilePicture}
-  //           />
-  //         </Pressable>
-  //       )
-  //     ),
-  //     headerStyle: {
-  //       backgroundColor: 'blue',
-  //       position: 'absolute',
-  //       top: 0,
-  //       left: 0,
-  //       right: 0,
-  //       zIndex: 1000,
-  //     },
-  //     headerTintColor: '#fff',
-  //     headerTitleStyle: {
-  //       fontWeight: 'bold',
-  //     },
-  //   });
-  // }, [navigation, sidebarVisible, userData.profilePictureUrl]);
-
-  // monitor authentication state and fetch user data
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        fetchUserData(currentUser.uid);
-      } else {
-        setUser(null);
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Welcome' }],
-        });
-      }
-    });
-
-    return () => unsubscribe();
-  }, [navigation]);
-
-  // fetch user data from Firestore
-  const fetchUserData = async (uid) => {
-    try {
-      const userDocRef = doc(db, 'users', uid);
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setUserData(userData);
-        setFavoriteCity(userData.favoriteCity || 'New York');
-        if (userData.favoriteCity) {
-          fetchCoordinates(userData.favoriteCity);
-        } else {
-          setFavoriteCityLocation({ lat: 40.7128, lng: -74.0060 });
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  };
 
   // fetch city coordinates using serverless function
   const fetchCoordinates = async (city) => {
@@ -312,7 +232,7 @@ const HomePage = () => {
     if (user && user.isAnonymous) {
       return [
         { label: 'Settings', action: toggleSettingsModal },
-        { label: 'Sign In', action: () => navigation.navigate('Welcome') },
+        { label: 'Sign In', action: handleLogout },
       ];
     } else if (user) {
       return [
@@ -326,15 +246,6 @@ const HomePage = () => {
   }
 
 
-  if (!user) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-        <br />
-        <Text>If nothing is being displayed, refresh the page</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -373,20 +284,8 @@ const HomePage = () => {
         <Animated.View style={[styles.overlay, { opacity: overlayAnim }]} />
       )}
 
-      {/* <View style={[styles.content, sidebarVisible && !isMobile && styles.rightContentShift, accountDetailsVisible && !isMobile && styles.leftContentShift]}>
-        {user.isAnonymous ? (
-          <>
-            <Text style={styles.welcomeText}>Welcome!</Text>
-            <Text style={styles.cityText}>Sign in to experience all benefits</Text>
-          </>
-        ) : (
-          <>
-          <Text style={styles.welcomeText}>Welcome, {userData.username}!</Text>
-          <Text style={styles.cityText}>Your favorite city is set to: {userData.favoriteCity}</Text>
-          </>
-        )} */}
         <View style={styles.mapContainer}>
-          <Map city={userData.favoriteCity} toggleSidebar={toggleSidebar} />
+          <Map city={userData ? userData.favoriteCity : 'New York'} toggleSidebar={toggleSidebar} />
         </View>
 
         <BottomNavbar onAccountPress={toggleAccountDetails}/>

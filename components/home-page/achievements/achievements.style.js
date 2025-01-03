@@ -29,6 +29,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
   },
+  isAnonymousText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#000',
+  },
   badgeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

@@ -15,7 +15,7 @@ import { toast } from 'react-toastify';
 import styles from './mobile-animation.style';
 
 const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
-  const { userData, setUserData } = useUser();
+  const { userData, setUserData, isAnonymous } = useUser();
   const [latestPotholes, setLatestPotholes] = useState([]);
   const [loadingPotholes, setLoadingPotholes] = useState(false); 
   const screenWidth = Dimensions.get('window').width;
@@ -130,6 +130,7 @@ const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
   };
 
 const fetchLinkedAccounts = async () => {
+  if (!userData.uid) return;
   const currentUser = auth.currentUser;
 
   const allCookies = Cookies.get();
@@ -159,23 +160,6 @@ const fetchLinkedAccounts = async () => {
 
   setLinkedAccounts(validLinkedAccounts);
 };
-
-
-useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log('auth.currentUser updated:', user);
-      fetchUserData(user.uid).then((data) => {
-        setUserData(data);
-        setCurrentDisplayedAccountUid(user.uid);
-      });
-    } else {
-      console.log('No user is signed in');
-    }
-  });
-
-  return () => unsubscribe();
-}, []);
 
 const handleSwitchAccount = async (accountUid) => {
   try {
@@ -279,12 +263,12 @@ useEffect(() => {
     }
   };
 
-  if (auth.currentUser) {
+  if (userData.uid) {
     updateLinkedAccounts();
   }
 
   updateLinkedAccounts();
-}, [auth.currentUser]);
+}, [userData.uid]);
 
 const handleAddAccount = async () => {
   try {
@@ -446,18 +430,23 @@ const handleAddAccount = async () => {
           <Text style={styles.manageAccountText}>Manage Account</Text>
           <View style={styles.profilePictureContainer}>
             <Image source={{ uri: userData?.profilePictureUrl }} style={styles.profilePicture} />
-            <Pressable style={styles.editButton} onPress={selectFromGallery}>
-              <Icon name="edit" size={20} color="#fff" />
-            </Pressable>
+            {!isAnonymous && (
+              <Pressable style={styles.editButton} onPress={selectFromGallery}>
+                <Icon name="edit" size={20} color="#fff" />
+              </Pressable>
+            )}
           </View>
           <View style={styles.nameAndBadgeContainer}>
-              <Text style={styles.username}>{userData.username}</Text>
-              <Image
+              <Text style={styles.username}>{userData && userData.username ? userData.username : 'Anonymous User'}</Text>
+              {badgeImage && (
+                <Image
                   source={badgeImage}
                   style={styles.badge}
-              />
+                  resizeMode="contain"
+                />
+              )}
           </View>
-          <Text style={styles.email}>{userData?.email}</Text>
+          <Text style={styles.email}>{userData && userData.email ? userData.email : 'Sign in to enjoy full functionality'}</Text>
           <View style={styles.linkedAccountsContainer}>
             <View style={styles.linkedAccountsHeader}>
               <Text style={styles.linkedAccountsText}>Linked Accounts</Text>
@@ -542,12 +531,12 @@ const handleAddAccount = async () => {
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Joined:</Text>
               <Text style={styles.statValue}>
-                {userData?.joinDate?.toDate().toLocaleDateString() || 'N/A'}
+                {!isAnonymous ? userData?.joinDate?.toDate().toLocaleDateString() : 'N/A'}
               </Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Total Contributions:</Text>
-              <Text style={styles.statValue}>{userData?.contributions || 0}</Text>
+              <Text style={styles.statValue}>{!isAnonymous ? userData?.contributions : 'N/A'}</Text>
             </View>
           </View>
 
@@ -572,7 +561,7 @@ const handleAddAccount = async () => {
                     </View>
                     ))
                 ) : (
-                    <Text style={styles.noPotholesText}>You have not reported any potholes yet.</Text>
+                  <Text style={styles.noPotholesText}>{isAnonymous ? 'Sign in to record latest pothole reports.' : 'You have not reported any potholes yet.'}</Text>
                 )}
                 </ScrollView>
             )}

@@ -55,7 +55,7 @@ const CitySelection = ({ onCitySelect }) => {
           data={suggestions}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleCitySelect(item)} style={styles.suggestionItemContainer}>
+            <TouchableOpacity onPress={() => handleSuggestionPress(item)} style={styles.suggestionItemContainer}>
               <Icon name="location-on" size={20} color="#555" />
               <Text style={styles.suggestionItem}>{item.description}</Text>
             </TouchableOpacity>
