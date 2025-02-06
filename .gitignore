@@ -43,7 +43,7 @@ android/
 .netlify
 
 .firebase
-config/firebase.js
+config/firebase/firebase-config.js
 app.json
 firebase.json
 google-services.json
