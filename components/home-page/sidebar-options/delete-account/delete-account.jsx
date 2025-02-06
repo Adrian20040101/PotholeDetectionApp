@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, Pressable, Animated, CheckBox, Dimensions } from 'react-native';
 import { auth, db } from '../../../../config/firebase/firebase-config';
 import { deleteUser } from "firebase/auth";
 import { deleteDoc, doc } from "firebase/firestore";
-import { toast } from 'react-toastify';
+import Toast from 'react-native-toast-message';
 import styles from './delete-account.style';
 import { useUser } from '../../../../context-components/user-context';
 
@@ -13,7 +13,7 @@ const DeleteAccountModal = ({ isVisible, onClose }) => {
     const [isLoading, setIsLoading] = useState(false);
     const navigation = useNavigation();
     const { setUserData } = useUser();
-    const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '35%');
+    const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '60%');
 
     const overlayAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -64,7 +64,16 @@ const DeleteAccountModal = ({ isVisible, onClose }) => {
         }
     }, [isVisible]);
 
-    const handleDeleteAccount = async () => {
+    const handleDeleteAccount = useCallback(async () => {
+        if (!isAcknowledged) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Please acknowledge the warning to proceed.',
+            });
+            return;
+        }
+
         try {
             setIsLoading(true);
             const user = auth.currentUser;
@@ -72,18 +81,31 @@ const DeleteAccountModal = ({ isVisible, onClose }) => {
                 await deleteDoc(doc(db, 'users', user.uid));
                 await deleteUser(user);
                 setUserData(null);
-                toast.success('Account deleted successfully.');
+                Toast.show({
+                    type: 'success',
+                    text1: 'Success',
+                    text2: 'Account deleted successfully.',
+                });
                 navigation.navigate('Welcome');
             } else {
-                toast.error('No user is currently signed in.');
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'No user is currently signed in.',
+                });
             }
         } catch (error) {
-            toast.error(`Failed to delete account: ${error.message}`);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: `Failed to delete account: ${error.message}`,
+            });
             console.error(error.message);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [isAcknowledged, navigation, setUserData]);
+
 
     return (
         isVisible && (

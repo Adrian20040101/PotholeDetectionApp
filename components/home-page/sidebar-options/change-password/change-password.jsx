@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TextInput, Pressable, Animated, Easing, Dimensions } from 'react-native';
 import { auth } from '../../../../config/firebase/firebase-config';
-import { toast } from 'react-toastify';
+import Toast from 'react-native-toast-message';
 import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "firebase/auth";
 import styles from './change-password.style';
 
@@ -10,7 +10,7 @@ const ChangePasswordModal = ({ isVisible, onClose }) => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isGoogleUser, setIsGoogleUser] = useState(false);
-    const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '35%');
+    const [modalWidth, setModalWidth] = useState(Dimensions.get('window').width < 800 ? '85%' : '70%');
 
     const overlayAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -67,23 +67,45 @@ const ChangePasswordModal = ({ isVisible, onClose }) => {
         }
       }, [isVisible]);
 
-    const handleChangePassword = async () => {
+      const handleChangePassword = useCallback(async () => {
         if (newPassword !== confirmPassword) {
-            toast.error('New passwords do not match');
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'New passwords do not match.',
+            });
             return;
         }
+
         try {
             const user = auth.currentUser;
+            if (!user) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'No user is currently signed in.',
+                });
+                return;
+            }
+
             const credential = EmailAuthProvider.credential(user.email, currentPassword);
 
             await reauthenticateWithCredential(user, credential);
             await updatePassword(user, newPassword);
-            toast.success('Password updated successfully.');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Password updated successfully.',
+            });
             onClose();
         } catch (error) {
-            toast.error(error.message);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: `Failed to update password: ${error.message}`,
+            });
         }
-    };
+    }, [currentPassword, newPassword, confirmPassword, onClose]);
 
     return (
         isVisible && (

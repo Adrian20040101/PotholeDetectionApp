@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, Image } from 'react-native';
-import { collection, where, query, getDocs, getDoc, setDoc, doc } from 'firebase/firestore';
+import { View, Text, TextInput, Pressable, Image, useWindowDimensions, Platform } from 'react-native';
+import { collection, where, query, getDocs, setDoc, doc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import styles from './signup.style';
 
-const googleLogo = require('../../../assets/logos/google-logo-2.png');
 const backArrow = require('../../../assets/icons/back-arrow-icon.png');
 
 const Signup = ({ onBackPress, onLoginPress }) => {
+    const { width, height } = useWindowDimensions();
     const [isHovered, setIsHovered] = useState({ signup: false, googleButton: false });
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
@@ -16,6 +16,8 @@ const Signup = ({ onBackPress, onLoginPress }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [validation, setValidation] = useState(false);
+
+    const isWeb = Platform.OS === 'web';
 
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -49,7 +51,6 @@ const Signup = ({ onBackPress, onLoginPress }) => {
                 return;
             }
 
-            // check if username already exists
             const usernamesRef = collection(db, 'users');
             const q = query(usernamesRef, where('username', '==', username));
             const querySnapshot = await getDocs(q);
@@ -64,11 +65,15 @@ const Signup = ({ onBackPress, onLoginPress }) => {
             const user = userCredential.user;
             console.log('User signed up:', user);
 
-            // save a default profile picture along with username and email (can be changed later on)
             const defaultProfilePictureUrl = 'https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg';
 
-            // save the username in Firestore
-            await setDoc(doc(db, 'users', user.uid), { username, email, profilePictureUrl: defaultProfilePictureUrl, contributions: 0, joinDate: new Date() });
+            await setDoc(doc(db, 'users', user.uid), { 
+                username, 
+                email, 
+                profilePictureUrl: defaultProfilePictureUrl, 
+                contributions: 0, 
+                joinDate: new Date() 
+            });
         } catch (error) {
             console.error('Error signing up:', error.message);
             if (error.code === 'auth/email-already-in-use') {
@@ -83,7 +88,10 @@ const Signup = ({ onBackPress, onLoginPress }) => {
 
     return (
         <View style={styles.formContainer}>
-            <Pressable style={styles.backButton} onPress={onBackPress}>
+            <Pressable 
+                style={styles.backButton} 
+                onPress={onBackPress}
+            >
                 <Image source={backArrow} style={styles.backArrow} />
             </Pressable>
             <Text style={styles.title}>Sign Up</Text>
@@ -120,13 +128,17 @@ const Signup = ({ onBackPress, onLoginPress }) => {
             <Pressable
                 style={[styles.button, isHovered.signup && styles.buttonHover]}
                 onPress={handleSignup}
-                onMouseEnter={() => setIsHovered({ ...isHovered, signup: true })}
-                onMouseLeave={() => setIsHovered({ ...isHovered, signup: false })}
+                {...(isWeb ? {
+                    onMouseEnter: () => setIsHovered({ ...isHovered, signup: true }),
+                    onMouseLeave: () => setIsHovered({ ...isHovered, signup: false })
+                } : {})}
             >
                 <Text style={styles.buttonText}>Sign Up</Text>
             </Pressable>
             <Pressable onPress={onLoginPress}>
-                <Text style={styles.signUpText}>Already have an account? <Text style={styles.signUpLink}>Log In</Text></Text>
+                <Text style={styles.signUpText}>
+                    Already have an account? <Text style={styles.signUpLink}>Log In</Text>
+                </Text>
             </Pressable>
         </View>
     );

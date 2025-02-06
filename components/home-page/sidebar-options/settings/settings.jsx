@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Animated, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { useTheme } from './theme/theme-context';
-import { auth } from '../../../../config/firebase/firebase-config';
 import ThemeToggle from './theme/theme-toggle';
 import CitySelection from '../../city-selection/city';
 import styles from './settings.style';

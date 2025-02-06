@@ -14,7 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'react-toastify';
 import styles from './desktop-animation.style';
 
-const AccountDetailsSidebar = ({ sidebarAnim, overlayAnim, sidebarVisible, toggleSidebar }) => {
+const AccountDetailsSidebarDesktop = ({ sidebarAnim, overlayAnim, sidebarVisible, toggleSidebar }) => {
   const [shouldRender, setShouldRender] = useState(sidebarVisible);
   const { userData, setUserData, isAnonymous } = useUser();
   const [latestPotholes, setLatestPotholes] = useState([]);
@@ -567,4 +567,4 @@ const handleAddAccount = async () => {
   );
 };
 
-export default AccountDetailsSidebar;
+export default AccountDetailsSidebarDesktop;

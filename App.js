@@ -1,8 +1,10 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { UserProvider } from './context-components/user-context';
 import { ThemeProvider } from './components/home-page/sidebar-options/settings/theme/theme-context';
 import Navigation from './Navigation';
 import { ToastContainer } from 'react-toastify';
+import Toast from 'react-native-toast-message';
 import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
@@ -10,7 +12,8 @@ const App = () => {
     <UserProvider>
       <ThemeProvider>
         <Navigation />
-        <ToastContainer />
+        {Platform.OS === 'web' && <ToastContainer />}
+        <Toast />
       </ThemeProvider>
     </UserProvider>
   );

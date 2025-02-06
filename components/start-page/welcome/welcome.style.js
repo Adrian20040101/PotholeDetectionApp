@@ -1,9 +1,6 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet } from "react-native";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const isMobile = screenWidth < 700;
-
-const styles = StyleSheet.create({
+const createStyles = (isMobile, isLandscape, isWeb) => StyleSheet.create({
     container: {
         flex: 1,
         flexDirection: isMobile ? 'column' : 'row',
@@ -14,41 +11,39 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         height: '100%',
-        resizeMode: 'cover', 
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    leftSection: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
     },
     rightSection: {
         flex: 1, 
         backgroundColor: 'black',
         justifyContent: 'center',
         alignItems: 'center',
-        display: isMobile ? 'none' : 'flex',
     },
     overlay: {
-        padding: 30,
+        padding: isMobile ? 20 : 30,
         borderRadius: 15,
         borderWidth: 0.5,
         borderColor: 'white',
         alignItems: 'center',
-        width: '90%',
+        width: isMobile ? '90%' : '80%',
         maxWidth: 500,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
-    overlayMobile: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
     welcomeText: {
-        fontSize: 32,
+        fontSize: isMobile ? 24 : 32,
         fontWeight: 'bold',
         color: '#fff',
         marginBottom: 20,
         textAlign: 'center',
     },
     subtitleText: {
-        fontSize: 18,
+        fontSize: isMobile ? 16 : 18,
         color: '#d3d3d3',
         marginBottom: 30,
         textAlign: 'center',
@@ -57,6 +52,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         width: '100%',
+        gap: 15,
         maxWidth: 400,
     },
     button: {
@@ -66,19 +62,18 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 25,
         borderRadius: 30,
-        marginHorizontal: 10,
+        marginHorizontal: isMobile ? 0 : 10,
+        marginVertical: isMobile ? 10 : 0,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.8,
         shadowRadius: 2,
         elevation: 5,
-        whiteSpace: 'nowrap',
     },
     buttonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: isMobile ? 14 : 16,
         fontWeight: 'bold',
-        whiteSpace: 'nowrap',
     },
     buttonHover: {
         transform: [{ scale: 1.05 }],
@@ -87,7 +82,7 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         textAlign: 'center',
         color: '#fff',
-        fontSize: 14,
+        fontSize: isMobile ? 12 : 14,
     },
     guestLoginLink: {
         color: '#1E90FF',
@@ -95,4 +90,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default styles;
+export default createStyles;

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { collection, addDoc, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { FontAwesome } from '@expo/vector-icons';
 import { getUserLocation } from '../location-handling/location';
-import { toast } from 'react-toastify';
+import Toast from 'react-native-toast-message';
 import { auth, db } from '../../../../config/firebase/firebase-config';
 import { useUser } from '../../../../context-components/user-context';
 
@@ -94,14 +94,20 @@ const Voting = ({ markerId }) => {
 
   const handleVote = async (type) => {
     if (isAnonymous) {
-      toast.info('Sign in to be able to vote.');
+      Toast.show({
+        type: 'info',
+        text1: 'Sign in to be able to vote.',
+      });
       return;
     }
 
     const userLocation = await getUserLocation();
     if (!userLocation) {
       console.log('Unable to retrieve location');
-      toast.error('Unable to retrieve location.');
+      Toast.show({
+        type: 'error',
+        text1: 'Unable to retrieve location.',
+      });
       return;
     }
 
@@ -142,8 +148,10 @@ const Voting = ({ markerId }) => {
     const isAllowedToVote = userRegion === potholeRegion || distance <= 50;
   
     if (!isAllowedToVote) {
-      toast.error('You are not allowed to vote on this pothole as it is not in your area.');
-      return;
+      Toast.show({
+        type: 'error',
+        text1: 'You are not allowed to vote on this pothole as it is not in your area.',
+      });    
     }
   
     const votesRef = collection(db, 'votes');

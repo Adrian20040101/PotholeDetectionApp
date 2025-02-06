@@ -1,34 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Image, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, sendPasswordResetEmail, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
 import { getDoc, getDocs, doc, collection, query, where, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../../config/firebase/firebase-config';
-import { toast } from 'react-toastify';
 import styles from './login.style';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
-import Cookies from 'js-cookie';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const googleLogo = require('../../../assets/logos/google-logo-2.png');
 const backArrow = require('../../../assets/icons/back-arrow-icon.png');
+const googleLogo = require('../../../assets/logos/google-logo-2.png');
 
 const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
     const navigation = useNavigation();
-    const [isHovered, setIsHovered] =  useState({ login: false, googleButton: false });
     const [emailOrUsername, setEmailOrUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-        clientId: Platform.select({
-            web: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
-        }),
+        androidClientId: '280319253024-alvgul47blm18t0iq3qm9h6lu8qpb87t.apps.googleusercontent.com',
+        iosClientId: '280319253024-ob0unopvuuv8ql7idpst001dtsmotg91.apps.googleusercontent.com',
         redirectUri: AuthSession.makeRedirectUri({
-            scheme: 'potholedetection',
+            useProxy: true,
         }),
         scopes: ['profile', 'email'],
     });
@@ -40,53 +38,52 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
                     const { id_token } = response.params;
                     const credential = GoogleAuthProvider.credential(id_token);
                     
-                    const userCredential = await signInWithCredential(auth, credential);
+                    const userCredential = await auth.signInWithCredential(credential);
                     const user = userCredential.user;
-    
-                    Cookies.set(`linkedAccount_${user.uid}_idToken`, id_token, { expires: 7, secure: true });
-                    Cookies.set(`linkedAccount_${user.uid}_refreshToken`, user.stsTokenManager.refreshToken, { expires: 7, secure: true });
-                    
-                    await fetchOrCreateUserData(user);
-                    navigateToHome();
+
+                    await AsyncStorage.setItem(`linkedAccount_${user.uid}_idToken`, user.stsTokenManager.accessToken);
+                    await AsyncStorage.setItem(`linkedAccount_${user.uid}_refreshToken`, user.stsTokenManager.refreshToken);
+
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
+
+                    if (!userDoc.exists()) {
+                        await setDoc(userDocRef, { 
+                            username: user.displayName,
+                            email: user.email,
+                            profilePictureUrl: user.photoURL,
+                            contributions: 0,
+                            joinDate: new Date(),
+                        });
+                    }
+
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Login successful! Welcome.',
+                    });
+                    navigation.navigate('HomePage');
                 } catch (error) {
                     console.error('Error signing in with Google:', error);
                     Alert.alert('Error', 'Error signing in with Google. Please try again.');
                 }
             }
         };
-    
-        const fetchOrCreateUserData = async (user) => {
-            const userDocRef = doc(db, 'users', user.uid);
-            const userDoc = await getDoc(userDocRef);
-    
-            if (!userDoc.exists()) {
-                const googleProfilePictureUrl = user.photoURL;
-                await setDoc(userDocRef, {
-                    username: user.displayName,
-                    email: user.email,
-                    profilePictureUrl: googleProfilePictureUrl,
-                    contributions: 0,
-                    joinDate: new Date()
-                });
-            }
-        };
 
-        const navigateToHome = () => {
-            navigation.navigate('HomePage');
-        };
-    
         handleGoogleSignIn();
     }, [response]);
-    
 
-    const navigateToHome = () => {
-        navigation.navigate('HomePage');
+    const onSubmit = () => {
+        handleLogin(emailOrUsername, password);
     };
 
-    const handleLogin = async () => {
+    const handleLogin = async (emailOrUsername, password) => {
         setError('');
         if (emailOrUsername === '' || password === '') {
             setError('Please fill in both fields');
+            Toast.show({
+                type: 'error',
+                text1: 'Please fill in both fields',
+            });
             return;
         }
 
@@ -99,61 +96,98 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
                 const querySnapshot = await getDocs(q);
                 if (querySnapshot.empty) {
                     setError('Username not found');
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Username not found',
+                    });
                     return;
                 }
                 email = querySnapshot.docs[0].data().email;
             } catch (error) {
                 setError('Error checking username. Please try again.');
                 console.error('Error checking username:', error);
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error checking username. Please try again.',
+                });
                 return;
             }
         }
-    
+
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             const idToken = await user.getIdToken(true);
             const refreshToken = user.stsTokenManager.refreshToken;
-            Cookies.set(`linkedAccount_${user.uid}_idToken`, idToken, { expires: 7, secure: true });
-            Cookies.set(`linkedAccount_${user.uid}_refreshToken`, refreshToken, { expires: 7, secure: true });
+
+            await AsyncStorage.setItem(`linkedAccount_${user.uid}_idToken`, idToken);
+            await AsyncStorage.setItem(`linkedAccount_${user.uid}_refreshToken`, refreshToken);
+
             navigation.navigate('HomePage');
 
-            console.log(`Login successful. Welcome ${emailOrUsername}`);
+            Toast.show({
+                type: 'success',
+                text1: `Login successful. Welcome ${emailOrUsername}`,
+            });
         } catch (error) {
             console.error('Error signing you in:', error.message);
             if (error.code === 'auth/invalid-email') {
                 setError('No user found with this email.');
+                Toast.show({
+                    type: 'error',
+                    text1: 'No user found with this email.',
+                });
             } else if (error.code === 'auth/invalid-credential') {
                 setError('Invalid credentials.');
+                Toast.show({
+                    type: 'error',
+                    text1: 'Invalid credentials.',
+                });
             } else {
                 setError('Error signing in. Please try again.');
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error signing in. Please try again.',
+                });
             }
         }
     };
 
-    const handleGoogleLogin = async () => {
-        promptAsync(); 
-    }
+    const handleGoogleLogin = () => {
+        promptAsync();
+    };
 
     const handleForgotPassword = () => {
         if (!emailOrUsername) {
-            toast.error('Please enter your email to reset your password.');
+            Toast.show({
+                type: 'error',
+                text1: 'Please enter your email to reset your password.',
+            });
             return;
         }
 
         sendPasswordResetEmail(auth, emailOrUsername)
             .then(() => {
-              toast.success('Reset Link has been sent! Check your email.')  
+                Toast.show({
+                    type: 'success',
+                    text1: 'Reset Link has been sent! Check your email.',
+                });
             })
             .catch((error) => {
                 console.error('Error sending password reset email:', error.message);
-                toast.error('An error occurred. Please make sure you typed your email correctly and try again.')
+                Toast.show({
+                    type: 'error',
+                    text1: 'An error occurred. Please make sure you typed your email correctly and try again.',
+                });
             });
     };
 
     return (
         <View style={styles.formContainer}>
-            <Pressable style={styles.backButton} onPress={onBackPress}>
+            <Pressable 
+                style={styles.backButton} 
+                onPress={onBackPress}
+            >
                 <Image source={backArrow} style={styles.backArrow}/>
             </Pressable>
             <Text style={styles.title}>Login</Text>
@@ -176,26 +210,26 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
             <Pressable onPress={onSignupPress}>
                 <Text style={styles.signUpText}>New here? <Text style={styles.signUpLink}>Sign Up</Text></Text>
             </Pressable>
-            <Text style={{color: 'white'}}>- or -</Text>
+            <Text style={{color: 'black', marginVertical: 10}}>- or -</Text>
             <Pressable 
-                style={[styles.googleButton, isHovered.googleButton && styles.googleButtonHover]} 
+                style={styles.googleButton} 
                 onPress={handleGoogleLogin}
-                onMouseEnter={() => setIsHovered({ ...isHovered, googleButton: true })}
-                onMouseLeave={() => setIsHovered({ ...isHovered, googleButton: false })}
             >
-                Continue With Google <Image source={googleLogo} style={styles.googleLogo} />
+                <Image source={googleLogo} style={styles.googleLogo} />
+                <Text style={styles.googleButtonText}>Continue With Google</Text>
             </Pressable>
             <Pressable 
-                style={[styles.button, isHovered.login && styles.buttonHover]} 
-                onPress={handleLogin}
-                onMouseEnter={() => setIsHovered({ ...isHovered, login: true })}
-                onMouseLeave={() => setIsHovered({ ...isHovered, login: false })}
+                style={styles.button} 
+                onPress={onSubmit}
             >
                 <Text style={styles.buttonText}>Login</Text>
             </Pressable>
             <Pressable onPress={handleForgotPassword}>
-            <Text style={styles.signUpText}>Forgot your password? <Text style={styles.forgotPasswordText}>Reset it</Text></Text>
+                <Text style={styles.signUpText}>
+                    Forgot your password? <Text style={styles.forgotPasswordText}>Reset it</Text>
+                </Text>
             </Pressable>
+            <Toast ref={(ref) => Toast.setRef(ref)} />
         </View>
     );
 };

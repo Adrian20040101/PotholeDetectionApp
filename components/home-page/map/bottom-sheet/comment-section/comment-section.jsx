@@ -125,13 +125,6 @@ const CommentSection = ({ markerId, onClose, onEdit, onReply, onDelete }) => {
     };
   }, []);
 
-  const handleRightClick = (event, comment) => {
-    event.preventDefault();
-    setSelectedComment(comment);
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setShowContextMenu(true);
-  };
-
   const handleClickOutside = () => {
     setShowContextMenu(false);
     setSelectedComment(null);

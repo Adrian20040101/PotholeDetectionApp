@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import Filters from '../filters/filters';
-import Map from '../map.web';
+import Map from '../map';
 import styles from './filter-screen.style';
 
 const FilteredMapScreen = () => {

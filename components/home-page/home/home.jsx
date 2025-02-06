@@ -1,28 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback, Dimensions, Modal, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { View, Text, Pressable, Animated, Easing, TouchableWithoutFeedback, Dimensions, Modal, Image, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../../config/firebase/firebase-config';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
-import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Map from '../map/map';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import DesktopSidebar from '../sidebar-animation/desktop-animation';
-import MobileSidebar from '../sidebar-animation/mobile-animation';
-import ImageUpload from '../upload-photo/upload-photo';
+import Sidebar from '../sidebar-animation/sidebar';
 import SettingsModal from '../sidebar-options/settings/settings';
-import ThemeToggle from '../sidebar-options/settings/theme/theme-toggle';
-import { useTheme } from '../sidebar-options/settings/theme/theme-context';
-import { lightTheme, darkTheme } from '../sidebar-options/settings/theme/theme';
-import { themeStyle } from '../sidebar-options/settings/theme/theme.style';
 import { useUser } from '../../../context-components/user-context';
 import styles from './home.style';
 import ChangePasswordModal from '../sidebar-options/change-password/change-password';
 import ChangeUsernameModal from '../sidebar-options/change-username/change-username';
 import DeleteAccountModal from '../sidebar-options/delete-account/delete-account';
-import AccountDetailsSidebarMobile from '../account-details-animation/mobile-animation';
-import AccountDetailsSidebarPC from '../account-details-animation/desktop-animation';
+import AccountDetailsSidebar from '../account-details-animation/account-details';
 import BottomNavbar from '../bottom-navbar/bottom-navbar';
 
 const HomePage = () => {
@@ -215,11 +206,16 @@ const HomePage = () => {
     });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      Cookies.remove(`linkedAccount_${currentUser.uid}_refreshToken`);
-      Cookies.remove(`linkedAccount_${currentUser.uid}_idToken`);
+      if (Platform.OS === 'web') {
+        Cookies.remove(`linkedAccount_${currentUser.uid}_refreshToken`);
+        Cookies.remove(`linkedAccount_${currentUser.uid}_idToken`);
+      } else {
+        await AsyncStorage.removeItem(`linkedAccount_${currentUser.uid}_refreshToken`);
+        await AsyncStorage.removeItem(`linkedAccount_${currentUser.uid}_idToken`);
+      }
       auth.signOut();
     }
   };
@@ -245,40 +241,23 @@ const HomePage = () => {
     };
   }
 
-
-
   return (
     <View style={styles.container}>
-      {isMobile ? (
-        <MobileSidebar
-          menuAnim={menuAnim}
-          sidebarVisible={sidebarVisible}
-          toggleSidebar={toggleSidebar}
-          menuItems={getMenuItems}
-        />
-      ) : (
-        <DesktopSidebar
-          sidebarAnim={sidebarAnim}
-          overlayAnim={overlayAnim}
-          sidebarVisible={sidebarVisible}
-          toggleSidebar={toggleSidebar}
-          menuItems={getMenuItems}
-        />
-      )}
-      
-      {isMobile ? (
-        <AccountDetailsSidebarMobile
-          sidebarVisible={accountDetailsVisible}
-          toggleSidebar={toggleAccountDetails}
-        />
-      ) : (
-        <AccountDetailsSidebarPC
-          sidebarAnim={accountSidebarAnim}
-          overlayAnim={overlayAnim}
-          sidebarVisible={accountDetailsVisible}
-          toggleSidebar={toggleAccountDetails}
-        />
-      )}
+      <Sidebar
+        sidebarAnim={sidebarAnim}
+        menuAnim={menuAnim}
+        overlayAnim={overlayAnim}
+        sidebarVisible={sidebarVisible}
+        toggleSidebar={toggleSidebar}
+        menuItems={getMenuItems}
+      />
+
+      <AccountDetailsSidebar
+        sidebarAnim={accountSidebarAnim}
+        overlayAnim={overlayAnim}
+        sidebarVisible={accountDetailsVisible}
+        toggleSidebar={toggleAccountDetails}
+      />
 
       {!isMobile && sidebarVisible && (
         <Animated.View style={[styles.overlay, { opacity: overlayAnim }]} />

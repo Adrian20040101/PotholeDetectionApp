@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { toast } from 'react-toastify';
+import Toast from 'react-native-toast-message';
 
 export const getUserLocation = async () => {
   try {
@@ -56,7 +56,11 @@ const getLocationByServerless = async () => {
     };
   } catch (error) {
     console.error('Error fetching location from serverless function:', error);
-    toast.error('Unable to retrieve location. Please try again.');
+    Toast.show({
+      type: 'error',
+      text1: 'Location Error',
+      text2: 'Unable to retrieve location. Please try again.',
+    });
     return null;
   }
 };

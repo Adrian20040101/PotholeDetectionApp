@@ -15,23 +15,27 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.PotholeDetectionApp"
+      "bundleIdentifier": "com.potholedetectionapp.potholedetectionapp",
+      "config": {
+        "googleMapsApiKey": "AIzaSyCKQH3TZGANH9g_WV-9wPpyg9Fo-HQa_as"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.PotholeDetectionApp",
-      "permissions": ["CAMERA"]
+      "package": "com.potholedetectionapp.potholedetectionapp",
+      "googleServicesFile": "./google-services.json",
+      "permissions": ["CAMERA"],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCKQH3TZGANH9g_WV-9wPpyg9Fo-HQa_as"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "df0e7fdd-3a98-4aa5-bd4a-92d0760d1869"
-      }
     }
   }
 }
