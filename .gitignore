@@ -46,5 +46,5 @@ android/
 config/firebase/firebase-config.js
 app.json
 firebase.json
-google-services.json
-GoogleService-Info.plist
+# google-services.json
+# GoogleService-Info.plist

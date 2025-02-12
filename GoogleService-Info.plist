@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>240153903599-qsqsrccf6a9p4o2nsvo7pjong2tma1f7.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.240153903599-qsqsrccf6a9p4o2nsvo7pjong2tma1f7</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>240153903599-nlse1hmu784682nn6c4m1eleb2tkqvsl.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC7cwOpVSdBzi_R5L9M73jIwqL8L4nRSp4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>240153903599</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.potholedetectionapp.potholedetectionapp</string>
+	<key>PROJECT_ID</key>
+	<string>pothole-detection-1d63b</string>
+	<key>STORAGE_BUCKET</key>
+	<string>pothole-detection-1d63b.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:240153903599:ios:e53039e74822deded1b61a</string>
+</dict>
+</plist>

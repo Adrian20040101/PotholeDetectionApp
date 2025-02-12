@@ -1,16 +1,11 @@
 import 'dotenv/config';
-import withAppJsonSecret from './withAppJsonSecret';
-import withGoogleServices from './withGoogleServices';
-import withGoogleServiceInfo from './withGoogleServiceInfo';
-import withEnvFile from './withEnvFile';
-import withFirebaseConfig from './withFirebaseConfig';
 
 export default ({ config }) => ({
   ...config,
   name: "PotholeDetectionApp",
   slug: "PotholeDetectionApp",
   version: "1.0.0",
-  // scheme: "com.potholedetectionapp",
+  //scheme: "com.potholedetectionapp",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
@@ -33,7 +28,7 @@ export default ({ config }) => ({
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#ffffff",
+      backgroundColor: "#ffffff"
     },
     permissions: ["CAMERA"],
     config: {
@@ -46,13 +41,6 @@ export default ({ config }) => ({
     ...config.web,
     favicon: "./assets/favicon.png",
   },
-  plugins: [
-    withAppJsonSecret,
-    withGoogleServices,
-    withGoogleServiceInfo,
-    withEnvFile,
-    withFirebaseConfig,
-  ],
   extra: {
     googleMapsApiKey: process.env.GOOGLE_API_KEY,
     eas: {

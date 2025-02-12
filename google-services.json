@@ -1,0 +1,50 @@
+{
+  "project_info": {
+    "project_number": "240153903599",
+    "project_id": "pothole-detection-1d63b",
+    "storage_bucket": "pothole-detection-1d63b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:240153903599:android:3227aa9698625588d1b61a",
+        "android_client_info": {
+          "package_name": "com.potholedetectionapp.potholedetectionapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "240153903599-nlse1hmu784682nn6c4m1eleb2tkqvsl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.potholedetectionapp.potholedetectionapp",
+            "certificate_hash": "fe52e8c8ee7769cec8280e0b4f4d71f9b3bfee08"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBETJSNCk8mAbLOiIscJq6gZuTw5JRCx0c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "240153903599-6vjlau3mss0643ktcji5vk2uc1t5qdfl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "240153903599-qsqsrccf6a9p4o2nsvo7pjong2tma1f7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.potholedetectionapp.potholedetectionapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
