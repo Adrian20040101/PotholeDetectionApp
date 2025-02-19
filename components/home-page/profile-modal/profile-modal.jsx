@@ -198,8 +198,6 @@ const ProfileModal = ({ isVisible, onClose, userId }) => {
             }
           ]}
           accessible={true}
-          accessibilityLabel="User Profile Modal"
-          accessibilityRole="dialog"
         >
           <TouchableOpacity 
             style={styles.closeButton}
@@ -219,8 +217,6 @@ const ProfileModal = ({ isVisible, onClose, userId }) => {
                 onClose();
               });
             }}
-            accessibilityLabel="Close Profile Modal"
-            accessibilityRole="button"
           >
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
@@ -234,7 +230,6 @@ const ProfileModal = ({ isVisible, onClose, userId }) => {
                   <Image
                     source={{ uri: userData.profilePictureUrl }}
                     style={styles.profilePicture}
-                    accessibilityLabel="User Profile Picture"
                   />
                   <View style={styles.profileDetails}>
                     <View style={styles.nameAndBadgeContainer}>
@@ -243,7 +238,6 @@ const ProfileModal = ({ isVisible, onClose, userId }) => {
                         <Image
                           source={badgeImage}
                           style={styles.badge}
-                          accessibilityLabel={`${calculateBadge(userData.contributions)} Badge`}
                         />
                       )}
                     </View>
@@ -272,7 +266,6 @@ const ProfileModal = ({ isVisible, onClose, userId }) => {
                   showsHorizontalScrollIndicator={false} 
                   style={styles.potholeScroll}
                   contentContainerStyle={latestPotholes.length === 0 && styles.noPotholesContainer}
-                  accessibilityLabel="Latest Reported Potholes"
                 >
                   {latestPotholes.length > 0 ? (
                     latestPotholes.map((pothole) => (
@@ -280,7 +273,6 @@ const ProfileModal = ({ isVisible, onClose, userId }) => {
                         <Image 
                           source={{ uri: pothole.imageUrl }} 
                           style={styles.potholeImage} 
-                          accessibilityLabel="Pothole Image" 
                         />
                         <Text style={styles.potholeTimestamp}>
                           Reported on: {new Date(pothole.timestamp.toDate()).toLocaleDateString()}

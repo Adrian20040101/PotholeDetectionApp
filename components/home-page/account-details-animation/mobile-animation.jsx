@@ -77,14 +77,16 @@ const AccountDetailsSidebarMobile = ({ sidebarVisible, toggleSidebar }) => {
     }
   };
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
-    redirectUri: AuthSession.makeRedirectUri({
-      scheme: 'potholedetection',
-    }),
-    scopes: ['profile', 'email'],
-    prompt: 'select_account',
-  });
+  const redirectUri = AuthSession.makeRedirectUri({
+      useProxy: true,
+    });
+  
+    const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+      clientId: '240153903599-6vjlau3mss0643ktcji5vk2uc1t5qdfl.apps.googleusercontent.com',
+      redirectUri: redirectUri,
+      scopes: ['profile', 'email'],
+      prompt: 'select_account',
+    });
 
   function showSuccessToast(message) {
     Toast.show({

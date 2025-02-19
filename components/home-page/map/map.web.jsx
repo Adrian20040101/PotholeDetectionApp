@@ -150,7 +150,6 @@ const Map = ({ city, toggleSidebar, placeId, status, timeframe }) => {
         }));
         setMarkers(markersList);
         setLoadingMarkers(false);
-        console.log(filters?.placeId || 'All Places');
       },
       (error) => {
         console.error('Error fetching markers:', error);

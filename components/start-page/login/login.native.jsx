@@ -193,6 +193,7 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <TextInput
         placeholder="Email/Username"
+        placeholderTextColor="white"
         style={styles.input}
         value={emailOrUsername}
         onChangeText={setEmailOrUsername}
@@ -201,6 +202,7 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
       />
       <TextInput
         placeholder="Password"
+        placeholderTextColor="white"
         style={styles.input}
         value={password}
         onChangeText={setPassword}
@@ -211,7 +213,7 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
           New here? <Text style={styles.signUpLink}>Sign Up</Text>
         </Text>
       </Pressable>
-      <Text style={{ color: 'black', marginVertical: 10 }}>- or -</Text>
+      <Text style={{ color: 'white', marginVertical: 10 }}>- or -</Text>
       <Pressable style={styles.googleButton} onPress={handleGoogleLogin}>
         <Image source={googleLogo} style={styles.googleLogo} />
         <Text style={styles.googleButtonText}>Continue With Google</Text>

@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     zIndex: 1,
-    marginBottom: 80
+    marginBottom: isMobile ? 40 : 80,  // 40px for the bottom tab bar
   },
   loadingContainer: {
     flex: 1,

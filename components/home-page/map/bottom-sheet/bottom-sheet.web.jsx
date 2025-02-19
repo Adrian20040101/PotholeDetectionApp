@@ -4,7 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { collection, query, onSnapshot, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../../config/firebase/firebase-config.js';
 import Voting from '../voting/votes.jsx';
-import CommentSection from './comment-section/comment-section.jsx';
+import CommentSection from './comment-section/comment-section.web.jsx';
 import ProfileModal from '../../profile-modal/profile-modal.jsx';
 import styles from './bottom-sheet.style';
 

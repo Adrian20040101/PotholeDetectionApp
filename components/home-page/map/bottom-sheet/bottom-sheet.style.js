@@ -55,6 +55,8 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#ddd'
   },
   userInfo: {
     flex: 1,

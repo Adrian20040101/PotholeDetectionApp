@@ -22,11 +22,13 @@ const Login = ({ onBackPress, onSignupPress, onForgotPasswordPress }) => {
     const [password, setPassword] = useState('');
     const [isHovered, setIsHovered] = useState({ login: false, googleButton: false });
 
+    const redirectUri = AuthSession.makeRedirectUri({
+        useProxy: true,
+    });
+
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-        clientId: '280319253024-a79cn7spqmoth4pktb198f7o6h7uttp7.apps.googleusercontent.com',
-        redirectUri: AuthSession.makeRedirectUri({
-            scheme: 'potholedetection',
-        }),
+        clientId: '240153903599-6vjlau3mss0643ktcji5vk2uc1t5qdfl.apps.googleusercontent.com',
+        redirectUri: redirectUri,
         scopes: ['profile', 'email'],
     });
 

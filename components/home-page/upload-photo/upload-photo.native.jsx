@@ -31,7 +31,7 @@ const API_ENDPOINTS = {
   REVERSE_GEOCODING:
     'https://road-guard.netlify.app/.netlify/functions/reverse_geocoding',
   IMAGE_ANALYSIS:
-    'https://europe-central2-pothole-detection-430514.cloudfunctions.net/image-analysis',
+    'https://europe-central2-pothole-detection-1d63b.cloudfunctions.net/image-analysis',
 };
 
 const ImageUpload = ({ isVisible, onClose }) => {

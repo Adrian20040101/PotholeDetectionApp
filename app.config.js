@@ -5,7 +5,7 @@ export default ({ config }) => ({
   name: "PotholeDetectionApp",
   slug: "PotholeDetectionApp",
   version: "1.0.0",
-  //scheme: "com.potholedetectionapp",
+  scheme: "com.potholedetectionapp.potholedetectionapp",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",

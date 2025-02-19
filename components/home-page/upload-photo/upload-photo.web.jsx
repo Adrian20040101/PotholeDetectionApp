@@ -175,7 +175,7 @@ const ImageUpload = ({ isVisible, onClose }) => {
     setAnalyzing(true);
 
     try {
-        const response = await fetch('https://europe-central2-pothole-detection-430514.cloudfunctions.net/image-analysis', {
+        const response = await fetch('https://europe-central2-pothole-detection-1d63b.cloudfunctions.net/image-analysis', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
