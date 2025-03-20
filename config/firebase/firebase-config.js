@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  apiKey: "AIzaSyAQmYkX-XBTxGpAvMZ9yYtvMPzg86GQkxA",
   authDomain: "pothole-detection-1d63b.firebaseapp.com",
   projectId: "pothole-detection-1d63b",
   storageBucket: "pothole-detection-1d63b.appspot.com",
