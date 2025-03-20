@@ -186,10 +186,12 @@ const CustomBottomSheet = forwardRef(({ marker, isLoggedIn }, ref) => {
           <View style={styles.detailsCard}>
             <Text style={styles.title}>{markerInfo?.title || 'Pothole Report'}</Text>
             <View style={styles.reporterInfo}>
-              <Image
-                source={{ uri: markerInfo?.userProfilePicture || 'https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg' }}
-                style={styles.userImage}
-              />
+              <Pressable onPress={() => handleUserPress(markerInfo?.userId)}>
+                <Image
+                  source={{ uri: markerInfo?.userProfilePicture || 'https://t3.ftcdn.net/jpg/05/87/76/66/360_F_587766653_PkBNyGx7mQh9l1XXPtCAq1lBgOsLl6xH.jpg' }}
+                  style={styles.userImage}
+                />
+              </Pressable>
               <View style={styles.userDetails}>
                 <Text style={styles.username}>
                   {markerInfo?.userId === 'anonymous' ? 'Anonymous' : markerInfo?.username || 'Anonymous'}
@@ -216,11 +218,6 @@ const CustomBottomSheet = forwardRef(({ marker, isLoggedIn }, ref) => {
           </View>
         </View>
       </View>
-      <ProfileModal
-        isVisible={isProfileModalVisible}
-        onClose={closeProfileModal}
-        userId={selectedUserId}
-      />
     </View>
   );
 
@@ -244,10 +241,16 @@ const CustomBottomSheet = forwardRef(({ marker, isLoggedIn }, ref) => {
       defaultIndex={-1}
     >
       <BottomSheetScrollView contentContainerStyle={styles.fullScrollContainer}>
-        <Animated.View style={[styles.contentAbsolute, { opacity: collapsedOpacity }]}>
+        <Animated.View 
+          style={[styles.contentAbsolute, { opacity: collapsedOpacity }]}
+          pointerEvents={isFullCommentsActive ? 'none' : 'auto'}
+        >
           {renderCollapsedContent()}
         </Animated.View>
-        <Animated.View style={[styles.contentAbsolute, { opacity: fullCommentsOpacity }]}>
+        <Animated.View 
+          style={[styles.contentAbsolute, { opacity: fullCommentsOpacity }]}
+          pointerEvents={isFullCommentsActive ? 'auto' : 'none'}
+        >
           {renderFullComments()}
         </Animated.View>
       </BottomSheetScrollView>

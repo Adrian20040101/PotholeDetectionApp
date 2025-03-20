@@ -134,21 +134,21 @@ const HomePage = () => {
         toValue: isOpening ? 1 : 0,
         duration,
         easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
+        useNativeDriver: true,
       }).start();
     } else {
       Animated.timing(sidebarAnim, {
         toValue: isOpening ? 0 : -250,
         duration,
         easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
+        useNativeDriver: true,
       }).start();
 
       Animated.timing(overlayAnim, {
         toValue: isOpening ? 1 : 0,
         duration,
         easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
+        useNativeDriver: true,
       }).start();
     }
 
@@ -163,14 +163,14 @@ const HomePage = () => {
       toValue: isOpening ? 0 : -350,
       duration,
       easing: Easing.inOut(Easing.ease),
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   
     Animated.timing(overlayAnim, {
       toValue: isOpening ? 1 : 0,
       duration,
       easing: Easing.inOut(Easing.ease),
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   
     setAccountDetailsVisible(isOpening);

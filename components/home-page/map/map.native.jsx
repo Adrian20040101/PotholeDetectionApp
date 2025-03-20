@@ -275,6 +275,7 @@ const Map = ({ city, toggleSidebar, placeId, status, timeframe }) => {
               onPress={toggleSidebar}
               accessibilityLabel="Open Menu"
               accessibilityHint="Opens the sidebar"
+              hitSlop={15}
             >
               <FontAwesome name="bars" size={24} color="#000" />
             </TouchableOpacity>

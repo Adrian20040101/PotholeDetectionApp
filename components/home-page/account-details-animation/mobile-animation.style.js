@@ -25,10 +25,11 @@ const styles = StyleSheet.create({
   scrollView: {
     width: '100%',
     paddingRight: 5,
+    top: 30
   },
   backButton: {
     position: 'absolute',
-    top: 15,
+    top: 40,
     left: 12,
     zIndex: 5,
     backgroundColor: '#444',
